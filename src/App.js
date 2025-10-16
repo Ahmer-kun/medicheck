@@ -17,6 +17,7 @@ import {
 // import QRCode from "qrcode.react";
 import { QRCodeCanvas as QRCode } from "qrcode.react";
 
+
 // ----------------- Default sample data -----------------
 const DEFAULT_BATCHES = [
   {
@@ -37,14 +38,63 @@ const DEFAULT_BATCHES = [
     expiry: "2026-05-20",
     formulation: "Cefixime 200mg capsule",
   },
+  {
+    batchNo: "AMX-2025-004",
+    name: "Amoxicillin 500mg",
+    expiry: "2026-08-15",
+    formulation: "Amoxicillin trihydrate capsule",
+  },
+  {
+    batchNo: "AZT-2025-005",
+    name: "Azithro 250mg",
+    expiry: "2026-09-20",
+    formulation: "Azithromycin 250mg tablet",
+  },
+  {
+    batchNo: "PARA-2025-006",
+    name: "Paracet 500mg",
+    expiry: "2026-12-31",
+    formulation: "Paracetamol 500mg tablet",
+  },
+  {
+    batchNo: "IBU-2025-007",
+    name: "Ibufen 400mg",
+    expiry: "2026-11-10",
+    formulation: "Ibuprofen 400mg tablet",
+  },
+  {
+    batchNo: "MET-2025-008",
+    name: "Metformin 850mg",
+    expiry: "2026-10-25",
+    formulation: "Metformin hydrochloride tablet",
+  },
+  {
+    batchNo: "LOR-2025-009",
+    name: "Loramed 1mg",
+    expiry: "2026-09-15",
+    formulation: "Lorazepam 1mg tablet",
+  },
+  {
+    batchNo: "OMZ-2025-010",
+    name: "Omze 20mg",
+    expiry: "2026-08-05",
+    formulation: "Omeprazole 20mg capsule",
+  },
 ];
 
 const analyticsData = [
-  { name: "Week 1", Registered: 12, Verified: 9, Expired: 1 },
-  { name: "Week 2", Registered: 18, Verified: 14, Expired: 2 },
-  { name: "Week 3", Registered: 22, Verified: 20, Expired: 0 },
-  { name: "Week 4", Registered: 16, Verified: 12, Expired: 1 },
+  { name: "Week 1", Registered: 10, Verified: 8, Expired: 1 },
+  { name: "Week 2", Registered: 12, Verified: 9, Expired: 1 },
+  { name: "Week 3", Registered: 15, Verified: 13, Expired: 0 },
+  { name: "Week 4", Registered: 18, Verified: 15, Expired: 4 },
+  { name: "Week 5", Registered: 20, Verified: 18, Expired: 1 },
+  { name: "Week 6", Registered: 22, Verified: 19, Expired: 3 },
+  { name: "Week 7", Registered: 25, Verified: 23, Expired: 1 },
+  { name: "Week 8", Registered: 27, Verified: 25, Expired: 2 },
+  { name: "Week 9", Registered: 30, Verified: 28, Expired: 0 },
+  { name: "Week 10", Registered: 32, Verified: 29, Expired: 2 },
 ];
+
 
 // ----------------- Small Components -----------------
 function NavLinkItem({ to, label, collapsed }) {
@@ -202,7 +252,7 @@ function DashboardPage({ batches }) {
 
 
 //            -----------------Manufacturer---------------
-
+// ----------------- Manufacturer -----------------
 function ManufacturerPage({ onRegister }) {
   const [form, setForm] = useState({
     medicineName: "",
@@ -254,61 +304,91 @@ function ManufacturerPage({ onRegister }) {
         onSubmit={handleRegister}
         className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-4 rounded shadow"
       >
-        <input
-          value={form.medicineName}
-          onChange={(e) =>
-            setForm({ ...form, medicineName: e.target.value })
-          }
-          placeholder="Medicine Name"
-          className="p-2 border rounded"
-        />
-        <input
-          value={form.batchNo}
-          onChange={(e) => setForm({ ...form, batchNo: e.target.value })}
-          placeholder="Batch No"
-          className="p-2 border rounded"
-        />
-        <input
-          type="date"
-          value={form.manufactureDate}
-          onChange={(e) =>
-            setForm({ ...form, manufactureDate: e.target.value })
-          }
-          className="p-2 border rounded"
-        />
-        <input
-          type="date"
-          value={form.expiryDate}
-          onChange={(e) =>
-            setForm({ ...form, expiryDate: e.target.value })
-          }
-          className="p-2 border rounded"
-        />
-        <textarea
-          value={form.formulation}
-          onChange={(e) =>
-            setForm({ ...form, formulation: e.target.value })
-          }
-          placeholder="Formulation"
-          className="p-2 border rounded col-span-1 md:col-span-2"
-        />
-        <input
-          type="number"
-          value={form.quantity}
-          onChange={(e) =>
-            setForm({ ...form, quantity: e.target.valueAsNumber })
-          }
-          placeholder="Quantity"
-          className="p-2 border rounded"
-        />
+        {/* Medicine Name */}
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-600 mb-1">Medicine Name</label>
+          <input
+            value={form.medicineName}
+            onChange={(e) =>
+              setForm({ ...form, medicineName: e.target.value })
+            }
+            placeholder="e.g. Pantra 40mg"
+            className="p-2 border rounded text-gray-700"
+          />
+        </div>
 
+        {/* Batch Number */}
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-600 mb-1">Batch Number</label>
+          <input
+            value={form.batchNo}
+            onChange={(e) => setForm({ ...form, batchNo: e.target.value })}
+            placeholder="e.g. PANT-2025-001"
+            className="p-2 border rounded text-gray-700"
+          />
+        </div>
+
+        {/* Manufacture Date */}
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-600 mb-1">Manufacture Date</label>
+          <input
+            type="date"
+            value={form.manufactureDate}
+            onChange={(e) =>
+              setForm({ ...form, manufactureDate: e.target.value })
+            }
+            className="p-2 border rounded text-gray-700"
+          />
+        </div>
+
+        {/* Expiry Date */}
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-600 mb-1">Expiry Date</label>
+          <input
+            type="date"
+            value={form.expiryDate}
+            onChange={(e) =>
+              setForm({ ...form, expiryDate: e.target.value })
+            }
+            className="p-2 border rounded text-gray-700"
+          />
+        </div>
+
+        {/* Formulation */}
+        <div className="flex flex-col md:col-span-2">
+          <label className="text-sm text-gray-600 mb-1">Formulation</label>
+          <textarea
+            value={form.formulation}
+            onChange={(e) =>
+              setForm({ ...form, formulation: e.target.value })
+            }
+            placeholder="e.g. Pantoprazole 40mg tablet"
+            className="p-2 border rounded text-gray-700"
+          />
+        </div>
+
+        {/* Quantity */}
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-600 mb-1">Quantity</label>
+          <input
+            type="number"
+            value={form.quantity}
+            onChange={(e) =>
+              setForm({ ...form, quantity: e.target.valueAsNumber })
+            }
+            placeholder="e.g. 1000"
+            className="p-2 border rounded text-gray-700"
+          />
+        </div>
+
+        {/* Buttons */}
         <div className="flex items-center gap-3">
           <button className="bg-indigo-600 text-white px-4 py-2 rounded">
             Register
           </button>
           <button
             type="button"
-            className="px-4 py-2 rounded border"
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded border"
             onClick={() =>
               setForm({
                 medicineName: "",
@@ -340,7 +420,9 @@ function ManufacturerPage({ onRegister }) {
   );
 }
 
-//            -----------------Pharmacy Page---------------
+
+
+// ----------------- Pharmacy Page ---------------
 function PharmacyPage({ batches, onAccept }) {
   function handleReceive(batchNo) {
     if (typeof onAccept === "function") onAccept(batchNo);
@@ -349,27 +431,34 @@ function PharmacyPage({ batches, onAccept }) {
 
   return (
     <div className="p-6">
-      <h3 className="text-lg font-semibold mb-4">Received Batches</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">
+        Received Batches
+      </h3>
+
       <div className="bg-white p-4 rounded shadow">
         <table className="min-w-full text-left">
           <thead>
-            <tr className="border-b">
-              <th className="py-2">Batch</th>
-              <th className="py-2">Medicine</th>
-              <th className="py-2">Expiry</th>
-              <th className="py-2">Action</th>
+            <tr className="border-b bg-gray-100 text-gray-700">
+              <th className="py-2 px-3 font-medium">Batch</th>
+              <th className="py-2 px-3 font-medium">Medicine</th>
+              <th className="py-2 px-3 font-medium">Expiry</th>
+              <th className="py-2 px-3 font-medium">Action</th>
             </tr>
           </thead>
+
           <tbody>
             {batches.map((b) => (
-              <tr key={String(b.batchNo)} className="border-b hover:bg-gray-50">
-                <td className="py-2">{String(b.batchNo)}</td>
-                <td className="py-2">{String(b.name)}</td>
-                <td className="py-2">{String(b.expiry)}</td>
-                <td className="py-2">
+              <tr
+                key={String(b.batchNo)}
+                className="border-b hover:bg-gray-50 text-gray-700 transition"
+              >
+                <td className="py-2 px-3">{String(b.batchNo)}</td>
+                <td className="py-2 px-3">{String(b.name)}</td>
+                <td className="py-2 px-3">{String(b.expiry)}</td>
+                <td className="py-2 px-3">
                   <button
                     onClick={() => handleReceive(b.batchNo)}
-                    className="px-3 py-1 bg-indigo-600 text-white rounded"
+                    className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded transition"
                   >
                     Accept
                   </button>
@@ -378,12 +467,16 @@ function PharmacyPage({ batches, onAccept }) {
             ))}
           </tbody>
         </table>
+
+        {batches.length === 0 && (
+          <div className="text-center text-gray-500 py-6">
+            No batches available at the moment.
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
-
 
 
 // ---------------------------------------Verify-------------------------
@@ -492,60 +585,137 @@ function VerifyPage({ batches }) {
 
 
 
+
 // ----------------- Analytics Page -----------------
+
 function AnalyticsPage() {
+  // Calculate totals dynamically
+  const totalRegistered = analyticsData.reduce((sum, d) => sum + d.Registered, 0);
+  const totalVerified = analyticsData.reduce((sum, d) => sum + d.Verified, 0);
+  const totalExpired = analyticsData.reduce((sum, d) => sum + d.Expired, 0);
+
   return (
-    <div className="p-6">
-      <h3 className="text-lg font-semibold mb-4">Analytics</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <section className="bg-white p-4 rounded shadow">
-          <h4 className="font-medium mb-2">Monthly Registrations</h4>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={analyticsData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="Registered" stroke="#6366F1" />
-            </LineChart>
-          </ResponsiveContainer>
+    <div className="p-6 space-y-6">
+      {/* Page Title */}
+      <h3 className="text-lg font-semibold mb-4">Analytics Overview</h3>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-5 rounded-xl shadow text-center border border-gray-100">
+          <div className="text-sm text-gray-500 mb-1">Total Registered</div>
+          <div className="text-3xl font-bold text-indigo-600">{totalRegistered}</div>
+        </div>
+        <div className="bg-white p-5 rounded-xl shadow text-center border border-gray-100">
+          <div className="text-sm text-gray-500 mb-1">Total Verified</div>
+          <div className="text-3xl font-bold text-green-600">{totalVerified}</div>
+        </div>
+        <div className="bg-white p-5 rounded-xl shadow text-center border border-gray-100">
+          <div className="text-sm text-gray-500 mb-1">Total Expired</div>
+          <div className="text-3xl font-bold text-red-600">{totalExpired}</div>
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Line Chart */}
+        <section className="bg-white p-5 rounded-xl shadow border border-gray-100">
+          <h4 className="font-medium text-gray-700 mb-3 text-center">
+            Weekly Registrations Trend
+          </h4>
+          <div className="w-full h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={analyticsData} margin={{ top: 10, right: 30, left: 0, bottom: 40 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis
+                  dataKey="name"
+                  interval={0}
+                  angle={-30}
+                  textAnchor="end"
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="Registered"
+                  stroke="#6366F1"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Verified"
+                  stroke="#10B981"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </section>
 
-        <section className="bg-white p-4 rounded shadow">
-          <h4 className="font-medium mb-2">Expired vs Verified</h4>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={analyticsData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="Verified" fill="#10B981" />
-              <Bar dataKey="Expired" fill="#EF4444" />
-            </BarChart>
-          </ResponsiveContainer>
+        {/* Bar Chart */}
+        <section className="bg-white p-5 rounded-xl shadow border border-gray-100">
+          <h4 className="font-medium text-gray-700 mb-3 text-center">
+            Expired vs Verified (Weekly)
+          </h4>
+          <div className="w-full h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analyticsData} margin={{ top: 10, right: 30, left: 0, bottom: 40 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis
+                  dataKey="name"
+                  interval={0}
+                  angle={-30}
+                  textAnchor="end"
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="Verified" fill="#10B981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Expired" fill="#EF4444" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </section>
       </div>
     </div>
   );
 }
+
+
+
+
+
 
 //--------------------------------------------------------------------
 
 function AdminPage() {
   return (
     <div className="p-6">
-      <h3 className="text-lg font-semibold mb-4">Admin Panel</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">
+        Admin Panel
+      </h3>
+
       <div className="bg-white p-4 rounded shadow">
-        <p className="mb-3">
+        <p className="mb-3 text-gray-600">
           Manage roles, view system logs, and perform recall actions.
         </p>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="p-3 border rounded">Roles Management (placeholder)</div>
-          <div className="p-3 border rounded">Recall Batch (placeholder)</div>
+          <div className="p-3 border rounded text-gray-700 bg-gray-50 hover:bg-gray-100 transition">
+            Roles Management (placeholder)
+          </div>
+          <div className="p-3 border rounded text-gray-700 bg-gray-50 hover:bg-gray-100 transition">
+            Recall Batch (placeholder)
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
 
 
 // ----------------- App wrapper -----------------
