@@ -427,7 +427,7 @@ function PharmacyPage({ batches, onAccept }) {
 
   return (
     <div className="p-6">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">
+      <h3 className="text-lg font-semibold mb-4">
         Received Batches
       </h3>
 
@@ -683,7 +683,7 @@ function AnalyticsPage() {
 function AdminPage() {
   return (
     <div className="p-6">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">
+      <h3 className="text-lg font-semibold mb-4">
         Admin Panel
       </h3>
 
