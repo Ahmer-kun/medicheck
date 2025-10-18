@@ -1,4 +1,4 @@
-// Medicheck Dashboard - Fixed + Improved UI (Dark Mode Ready)
+// Medicheck Dashboard (Dark Mode Ready)
 
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
@@ -83,16 +83,11 @@ const DEFAULT_BATCHES = [
 ];
 
 const analyticsData = [
-  { name: "Week 1", Registered: 10, Verified: 8, Expired: 1 },
-  { name: "Week 2", Registered: 12, Verified: 9, Expired: 1 },
-  { name: "Week 3", Registered: 15, Verified: 13, Expired: 0 },
-  { name: "Week 4", Registered: 18, Verified: 15, Expired: 4 },
-  { name: "Week 5", Registered: 20, Verified: 18, Expired: 1 },
-  { name: "Week 6", Registered: 22, Verified: 19, Expired: 3 },
-  { name: "Week 7", Registered: 25, Verified: 23, Expired: 1 },
-  { name: "Week 8", Registered: 27, Verified: 25, Expired: 2 },
-  { name: "Week 9", Registered: 30, Verified: 28, Expired: 0 },
-  { name: "Week 10", Registered: 32, Verified: 29, Expired: 2 },
+  { name: "Week 1", Registered: 400, Verified: 300, Expired: 50 },
+  { name: "Week 2", Registered: 420, Verified: 350, Expired: 60 },
+  { name: "Week 3", Registered: 380, Verified: 340, Expired: 70 },
+  { name: "Week 4", Registered: 500, Verified: 420, Expired: 80 },
+  { name: "Week 5", Registered: 550, Verified: 470, Expired: 90 },
 ];
 
 
@@ -110,7 +105,7 @@ function NavLinkItem({ to, label, collapsed }) {
     </Link>
   );
 }
-
+  //-----------------SideBar-----------------
 function Sidebar({ collapsed }) {
   return (
     <div
@@ -144,7 +139,7 @@ function Sidebar({ collapsed }) {
     </div>
   );
 }
-
+  //-----------------TopBar-----------------
 function Topbar({ onToggle }) {
   return (
     <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-950 shadow-sm">
@@ -163,7 +158,7 @@ function Topbar({ onToggle }) {
     </div>
   );
 }
-
+//---------------Card-------------------------
 function Card({ title, value }) {
   return (
     <div className="bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-700 flex flex-col">
@@ -422,6 +417,7 @@ function ManufacturerPage({ onRegister }) {
 
 
 
+
 // ----------------- Pharmacy Page ---------------
 function PharmacyPage({ batches, onAccept }) {
   function handleReceive(batchNo) {
@@ -477,6 +473,7 @@ function PharmacyPage({ batches, onAccept }) {
     </div>
   );
 }
+
 
 
 // ---------------------------------------Verify-------------------------
@@ -583,13 +580,10 @@ function VerifyPage({ batches }) {
   );
 }
 
-
-
-
 // ----------------- Analytics Page -----------------
 
 function AnalyticsPage() {
-  // Calculate totals dynamically
+  // Here we Calculate Totals Dynamically
   const totalRegistered = analyticsData.reduce((sum, d) => sum + d.Registered, 0);
   const totalVerified = analyticsData.reduce((sum, d) => sum + d.Verified, 0);
   const totalExpired = analyticsData.reduce((sum, d) => sum + d.Expired, 0);
@@ -618,7 +612,7 @@ function AnalyticsPage() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Line Chart */}
-        <section className="bg-white p-5 rounded-xl shadow border border-gray-100">
+        <section className="bg-white p-4 rounded-xl shadow border border-gray-100">
           <h4 className="font-medium text-gray-700 mb-3 text-center">
             Weekly Registrations Trend
           </h4>
@@ -655,7 +649,7 @@ function AnalyticsPage() {
         </section>
 
         {/* Bar Chart */}
-        <section className="bg-white p-5 rounded-xl shadow border border-gray-100">
+        <section className="bg-white p-4 rounded-xl shadow border border-gray-100">
           <h4 className="font-medium text-gray-700 mb-3 text-center">
             Expired vs Verified (Weekly)
           </h4>
@@ -683,11 +677,6 @@ function AnalyticsPage() {
     </div>
   );
 }
-
-
-
-
-
 
 //--------------------------------------------------------------------
 
@@ -779,56 +768,3 @@ export default function MedicheckDashboard() {
     </Router>
   );
 }
-
-
-
-// //------------------------------------------App-----------------------
-// //------------------------------------------App-----------------------
-// function App() {
-//   const [collapsed, setCollapsed] = useState(false);
-//   const [batches, setBatches] = useState(DEFAULT_BATCHES);
-
-//   const handleRegister = (batch) => setBatches((prev) => [...prev, batch]);
-//   const handleAccept = (batchNo) => console.log("Batch accepted:", batchNo);
-
-//   return (
-//     <Router>
-//       <div className="flex h-screen bg-gray-900 text-gray-100">
-//         <Sidebar collapsed={collapsed} />
-//         <div className="flex-1 flex flex-col">
-//           <Topbar onToggle={() => setCollapsed(!collapsed)} />
-//           <main className="flex-1 overflow-auto">
-//             <Routes>
-//               <Route path="/" element={<DashboardPage batches={batches} />} />
-//               <Route
-//                 path="/manufacturer"
-//                 element={<ManufacturerPage onRegister={handleRegister} />}
-//               />
-//               <Route
-//                 path="/pharmacy"
-//                 element={<PharmacyPage batches={batches} onAccept={handleAccept} />}
-//               />
-//               <Route
-//                 path="/verify"
-//                 element={<VerifyPage batches={batches} />}
-//               />
-
-//             <Route
-//                 path="/analytics"
-//                 element={<AnalyticsPage batches={batches} />}
-//               />
-
-//             <Route
-//                 path="/admin"
-//                 element={<AdminPage batches={batches} />}
-//               />
-//             </Routes>
-            
-//           </main>
-//         </div>
-//       </div>
-//     </Router>
-//   );
-// }
-
-// export default App;
