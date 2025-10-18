@@ -29,7 +29,7 @@ const DEFAULT_BATCHES = [
   {
     batchNo: "TLD-2025-010",
     name: "Telday 40mg",
-    expiry: "2026-07-10",
+    expiry: "2025-07-10",
     formulation: "Telmisartan 40mg tablet",
   },
   {
@@ -41,44 +41,44 @@ const DEFAULT_BATCHES = [
   {
     batchNo: "AMX-2025-004",
     name: "Amoxicillin 500mg",
-    expiry: "2026-08-15",
+    expiry: "2025-08-15",
     formulation: "Amoxicillin trihydrate capsule",
   },
   {
     batchNo: "AZT-2025-005",
     name: "Azithro 250mg",
-    expiry: "2026-09-20",
+    expiry: "2024-11-20",
     formulation: "Azithromycin 250mg tablet",
   },
   {
-    batchNo: "PARA-2025-006",
-    name: "Paracet 500mg",
-    expiry: "2026-12-31",
-    formulation: "Paracetamol 500mg tablet",
+    batchNo: "CIP-2025-006",
+    name: "Ciproflox 500mg",
+    expiry: "2025-12-10",
+    formulation: "Ciprofloxacin 500mg tablet",
   },
   {
-    batchNo: "IBU-2025-007",
-    name: "Ibufen 400mg",
-    expiry: "2026-11-10",
-    formulation: "Ibuprofen 400mg tablet",
-  },
-  {
-    batchNo: "MET-2025-008",
-    name: "Metformin 850mg",
-    expiry: "2026-10-25",
+    batchNo: "MET-2025-007",
+    name: "Metformin 500mg",
+    expiry: "2025-10-30",
     formulation: "Metformin hydrochloride tablet",
   },
   {
-    batchNo: "LOR-2025-009",
-    name: "Loramed 1mg",
-    expiry: "2026-09-15",
-    formulation: "Lorazepam 1mg tablet",
+    batchNo: "PARA-2025-008",
+    name: "Paracetamol 500mg",
+    expiry: "2025-06-12",
+    formulation: "Acetaminophen tablet",
   },
   {
-    batchNo: "OMZ-2025-010",
-    name: "Omze 20mg",
-    expiry: "2026-08-05",
-    formulation: "Omeprazole 20mg capsule",
+    batchNo: "VITC-2025-009",
+    name: "Ascoril C",
+    expiry: "2026-02-01",
+    formulation: "Vitamin C chewable tablet",
+  },
+  {
+    batchNo: "IBU-2025-010",
+    name: "Ibugesic Plus",
+    expiry: "2024-12-05",
+    formulation: "Ibuprofen + Paracetamol tablet",
   },
 ];
 
@@ -170,16 +170,21 @@ function Card({ title, value }) {
 
 // ----------------- Pages -----------------
 
-
-
 //            -----------------DASHBOARD---------------
 function DashboardPage({ batches }) {
   return (
     <div className="p-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card title="Total Batches" value={batches.length} />
-        <Card title="Verified Today" value="34" />
-        <Card title="Expired" value="6" />
+        
+        {/* Verified Today */}
+        <Card title="Verified Today" value={batches.filter(b => {
+          const today = new Date().toISOString().slice(0, 10);
+          return b.verifiedDate === today;
+          }).length} />
+        
+        {/* Expired */}
+        <Card title="Expired" value={batches.filter(b => new Date(b.expiry) < new Date()).length}/>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -227,17 +232,48 @@ function DashboardPage({ batches }) {
                 <th className="py-2">Status</th>
               </tr>
             </thead>
-            <tbody>
-              {batches.map((b) => (
-                <tr key={b.batchNo} className="border-b border-gray-700 hover:bg-gray-700/40">
-                  <td className="py-2">{b.batchNo}</td>
-                  <td className="py-2">{b.name}</td>
-                  <td className="py-2">{b.expiry}</td>
-                  <td className="py-2">{b.formulation}</td>
-                  <td className="py-2 text-green-400 font-medium">At Pharmacy</td>
-                </tr>
-              ))}
-            </tbody>
+            {/* <tbody>
+  {batches.map((b) => {
+    let statusColor = "text-gray-400";
+    if (b.status === "At Pharmacy") statusColor = "text-green-400";
+    else if (b.status === "Expired") statusColor = "text-red-400";
+    return (
+      <tr
+        key={b.batchNo}
+        className="border-b border-gray-700 hover:bg-gray-700/40"
+      >
+        <td className="py-2">{b.batchNo}</td>
+        <td className="py-2">{b.name}</td>
+        <td className="py-2">{b.expiry}</td>
+        <td className="py-2">{b.formulation}</td>
+        <td className={`py-2 font-medium ${statusColor}`}>{b.status}</td>
+      </tr>
+    );
+  })}
+  
+</tbody> */}
+        <tbody>
+  {batches.map((b) => {
+    // Auto-determine status based on expiry date
+    const isExpired = new Date(b.expiry) < new Date();
+    const status = isExpired ? "Expired" : "At Pharmacy";
+    const statusColor = isExpired ? "text-red-400" : "text-green-400";
+
+    return (
+      <tr
+        key={b.batchNo}
+        className="border-b border-gray-700 hover:bg-gray-700/40"
+      >
+        <td className="py-2">{b.batchNo}</td>
+        <td className="py-2">{b.name}</td>
+        <td className="py-2">{b.expiry}</td>
+        <td className="py-2">{b.formulation}</td>
+        <td className={`py-2 font-medium ${statusColor}`}>{status}</td>
+      </tr>
+    );
+  })}
+        </tbody>
+
           </table>
         </div>
       </section>
@@ -478,42 +514,122 @@ function PharmacyPage({ batches, onAccept }) {
 
 // ---------------------------------------Verify-------------------------
 
+
+
 function VerifyPage({ batches }) {
   const [input, setInput] = useState("");
   const [result, setResult] = useState(null);
 
   useEffect(() => setResult(null), [batches]);
 
+  // function handleVerify(e) {
+  //   e.preventDefault();
+  //   const query = input.trim();
+  //   if (!query) {
+  //     setResult({
+  //       authentic: false,
+  //       message: "Please enter a batch number or scan a QR.",
+  //     });
+  //     return;
+  //   }
+
+  //   const found = batches.find(
+  //     (s) => String(s.batchNo).toLowerCase() === query.toLowerCase()
+  //   );
+
+  //   if (found) {
+  //     setResult({
+  //       authentic: true,
+  //       batchNo: found.batchNo,
+  //       name: found.name,
+  //       formulation: found.formulation,
+  //       expiry: found.expiry,
+  //     });
+  //   } else {
+  //     setResult({
+  //       authentic: false,
+  //       message: "Batch not found on blockchain (mock).",
+  //     });
+  //   }
+  // }
+
+
   function handleVerify(e) {
-    e.preventDefault();
-    const query = input.trim();
-    if (!query) {
-      setResult({
-        authentic: false,
-        message: "Please enter a batch number or scan a QR.",
-      });
-      return;
-    }
+  e.preventDefault();
+  const query = input.trim();
 
-    const found = batches.find(
-      (s) => String(s.batchNo).toLowerCase() === query.toLowerCase()
-    );
-
-    if (found) {
-      setResult({
-        authentic: true,
-        batchNo: found.batchNo,
-        name: found.name,
-        formulation: found.formulation,
-        expiry: found.expiry,
-      });
-    } else {
-      setResult({
-        authentic: false,
-        message: "Batch not found on blockchain (mock).",
-      });
-    }
+  if (!query) {
+    setResult({
+      authentic: false,
+      message: "Please enter a batch number or scan a QR.",
+    });
+    return;
   }
+
+  const found = batches.find(
+    (s) => String(s.batchNo).toLowerCase() === query.toLowerCase()
+  );
+
+  if (!found) {
+    setResult({
+      authentic: false,
+      message: "Batch not found on blockchain (mock).",
+    });
+    return;
+  }
+
+  // Parse expiry date and check if expired
+  const today = new Date();
+  const expiryDate = new Date(found.expiry);
+
+  if (expiryDate < today) {
+    setResult({
+      authentic: false,
+      message: "This batch is expired. Do not use this medicine.",
+      batchNo: found.batchNo,
+      name: found.name,
+      formulation: found.formulation,
+      expiry: found.expiry,
+    });
+    return;
+  }
+
+  // Check for recall or pending verification
+  if (found.status === "Recalled") {
+    setResult({
+      authentic: false,
+      message: "This batch has been recalled due to safety concerns.",
+      batchNo: found.batchNo,
+      name: found.name,
+      formulation: found.formulation,
+      expiry: found.expiry,
+    });
+    return;
+  }
+
+  if (found.status === "Pending Verification") {
+    setResult({
+      authentic: false,
+      message: "This batch is pending verification. Not yet approved.",
+      batchNo: found.batchNo,
+      name: found.name,
+      formulation: found.formulation,
+      expiry: found.expiry,
+    });
+    return;
+  }
+
+  // Passed all checks
+  setResult({
+    authentic: true,
+    message: "This medicine is authentic and safe to use.",
+    batchNo: found.batchNo,
+    name: found.name,
+    formulation: found.formulation,
+    expiry: found.expiry,
+  });
+}
+
 
   return (
     <div className="p-6">
@@ -680,31 +796,178 @@ function AnalyticsPage() {
 
 //--------------------------------------------------------------------
 
+// function AdminPage() {
+//   return (
+//     <div className="p-6">
+//       <h3 className="text-lg font-semibold mb-4">
+//         Admin Panel
+//       </h3>
+
+//       <div className="bg-white p-4 rounded shadow">
+//         <p className="mb-3 text-gray-600">
+//           Manage roles, view system logs, and perform recall actions.
+//         </p>
+
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+//           <div className="p-3 border rounded text-gray-700 bg-gray-50 hover:bg-gray-100 transition">
+//             Roles Management (placeholder)
+//           </div>
+//           <div className="p-3 border rounded text-gray-700 bg-gray-50 hover:bg-gray-100 transition">
+//             Recall Batch (placeholder)
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+//-------------------------ADMIN PAGE-------------------------------
+
 function AdminPage() {
+  const [users, setUsers] = useState([
+    { id: 1, username: "admin", role: "Administrator" },
+    { id: 2, username: "pharma01", role: "Pharmacist" },
+    { id: 3, username: "qc_officer", role: "Quality Control" },
+  ]);
+
+  const [recallList, setRecallList] = useState([
+    { id: 1, batchNo: "BCH102", reason: "Defective packaging", date: "2025-10-17" },
+    { id: 2, batchNo: "BCH099", reason: "Expired medicine", date: "2025-10-14" },
+  ]);
+
+  const [logs, setLogs] = useState([
+    { id: 1, message: "User pharma01 Verified 10 medicines", time: "10:05 AM" },
+    { id: 2, message: "Batch BCH099 marked as Expired", time: "09:40 AM" },
+    { id: 3, message: "Admin added new batch BCH120", time: "09:15 AM" },
+  ]);
+
+  const handleRecallRemove = (id) => {
+    setRecallList(recallList.filter((r) => r.id !== id));
+    setLogs([
+      ...logs,
+      {
+        id: Date.now(),
+        message: `Batch ${id} recall entry removed`,
+        time: new Date().toLocaleTimeString(),
+      },
+    ]);
+  };
+
+  const handleRoleChange = (id, newRole) => {
+    const updated = users.map((u) =>
+      u.id === id ? { ...u, role: newRole } : u
+    );
+    setUsers(updated);
+    setLogs([
+      ...logs,
+      {
+        id: Date.now(),
+        message: `User ${id} role updated to ${newRole}`,
+        time: new Date().toLocaleTimeString(),
+      },
+    ]);
+  };
+
   return (
-    <div className="p-6">
-      <h3 className="text-lg font-semibold mb-4">
-        Admin Panel
-      </h3>
+    <div className="p-6 text-gray-200">
+      <h2 className="text-2xl font-semibold mb-4">Admin Panel</h2>
 
-      <div className="bg-white p-4 rounded shadow">
-        <p className="mb-3 text-gray-600">
-          Manage roles, view system logs, and perform recall actions.
-        </p>
+      {/* Section 1 — Role Management */}
+      <section className="bg-gray-800 p-4 rounded-xl mb-6 border border-gray-700">
+        <h3 className="text-lg font-semibold mb-3 text-gray-300">User Role Management</h3>
+        <table className="min-w-full text-sm text-gray-300">
+          <thead>
+            <tr className="border-b border-gray-700 text-gray-400">
+              <th className="py-2 text-left">Username</th>
+              <th className="py-2 text-left">Current Role</th>
+              <th className="py-2 text-left">Change Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((u) => (
+              <tr
+                key={u.id}
+                className="border-b border-gray-700 hover:bg-gray-700/40 transition"
+              >
+                <td className="py-2">{u.username}</td>
+                <td className="py-2 text-blue-400">{u.role}</td>
+                <td className="py-2">
+                  <select
+                    value={u.role}
+                    onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                    className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-gray-200"
+                  >
+                    <option>Administrator</option>
+                    <option>Pharmacist</option>
+                    <option>Quality Control</option>
+                    <option>Viewer</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="p-3 border rounded text-gray-700 bg-gray-50 hover:bg-gray-100 transition">
-            Roles Management (placeholder)
-          </div>
-          <div className="p-3 border rounded text-gray-700 bg-gray-50 hover:bg-gray-100 transition">
-            Recall Batch (placeholder)
-          </div>
+      {/* Section 2 — Recall Management */}
+      <section className="bg-gray-800 p-4 rounded-xl mb-6 border border-gray-700">
+        <h3 className="text-lg font-semibold mb-3 text-gray-300">Recall Management</h3>
+        {recallList.length === 0 ? (
+          <p className="text-gray-400 italic">No recalls pending.</p>
+        ) : (
+          <table className="min-w-full text-sm text-gray-300">
+            <thead>
+              <tr className="border-b border-gray-700 text-gray-400">
+                <th className="py-2 text-left">Batch No</th>
+                <th className="py-2 text-left">Reason</th>
+                <th className="py-2 text-left">Date</th>
+                <th className="py-2 text-left">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recallList.map((r) => (
+                <tr
+                  key={r.id}
+                  className="border-b border-gray-700 hover:bg-gray-700/40 transition"
+                >
+                  <td className="py-2">{r.batchNo}</td>
+                  <td className="py-2">{r.reason}</td>
+                  <td className="py-2">{r.date}</td>
+                  <td className="py-2">
+                    <button
+                      onClick={() => handleRecallRemove(r.id)}
+                      className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm"
+                    >
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      {/* Section 3 — System Logs */}
+      <section className="bg-gray-800 p-4 rounded-xl border border-gray-700">
+        <h3 className="text-lg font-semibold mb-3 text-gray-300">System Activity Logs</h3>
+        <div className="max-h-60 overflow-y-auto space-y-2">
+          {logs.map((log) => (
+            <div
+              key={log.id}
+              className="p-2 border border-gray-700 rounded bg-gray-900/50 flex justify-between"
+            >
+              <span>{log.message}</span>
+              <span className="text-gray-500 text-xs">{log.time}</span>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
-
 
 
 // ----------------- App wrapper -----------------
