@@ -330,3 +330,62 @@ function PharmacyPage({ batches, onAccept }) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+THIS IS FOR PACKAGE.JSON BACKEND
+
+
+
+
+{
+  "name": "medicheck-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
+
+
+
+
+
+
+//POSTMAN
+
+{
+  "batchNo": "TEST-001",
+  "name": "Sample Drug",
+  "manufactureDate": "2025-01-01",
+  "expiry": "2026-01-01",
+  "formulation": "Tablet",
+  "manufacturer": "Test Pharma",
+  "pharmacy": "Test Pharmacy",
+  "quantity": 1000,
+  "status": "active",
+  "blockchainVerified": true
+}
