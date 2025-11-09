@@ -1,25 +1,25 @@
-const Joi = require('joi');
+import Joi from "joi";
 
-const batchValidation = {
+export const batchValidation = {
   createBatch: Joi.object({
     batchNo: Joi.string().required(),
     name: Joi.string().required(),
     medicineName: Joi.string().required(),
     formulation: Joi.string().required(),
     manufactureDate: Joi.date().required(),
-    expiryDate: Joi.date().required().greater(Joi.ref('manufactureDate')),
-    quantity: Joi.number().required().min(1)
-  })
+    expiryDate: Joi.date().required().greater(Joi.ref("manufactureDate")),
+    quantity: Joi.number().required().min(1),
+  }),
 };
 
-const authValidation = {
+export const authValidation = {
   login: Joi.object({
     username: Joi.string().required(),
-    password: Joi.string().required().min(6)
-  })
+    password: Joi.string().required().min(6),
+  }),
 };
 
-const validate = (schema) => {
+export const validate = (schema) => {
   return (req, res, next) => {
     const { error } = schema.validate(req.body);
     if (error) {
@@ -27,10 +27,4 @@ const validate = (schema) => {
     }
     next();
   };
-};
-
-module.exports = {
-  batchValidation,
-  authValidation,
-  validate
 };

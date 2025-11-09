@@ -1,259 +1,943 @@
-const Batch = require('../models/Batch');
-const User = require('../models/User');
+import Batch from "../models/Batch.js";
+import PharmacyMedicine from "../models/PharmacyMedicine.js";
 
-// Initialize default batches
-const initializeDefaultBatches = async () => {
-  const defaultBatches = [
-    {
-      batchNo: "PANT-2025-001",
-      name: "Pantra 40mg",
-      medicineName: "Pantra 40mg",
-      formulation: "Pantoprazole 40mg tablet",
-      manufacturer: "Sun Pharma",
-      pharmacy: "MediCare Pharmacy",
-      manufactureDate: new Date("2025-01-15"),
-      expiryDate: new Date("2026-06-30"),
-      quantity: 1000,
-      status: "active",
-      blockchainVerified: true,
-      blockchainTxHash: "0x1a2b3c4d5e6f7890"
-    },
-    {
-      batchNo: "TLD-2025-010",
-      name: "Telday 40mg",
-      medicineName: "Telday 40mg",
-      formulation: "Telmisartan 40mg tablet",
-      manufacturer: "Cipla Ltd",
-      pharmacy: "Apollo Pharmacy",
-      manufactureDate: new Date("2024-12-10"),
-      expiryDate: new Date("2025-07-10"),
-      quantity: 800,
-      status: "active",
-      blockchainVerified: true,
-      blockchainTxHash: "0x2b3c4d5e6f7890a1"
-    },
-    {
-      batchNo: "CFG-2025-003",
-      name: "Cefiget 200mg",
-      medicineName: "Cefiget 200mg",
-      formulation: "Cefixime 200mg capsule",
-      manufacturer: "Dr. Reddy's",
-      pharmacy: "Wellness Forever",
-      manufactureDate: new Date("2026-01-05"),
-      expiryDate: new Date("2026-05-20"),
-      quantity: 1200,
-      status: "active",
-      blockchainVerified: true,
-      blockchainTxHash: "0x3c4d5e6f7890a1b2"
+const dummyBatches = [
+  {
+    batchNo: "B001",
+    name: "Paracetamol 500mg",
+    medicineName: "Paracetamol",
+    manufactureDate: "2024-01-15",
+    expiry: "2025-12-31",
+    formulation: "Tablet",
+    manufacturer: "MediLife Labs",
+    pharmacy: "Medico Plus",
+    quantity: 1500,
+    status: "active",
+    blockchainVerified: true
+  },
+  {
+    batchNo: "B002",
+    name: "Amoxicillin 250mg",
+    medicineName: "Amoxicillin",
+    manufactureDate: "2024-02-01",
+    expiry: "2026-03-15",
+    formulation: "Capsule",
+    manufacturer: "BioHeal Pharma",
+    pharmacy: "HealthFirst",
+    quantity: 2000,
+    status: "active",
+    blockchainVerified: true
+  },
+  {
+    batchNo: "B003",
+    name: "Ibuprofen 400mg",
+    medicineName: "Ibuprofen",
+    manufactureDate: "2024-01-20",
+    expiry: "2025-11-30",
+    formulation: "Tablet",
+    manufacturer: "PharmaCare Solutions",
+    pharmacy: "Curex Pharma",
+    quantity: 800,
+    status: "active",
+    blockchainVerified: true
+  }
+];
+
+/* --------------------------------------------
+   🧪 Verify Batch by Batch No (Check Both Collections)
+-------------------------------------------- */
+export const verifyBatch = async (req, res) => {
+  try {
+    const { batchNo } = req.params;
+    
+    console.log("🔍 Verifying batch:", batchNo);
+
+    // Check in main Batch collection first
+    let batch = await Batch.findOne({ batchNo });
+    let source = 'batch';
+
+    // If not found in Batch collection, check PharmacyMedicine collection
+    if (!batch) {
+      batch = await PharmacyMedicine.findOne({ batchNo });
+      source = 'pharmacy';
     }
-  ];
 
-  for (const batchData of defaultBatches) {
-    const existingBatch = await Batch.findOne({ batchNo: batchData.batchNo });
-    if (!existingBatch) {
-      // Find a manufacturer user to assign using User model directly
-      const manufacturerUser = await User.findOne({ role: 'manufacturer' });
-      if (manufacturerUser) {
-        batchData.manufacturerId = manufacturerUser._id;
+    if (!batch) {
+      // Check in dummy data as fallback
+      const dummy = dummyBatches.find((b) => b.batchNo === batchNo);
+      if (dummy) {
+        const today = new Date();
+        const expiryDate = new Date(dummy.expiry);
+        const isExpired = expiryDate < today;
+        
+        return res.json({ 
+          ...dummy, 
+          verified: true,
+          exists: true,
+          authentic: !isExpired,
+          message: isExpired ? 
+            "❌ This batch is expired. Do not use this medicine." : 
+            "✅ This medicine is authentic and safe to use.",
+          source: 'dummy',
+          status: isExpired ? 'Expired' : 'Active'
+        });
       }
-      await Batch.create(batchData);
-      console.log(`Created default batch: ${batchData.batchNo}`);
-    }
-  }
-};
-
-exports.getAllBatches = async (req, res) => {
-  try {
-    const { search, status, page = 1, limit = 10 } = req.query;
-    
-    let query = {};
-    
-    // Search functionality
-    if (search) {
-      query.$or = [
-        { batchNo: { $regex: search, $options: 'i' } },
-        { name: { $regex: search, $options: 'i' } },
-        { medicineName: { $regex: search, $options: 'i' } }
-      ];
-    }
-    
-    // Status filter
-    if (status && status !== 'all') {
-      query.status = status;
-    }
-    
-    // Role-based filtering
-    if (req.user.role === 'manufacturer') {
-      query.manufacturerId = req.user._id;
-    } else if (req.user.role === 'pharmacy') {
-      query.pharmacyId = req.user._id;
-    }
-
-    const batches = await Batch.find(query)
-      .sort({ createdAt: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .populate('manufacturerId', 'name')
-      .populate('pharmacyId', 'name');
-
-    const total = await Batch.countDocuments(query);
-
-    res.json({
-      success: true,
-      batches,
-      total,
-      page: parseInt(page),
-      pages: Math.ceil(total / limit)
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching batches', error: error.message });
-  }
-};
-
-exports.getBatch = async (req, res) => {
-  try {
-    const batch = await Batch.findOne({ batchNo: req.params.batchNo })
-      .populate('manufacturerId', 'name')
-      .populate('pharmacyId', 'name');
-
-    if (!batch) {
-      return res.status(404).json({ message: 'Batch not found' });
-    }
-
-    res.json({
-      success: true,
-      batch
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching batch', error: error.message });
-  }
-};
-
-exports.createBatch = async (req, res) => {
-  try {
-    const batchData = {
-      ...req.body,
-      manufacturerId: req.user._id,
-      manufacturer: req.user.name
-    };
-
-    // Check if batch number exists
-    const existingBatch = await Batch.findOne({ batchNo: batchData.batchNo });
-    if (existingBatch) {
-      return res.status(400).json({ message: 'Batch number already exists' });
-    }
-
-    // Simulate blockchain registration
-    batchData.blockchainVerified = true;
-    batchData.blockchainTxHash = `0x${Math.random().toString(16).slice(2)}${Date.now().toString(16)}`;
-
-    const batch = await Batch.create(batchData);
-
-    res.status(201).json({
-      success: true,
-      message: 'Batch created and registered on blockchain',
-      batch
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Error creating batch', error: error.message });
-  }
-};
-
-exports.updateBatch = async (req, res) => {
-  try {
-    const batch = await Batch.findOne({ batchNo: req.params.batchNo });
-
-    if (!batch) {
-      return res.status(404).json({ message: 'Batch not found' });
-    }
-
-    // Authorization check
-    if (req.user.role === 'manufacturer' && !batch.manufacturerId.equals(req.user._id)) {
-      return res.status(403).json({ message: 'Not authorized to update this batch' });
-    }
-
-    const updatedBatch = await Batch.findOneAndUpdate(
-      { batchNo: req.params.batchNo },
-      req.body,
-      { new: true, runValidators: true }
-    ).populate('manufacturerId', 'name')
-     .populate('pharmacyId', 'name');
-
-    res.json({
-      success: true,
-      message: 'Batch updated successfully',
-      batch: updatedBatch
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating batch', error: error.message });
-  }
-};
-
-exports.acceptBatch = async (req, res) => {
-  try {
-    const batch = await Batch.findOne({ batchNo: req.params.batchNo });
-
-    if (!batch) {
-      return res.status(404).json({ message: 'Batch not found' });
-    }
-
-    // Update pharmacy information
-    batch.pharmacy = req.user.name;
-    batch.pharmacyId = req.user._id;
-    batch.status = 'active';
-
-    await batch.save();
-
-    res.json({
-      success: true,
-      message: 'Batch accepted successfully',
-      batch
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Error accepting batch', error: error.message });
-  }
-};
-
-exports.verifyBatch = async (req, res) => {
-  try {
-    const batch = await Batch.findOne({ batchNo: req.params.batchNo });
-
-    if (!batch) {
       return res.status(404).json({ 
-        success: false,
-        message: 'Batch not found' 
+        exists: false,
+        message: "❌ Batch not found in system" 
       });
     }
 
-    const isExpired = batch.expiryDate < new Date();
-    const isVerified = batch.blockchainVerified;
+    // Convert to plain object and add verification info
+    const batchData = batch.toObject ? batch.toObject() : batch;
+    
+    const today = new Date();
+    const expiryDate = new Date(batchData.expiryDate || batchData.expiry);
+    const isExpired = expiryDate < today;
 
-    res.json({
-      success: true,
-      authentic: !isExpired && isVerified,
+    const response = {
+      exists: true,
+      verified: true,
+      authentic: !isExpired,
       message: isExpired ? 
-        '❌ This batch is expired. Do not use this medicine.' : 
-        '✅ This medicine is authentic and safe to use.',
-      batch: {
-        batchNo: batch.batchNo,
-        name: batch.name,
-        formulation: batch.formulation,
-        expiry: batch.expiryDate,
-        manufacturer: batch.manufacturer,
-        pharmacy: batch.pharmacy,
-        status: batch.status,
-        blockchainVerified: batch.blockchainVerified,
-        blockchainTxHash: batch.blockchainTxHash
-      },
-      isExpired
-    });
+        "❌ This batch is expired. Do not use this medicine." : 
+        "✅ This medicine is authentic and safe to use.",
+      batchNo: batchData.batchNo,
+      name: batchData.name,
+      medicineName: batchData.medicineName || batchData.name,
+      formulation: batchData.formulation,
+      expiry: batchData.expiryDate || batchData.expiry,
+      manufacturer: batchData.manufacturer,
+      pharmacy: batchData.pharmacy,
+      status: isExpired ? 'Expired' : (batchData.status || 'Active'),
+      source: source,
+      blockchainVerified: batchData.blockchainVerified || false
+    };
+
+    // Add transaction hash if blockchain verified
+    if (batchData.blockchainVerified) {
+      response.transaction = `0x${Math.random().toString(16).slice(2)}`;
+    }
+
+    console.log("✅ Verification successful for:", batchNo);
+    res.json(response);
   } catch (error) {
+    console.error("❌ Error verifying batch:", error.message);
     res.status(500).json({ 
-      success: false,
-      message: 'Error verifying batch', 
+      exists: false,
+      message: "Error verifying batch", 
       error: error.message 
     });
   }
 };
 
-exports.initializeBatches = initializeDefaultBatches;
+/* --------------------------------------------
+   📦 Get All Batches (Combine Both Collections)
+-------------------------------------------- */
+export const getAllBatches = async (req, res) => {
+  try {
+    const [batches, pharmacyMedicines] = await Promise.all([
+      Batch.find().sort({ createdAt: -1 }),
+      PharmacyMedicine.find().sort({ createdAt: -1 })
+    ]);
+
+    console.log(`📊 Found ${batches.length} batches and ${pharmacyMedicines.length} pharmacy medicines`);
+
+    // Combine both collections for a unified view
+    const allBatches = [
+      ...batches.map(b => ({
+        ...b.toObject(),
+        source: 'batch',
+        expiry: b.expiry // Use expiry for consistency
+      })),
+      ...pharmacyMedicines.map(pm => ({
+        ...pm.toObject(),
+        source: 'pharmacy',
+        expiry: pm.expiryDate // Map expiryDate to expiry for consistency
+      }))
+    ];
+
+    if (allBatches.length === 0) {
+      console.log("⚠️ No batches found in DB — returning dummy data");
+      return res.json(dummyBatches.map(b => ({...b, source: 'dummy'})));
+    }
+
+    // Sort by creation date (newest first)
+    allBatches.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json(allBatches);
+  } catch (error) {
+    console.error("❌ Error fetching batches:", error.message);
+    res.status(500).json({ message: "Error fetching batches", error: error.message });
+  }
+};
+
+/* --------------------------------------------
+   📦 Get Single Batch by Batch No
+-------------------------------------------- */
+export const getBatch = async (req, res) => {
+  try {
+    const { batchNo } = req.params;
+    const batch = await Batch.findOne({ batchNo });
+
+    if (!batch) {
+      const dummy = dummyBatches.find((b) => b.batchNo === batchNo);
+      if (dummy) return res.json(dummy);
+      return res.status(404).json({ message: "Batch not found" });
+    }
+
+    res.json(batch);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching batch", error: error.message });
+  }
+};
+
+/* --------------------------------------------
+   ➕ Create New Batch
+-------------------------------------------- */
+export const createBatch = async (req, res) => {
+  try {
+    const newBatch = new Batch(req.body);
+    await newBatch.save();
+    console.log("✅ New batch saved:", newBatch.batchNo);
+    res.status(201).json(newBatch);
+  } catch (error) {
+    console.error("❌ Error creating batch:", error.message);
+    res.status(500).json({ message: "Error creating batch", error: error.message });
+  }
+};
+
+/* --------------------------------------------
+   ✏️ Update Batch
+-------------------------------------------- */
+export const updateBatch = async (req, res) => {
+  try {
+    const { batchNo } = req.params;
+    const updated = await Batch.findOneAndUpdate({ batchNo }, req.body, { new: true });
+
+    if (!updated) {
+      return res.status(404).json({ message: "Batch not found" });
+    }
+
+    console.log("✅ Batch updated:", batchNo);
+    res.json(updated);
+  } catch (error) {
+    console.error("❌ Error updating batch:", error.message);
+    res.status(500).json({ message: "Error updating batch", error: error.message });
+  }
+};
+
+/* --------------------------------------------
+   ✅ Accept Batch (Pharmacy)
+-------------------------------------------- */
+export const acceptBatch = async (req, res) => {
+  try {
+    const { batchNo } = req.params;
+    const batch = await Batch.findOne({ batchNo });
+
+    if (!batch) {
+      return res.status(404).json({ message: "Batch not found" });
+    }
+
+    batch.status = "accepted";
+    await batch.save();
+
+    console.log("✅ Batch accepted:", batchNo);
+    res.json(batch);
+  } catch (error) {
+    console.error("❌ Error accepting batch:", error.message);
+    res.status(500).json({ message: "Error accepting batch", error: error.message });
+  }
+};
+
+/* --------------------------------------------
+   🧰 Initialize Dummy Data (DEV ONLY)
+-------------------------------------------- */
+export const initializeBatches = async () => {
+  try {
+    const count = await Batch.countDocuments();
+    if (count === 0) {
+      await Batch.insertMany(dummyBatches);
+      console.log("🌱 Dummy batches inserted into MongoDB.");
+    } else {
+      console.log("ℹ️ MongoDB already has batches — skipping init.");
+    }
+  } catch (error) {
+    console.error("❌ Error initializing dummy batches:", error.message);
+  }
+};
+
+
+//        collab getting...verifybatch error
+
+
+// import Batch from "../models/Batch.js";
+// import PharmacyMedicine from "../models/PharmacyMedicine.js";
+
+// /* ... (keep existing dummyBatches array) ... */
+
+
+// const dummyBatches = [
+//   {
+//     batchNo: "B001",
+//     name: "Paracetamol 500mg",
+//     medicineName: "Paracetamol",
+//     manufactureDate: "2024-01-15",
+//     expiry: "2025-12-31",
+//     formulation: "Tablet",
+//     manufacturer: "MediLife Labs",
+//     pharmacy: "Medico Plus",
+//     quantity: 1500,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B002",
+//     name: "Amoxicillin 250mg",
+//     medicineName: "Amoxicillin",
+//     manufactureDate: "2024-02-01",
+//     expiry: "2026-03-15",
+//     formulation: "Capsule",
+//     manufacturer: "BioHeal Pharma",
+//     pharmacy: "HealthFirst",
+//     quantity: 2000,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B003",
+//     name: "Ibuprofen 400mg",
+//     medicineName: "Ibuprofen",
+//     manufactureDate: "2024-01-20",
+//     expiry: "2025-11-30",
+//     formulation: "Tablet",
+//     manufacturer: "PharmaCare Solutions",
+//     pharmacy: "Curex Pharma",
+//     quantity: 800,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B004",
+//     name: "Vitamin C 1000mg",
+//     medicineName: "Vitamin C",
+//     manufactureDate: "2024-03-10",
+//     expiry: "2026-03-10",
+//     formulation: "Chewable Tablet",
+//     manufacturer: "NutraLife Labs",
+//     pharmacy: "Medico Plus",
+//     quantity: 3000,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B005",
+//     name: "Aspirin 75mg",
+//     medicineName: "Aspirin",
+//     manufactureDate: "2024-02-15",
+//     expiry: "2025-08-15",
+//     formulation: "Tablet",
+//     manufacturer: "CardioCare Pharma",
+//     pharmacy: "HealthFirst",
+//     quantity: 2500,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B006",
+//     name: "Omeprazole 20mg",
+//     medicineName: "Omeprazole",
+//     manufactureDate: "2024-01-30",
+//     expiry: "2026-01-30",
+//     formulation: "Capsule",
+//     manufacturer: "GastroHealth Inc",
+//     pharmacy: "Curex Pharma",
+//     quantity: 1200,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B007",
+//     name: "Metformin 500mg",
+//     medicineName: "Metformin",
+//     manufactureDate: "2024-02-28",
+//     expiry: "2025-12-31",
+//     formulation: "Tablet",
+//     manufacturer: "DiabetoCare",
+//     pharmacy: "Medico Plus",
+//     quantity: 1800,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B008",
+//     name: "Atorvastatin 20mg",
+//     medicineName: "Atorvastatin",
+//     manufactureDate: "2024-03-05",
+//     expiry: "2026-06-15",
+//     formulation: "Tablet",
+//     manufacturer: "CholestoFix Pharma",
+//     pharmacy: "HealthFirst",
+//     quantity: 900,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B009",
+//     name: "Cetirizine 10mg",
+//     medicineName: "Cetirizine",
+//     manufactureDate: "2024-01-25",
+//     expiry: "2025-10-20",
+//     formulation: "Tablet",
+//     manufacturer: "AllergyFree Corp",
+//     pharmacy: "Curex Pharma",
+//     quantity: 2200,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B010",
+//     name: "Levothyroxine 50mcg",
+//     medicineName: "Levothyroxine",
+//     manufactureDate: "2024-02-10",
+//     expiry: "2026-02-10",
+//     formulation: "Tablet",
+//     manufacturer: "ThyroCare Solutions",
+//     pharmacy: "Medico Plus",
+//     quantity: 750,
+//     status: "active",
+//     blockchainVerified: true
+//   }
+
+// ]
+
+// /* --------------------------------------------
+//    🧪 Verify Batch by Batch No (Check Both Collections)
+// -------------------------------------------- */
+// export const verifyBatch = async (req, res) => {
+//   try {
+//     const { batchNo } = req.params;
+    
+//     console.log("🔍 Verifying batch:", batchNo);
+
+//     // Check in main Batch collection first
+//     let batch = await Batch.findOne({ batchNo });
+//     let source = 'batch';
+
+//     // If not found in Batch collection, check PharmacyMedicine collection
+//     if (!batch) {
+//       batch = await PharmacyMedicine.findOne({ batchNo });
+//       source = 'pharmacy';
+//     }
+
+//     if (!batch) {
+//       // Check in dummy data as fallback
+//       const dummy = dummyBatches.find((b) => b.batchNo === batchNo);
+//       if (dummy) {
+//         const today = new Date();
+//         const expiryDate = new Date(dummy.expiry);
+//         const isExpired = expiryDate < today;
+        
+//         return res.json({ 
+//           ...dummy, 
+//           verified: true,
+//           exists: true,
+//           authentic: !isExpired,
+//           message: isExpired ? 
+//             "❌ This batch is expired. Do not use this medicine." : 
+//             "✅ This medicine is authentic and safe to use.",
+//           source: 'dummy',
+//           status: isExpired ? 'Expired' : 'Active'
+//         });
+//       }
+//       return res.status(404).json({ 
+//         exists: false,
+//         message: "❌ Batch not found in system" 
+//       });
+//     }
+
+//     // Convert to plain object and add verification info
+//     const batchData = batch.toObject ? batch.toObject() : batch;
+    
+//     const today = new Date();
+//     const expiryDate = new Date(batchData.expiryDate || batchData.expiry);
+//     const isExpired = expiryDate < today;
+
+//     const response = {
+//       exists: true,
+//       verified: true,
+//       authentic: !isExpired,
+//       message: isExpired ? 
+//         "❌ This batch is expired. Do not use this medicine." : 
+//         "✅ This medicine is authentic and safe to use.",
+//       batchNo: batchData.batchNo,
+//       name: batchData.name,
+//       medicineName: batchData.medicineName || batchData.name,
+//       formulation: batchData.formulation,
+//       expiry: batchData.expiryDate || batchData.expiry,
+//       manufacturer: batchData.manufacturer,
+//       pharmacy: batchData.pharmacy,
+//       status: isExpired ? 'Expired' : (batchData.status || 'Active'),
+//       source: source,
+//       blockchainVerified: batchData.blockchainVerified || false
+//     };
+
+//     // Add transaction hash if blockchain verified
+//     if (batchData.blockchainVerified) {
+//       response.transaction = `0x${Math.random().toString(16).slice(2)}`;
+//     }
+
+//     console.log("✅ Verification successful for:", batchNo);
+//     res.json(response);
+//   } catch (error) {
+//     console.error("❌ Error verifying batch:", error.message);
+//     res.status(500).json({ 
+//       exists: false,
+//       message: "Error verifying batch", 
+//       error: error.message 
+//     });
+//   }
+// };
+
+// /* --------------------------------------------
+//    📦 Get All Batches (Combine Both Collections)
+// -------------------------------------------- */
+// export const getAllBatches = async (req, res) => {
+//   try {
+//     const [batches, pharmacyMedicines] = await Promise.all([
+//       Batch.find().sort({ createdAt: -1 }),
+//       PharmacyMedicine.find().sort({ createdAt: -1 })
+//     ]);
+
+//     console.log(`📊 Found ${batches.length} batches and ${pharmacyMedicines.length} pharmacy medicines`);
+
+//     // Combine both collections for a unified view
+//     const allBatches = [
+//       ...batches.map(b => ({
+//         ...b.toObject(),
+//         source: 'batch',
+//         expiry: b.expiry // Use expiry for consistency
+//       })),
+//       ...pharmacyMedicines.map(pm => ({
+//         ...pm.toObject(),
+//         source: 'pharmacy',
+//         expiry: pm.expiryDate // Map expiryDate to expiry for consistency
+//       }))
+//     ];
+
+//     if (allBatches.length === 0) {
+//       console.log("⚠️ No batches found in DB — returning dummy data");
+//       return res.json(dummyBatches.map(b => ({...b, source: 'dummy'})));
+//     }
+
+//     // Sort by creation date (newest first)
+//     allBatches.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+//     res.json(allBatches);
+//   } catch (error) {
+//     console.error("❌ Error fetching batches:", error.message);
+//     res.status(500).json({ message: "Error fetching batches", error: error.message });
+//   }
+// };
+
+
+
+// /* --------------------------------------------
+//    📦 Get Single Batch by Batch No
+// -------------------------------------------- */
+// export const getBatch = async (req, res) => {
+//   try {
+//     const { batchNo } = req.params;
+//     const batch = await Batch.findOne({ batchNo });
+
+//     if (!batch) {
+//       const dummy = dummyBatches.find((b) => b.batchNo === batchNo);
+//       if (dummy) return res.json(dummy);
+//       return res.status(404).json({ message: "Batch not found" });
+//     }
+
+//     res.json(batch);
+//   } catch (error) {
+//     res.status(500).json({ message: "Error fetching batch", error: error.message });
+//   }
+// };
+
+// // /* --------------------------------------------
+// //    🧪 Verify Batch by Batch No
+// // -------------------------------------------- */
+// // export const verifyBatch = async (req, res) => {
+// //   try {
+// //     const { batchNo } = req.params;
+// //     const batch = await Batch.findOne({ batchNo });
+
+// //     if (!batch) {
+// //       const dummy = dummyBatches.find((b) => b.batchNo === batchNo);
+// //       if (dummy) return res.json({ ...dummy, verified: true });
+// //       return res.status(404).json({ message: "Batch not found" });
+// //     }
+
+// //     res.json({ ...batch.toObject(), verified: true });
+// //   } catch (error) {
+// //     res.status(500).json({ message: "Error verifying batch", error: error.message });
+// //   }
+// // };
+
+// /* --------------------------------------------
+//    ➕ Create New Batch
+// -------------------------------------------- */
+// export const createBatch = async (req, res) => {
+//   try {
+//     const newBatch = new Batch(req.body);
+//     await newBatch.save();
+//     console.log("✅ New batch saved:", newBatch.batchNo);
+//     res.status(201).json(newBatch);
+//   } catch (error) {
+//     console.error("❌ Error creating batch:", error.message);
+//     res.status(500).json({ message: "Error creating batch", error: error.message });
+//   }
+// };
+
+// /* --------------------------------------------
+//    ✏️ Update Batch
+// -------------------------------------------- */
+// export const updateBatch = async (req, res) => {
+//   try {
+//     const { batchNo } = req.params;
+//     const updated = await Batch.findOneAndUpdate({ batchNo }, req.body, { new: true });
+
+//     if (!updated) {
+//       return res.status(404).json({ message: "Batch not found" });
+//     }
+
+//     console.log("✅ Batch updated:", batchNo);
+//     res.json(updated);
+//   } catch (error) {
+//     console.error("❌ Error updating batch:", error.message);
+//     res.status(500).json({ message: "Error updating batch", error: error.message });
+//   }
+// };
+
+// /* --------------------------------------------
+//    ✅ Accept Batch (Pharmacy)
+// -------------------------------------------- */
+// export const acceptBatch = async (req, res) => {
+//   try {
+//     const { batchNo } = req.params;
+//     const batch = await Batch.findOne({ batchNo });
+
+//     if (!batch) {
+//       return res.status(404).json({ message: "Batch not found" });
+//     }
+
+//     batch.status = "accepted";
+//     await batch.save();
+
+//     console.log("✅ Batch accepted:", batchNo);
+//     res.json(batch);
+//   } catch (error) {
+//     console.error("❌ Error accepting batch:", error.message);
+//     res.status(500).json({ message: "Error accepting batch", error: error.message });
+//   }
+// };
+
+// /* --------------------------------------------
+//    🧰 Initialize Dummy Data (DEV ONLY)
+// -------------------------------------------- */
+// export const initializeBatches = async () => {
+//   try {
+//     const count = await Batch.countDocuments();
+//     if (count === 0) {
+//       await Batch.insertMany(dummyBatches);
+//       console.log("🌱 Dummy batches inserted into MongoDB.");
+//     } else {
+//       console.log("ℹ️ MongoDB already has batches — skipping init.");
+//     }
+//   } catch (error) {
+//     console.error("❌ Error initializing dummy batches:", error.message);
+//   }
+// };
+
+
+
+
+
+
+
+
+
+
+
+//    ahmers code
+
+// import Batch from "../models/Batch.js";
+
+// /* --------------------------------------------
+//    🧪 Dummy Data (used if DB is empty)
+// -------------------------------------------- */
+// const dummyBatches = [
+//   {
+//     batchNo: "B001",
+//     name: "Paracetamol 500mg",
+//     medicineName: "Paracetamol",
+//     manufactureDate: "2024-01-15",
+//     expiry: "2025-12-31",
+//     formulation: "Tablet",
+//     manufacturer: "MediLife Labs",
+//     pharmacy: "Medico Plus",
+//     quantity: 1500,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B002",
+//     name: "Amoxicillin 250mg",
+//     medicineName: "Amoxicillin",
+//     manufactureDate: "2024-02-01",
+//     expiry: "2026-03-15",
+//     formulation: "Capsule",
+//     manufacturer: "BioHeal Pharma",
+//     pharmacy: "HealthFirst",
+//     quantity: 2000,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B003",
+//     name: "Ibuprofen 400mg",
+//     medicineName: "Ibuprofen",
+//     manufactureDate: "2024-01-20",
+//     expiry: "2025-11-30",
+//     formulation: "Tablet",
+//     manufacturer: "PharmaCare Solutions",
+//     pharmacy: "Curex Pharma",
+//     quantity: 800,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B004",
+//     name: "Vitamin C 1000mg",
+//     medicineName: "Vitamin C",
+//     manufactureDate: "2024-03-10",
+//     expiry: "2026-03-10",
+//     formulation: "Chewable Tablet",
+//     manufacturer: "NutraLife Labs",
+//     pharmacy: "Medico Plus",
+//     quantity: 3000,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B005",
+//     name: "Aspirin 75mg",
+//     medicineName: "Aspirin",
+//     manufactureDate: "2024-02-15",
+//     expiry: "2025-08-15",
+//     formulation: "Tablet",
+//     manufacturer: "CardioCare Pharma",
+//     pharmacy: "HealthFirst",
+//     quantity: 2500,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B006",
+//     name: "Omeprazole 20mg",
+//     medicineName: "Omeprazole",
+//     manufactureDate: "2024-01-30",
+//     expiry: "2026-01-30",
+//     formulation: "Capsule",
+//     manufacturer: "GastroHealth Inc",
+//     pharmacy: "Curex Pharma",
+//     quantity: 1200,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B007",
+//     name: "Metformin 500mg",
+//     medicineName: "Metformin",
+//     manufactureDate: "2024-02-28",
+//     expiry: "2025-12-31",
+//     formulation: "Tablet",
+//     manufacturer: "DiabetoCare",
+//     pharmacy: "Medico Plus",
+//     quantity: 1800,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B008",
+//     name: "Atorvastatin 20mg",
+//     medicineName: "Atorvastatin",
+//     manufactureDate: "2024-03-05",
+//     expiry: "2026-06-15",
+//     formulation: "Tablet",
+//     manufacturer: "CholestoFix Pharma",
+//     pharmacy: "HealthFirst",
+//     quantity: 900,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B009",
+//     name: "Cetirizine 10mg",
+//     medicineName: "Cetirizine",
+//     manufactureDate: "2024-01-25",
+//     expiry: "2025-10-20",
+//     formulation: "Tablet",
+//     manufacturer: "AllergyFree Corp",
+//     pharmacy: "Curex Pharma",
+//     quantity: 2200,
+//     status: "active",
+//     blockchainVerified: true
+//   },
+//   {
+//     batchNo: "B010",
+//     name: "Levothyroxine 50mcg",
+//     medicineName: "Levothyroxine",
+//     manufactureDate: "2024-02-10",
+//     expiry: "2026-02-10",
+//     formulation: "Tablet",
+//     manufacturer: "ThyroCare Solutions",
+//     pharmacy: "Medico Plus",
+//     quantity: 750,
+//     status: "active",
+//     blockchainVerified: true
+//   }
+
+// ]
+
+// /* --------------------------------------------
+//    📦 Get All Batches
+// -------------------------------------------- */
+// export const getAllBatches = async (req, res) => {
+//   try {
+//     const batches = await Batch.find();
+
+//     if (batches.length === 0) {
+//       console.log("⚠️ No batches found in DB — returning dummy data");
+//       return res.json(dummyBatches);
+//     }
+
+//     res.json(batches);
+//   } catch (error) {
+//     console.error("❌ Error fetching batches:", error.message);
+//     res.status(500).json({ message: "Error fetching batches", error: error.message });
+//   }
+// };
+
+// /* --------------------------------------------
+//    📦 Get Single Batch by Batch No
+// -------------------------------------------- */
+// export const getBatch = async (req, res) => {
+//   try {
+//     const { batchNo } = req.params;
+//     const batch = await Batch.findOne({ batchNo });
+
+//     if (!batch) {
+//       const dummy = dummyBatches.find((b) => b.batchNo === batchNo);
+//       if (dummy) return res.json(dummy);
+//       return res.status(404).json({ message: "Batch not found" });
+//     }
+
+//     res.json(batch);
+//   } catch (error) {
+//     res.status(500).json({ message: "Error fetching batch", error: error.message });
+//   }
+// };
+
+// /* --------------------------------------------
+//    🧪 Verify Batch by Batch No
+// -------------------------------------------- */
+// export const verifyBatch = async (req, res) => {
+//   try {
+//     const { batchNo } = req.params;
+//     const batch = await Batch.findOne({ batchNo });
+
+//     if (!batch) {
+//       const dummy = dummyBatches.find((b) => b.batchNo === batchNo);
+//       if (dummy) return res.json({ ...dummy, verified: true });
+//       return res.status(404).json({ message: "Batch not found" });
+//     }
+
+//     res.json({ ...batch.toObject(), verified: true });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error verifying batch", error: error.message });
+//   }
+// };
+
+// /* --------------------------------------------
+//    ➕ Create New Batch
+// -------------------------------------------- */
+// export const createBatch = async (req, res) => {
+//   try {
+//     const newBatch = new Batch(req.body);
+//     await newBatch.save();
+//     console.log("✅ New batch saved:", newBatch.batchNo);
+//     res.status(201).json(newBatch);
+//   } catch (error) {
+//     console.error("❌ Error creating batch:", error.message);
+//     res.status(500).json({ message: "Error creating batch", error: error.message });
+//   }
+// };
+
+// /* --------------------------------------------
+//    ✏️ Update Batch
+// -------------------------------------------- */
+// export const updateBatch = async (req, res) => {
+//   try {
+//     const { batchNo } = req.params;
+//     const updated = await Batch.findOneAndUpdate({ batchNo }, req.body, { new: true });
+
+//     if (!updated) {
+//       return res.status(404).json({ message: "Batch not found" });
+//     }
+
+//     console.log("✅ Batch updated:", batchNo);
+//     res.json(updated);
+//   } catch (error) {
+//     console.error("❌ Error updating batch:", error.message);
+//     res.status(500).json({ message: "Error updating batch", error: error.message });
+//   }
+// };
+
+// /* --------------------------------------------
+//    ✅ Accept Batch (Pharmacy)
+// -------------------------------------------- */
+// export const acceptBatch = async (req, res) => {
+//   try {
+//     const { batchNo } = req.params;
+//     const batch = await Batch.findOne({ batchNo });
+
+//     if (!batch) {
+//       return res.status(404).json({ message: "Batch not found" });
+//     }
+
+//     batch.status = "accepted";
+//     await batch.save();
+
+//     console.log("✅ Batch accepted:", batchNo);
+//     res.json(batch);
+//   } catch (error) {
+//     console.error("❌ Error accepting batch:", error.message);
+//     res.status(500).json({ message: "Error accepting batch", error: error.message });
+//   }
+// };
+
+// /* --------------------------------------------
+//    🧰 Initialize Dummy Data (DEV ONLY)
+// -------------------------------------------- */
+// export const initializeBatches = async () => {
+//   try {
+//     const count = await Batch.countDocuments();
+//     if (count === 0) {
+//       await Batch.insertMany(dummyBatches);
+//       console.log("🌱 Dummy batches inserted into MongoDB.");
+//     } else {
+//       console.log("ℹ️ MongoDB already has batches — skipping init.");
+//     }
+//   } catch (error) {
+//     console.error("❌ Error initializing dummy batches:", error.message);
+//   }
+// };

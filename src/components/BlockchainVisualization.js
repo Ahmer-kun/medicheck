@@ -184,7 +184,7 @@ function BlockchainVisualization() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes pulseConnection {
           0% { opacity: 0; transform: scale(0.5); }
           50% { opacity: 0.7; transform: scale(1); }

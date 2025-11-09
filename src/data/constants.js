@@ -2,11 +2,22 @@
 export const navigationItems = [
   { to: "/", label: "Dashboard", icon: "📊", roles: ["admin", "manufacturer", "pharmacy", "analytics", "viewer"] },
   { to: "/manufacturer", label: "Manufacturer", icon: "🏭", roles: ["admin", "manufacturer"] },
-  { to: "/pharmacy", label: "Pharmacy", icon: "💊", roles: ["admin", "pharmacy"] },
+  { to: "/pharmacy-dashboard", label: "Pharmacy Companies", icon: "🏪", roles: ["admin", "pharmacy"] },
+  { to: "/pharmacy", label: "Medicine Management", icon: "💊", roles: ["admin", "pharmacy"] },
   { to: "/verify", label: "Customer Verify", icon: "🔍", roles: ["admin", "manufacturer", "pharmacy", "analytics", "viewer", "public"] },
   { to: "/analytics", label: "Analytics", icon: "📈", roles: ["admin", "analytics"] },
   { to: "/admin", label: "Admin", icon: "⚙️", roles: ["admin"] },
 ];
+
+// // Navigation Items
+// export const navigationItems = [
+//   { to: "/", label: "Dashboard", icon: "📊", roles: ["admin", "manufacturer", "pharmacy", "analytics", "viewer"] },
+//   { to: "/manufacturer", label: "Manufacturer", icon: "🏭", roles: ["admin", "manufacturer"] },
+//   { to: "/pharmacy", label: "Pharmacy", icon: "💊", roles: ["admin", "pharmacy"] },
+//   { to: "/verify", label: "Customer Verify", icon: "🔍", roles: ["admin", "manufacturer", "pharmacy", "analytics", "viewer", "public"] },
+//   { to: "/analytics", label: "Analytics", icon: "📈", roles: ["admin", "analytics"] },
+//   { to: "/admin", label: "Admin", icon: "⚙️", roles: ["admin"] },
+// ];
 
 // Users Data
 export const USERS = {

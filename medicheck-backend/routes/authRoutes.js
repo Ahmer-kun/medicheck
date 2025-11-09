@@ -1,19 +1,55 @@
-const express = require('express');
-const { login, initializeUsers } = require('../controllers/authController');
-const { authValidation, validate } = require('../middleware/validation');
+// import express from "express";
+// import { login, initializeUsers } from "../controllers/authController.js";
+// import { authValidation, validate } from "../middleware/validation.js";
+
+// const router = express.Router();
+
+// router.post("/login", validate(authValidation.login), login);
+
+// router.post("/initialize-users", async (req, res) => {
+//   try {
+//     await initializeUsers();
+//     res.json({ message: "Default users initialized successfully" });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error initializing users", error: error.message });
+//   }
+// });
+
+// export default router;
+
+
+import express from "express";
+import { login, initializeUsers } from "../controllers/authController.js";
+import { authValidation, validate } from "../middleware/validation.js";
 
 const router = express.Router();
 
-router.post('/login', validate(authValidation.login), login);
+// Public routes
+router.post("/login", validate(authValidation.login), login);
 
-// Initialize default users (for development)
-router.post('/initialize-users', async (req, res) => {
+// Development route to initialize users
+router.post("/initialize-users", async (req, res) => {
   try {
     await initializeUsers();
-    res.json({ message: 'Default users initialized successfully' });
+    res.json({ 
+      success: true, 
+      message: "Default users initialized successfully" 
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error initializing users', error: error.message });
+    res.status(500).json({ 
+      success: false, 
+      message: "Error initializing users", 
+      error: error.message 
+    });
   }
 });
 
-module.exports = router;
+// Add logout route if needed
+router.post("/logout", (req, res) => {
+  res.json({ 
+    success: true, 
+    message: "Logout successful" 
+  });
+});
+
+export default router;

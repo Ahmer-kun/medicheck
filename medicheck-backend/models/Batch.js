@@ -1,70 +1,95 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const batchSchema = new mongoose.Schema({
-  batchNo: {
-    type: String,
-    required: true,
-    unique: true
+  batchNo: { 
+    type: String, 
+    required: true, 
+    unique: true,
+    trim: true
   },
-  name: {
-    type: String,
-    required: true
+  name: { 
+    type: String, 
+    required: true,
+    trim: true
   },
   medicineName: {
     type: String,
-    required: true
+    trim: true
   },
-  formulation: {
+  manufactureDate: { 
+    type: Date 
+  },
+  expiry: { 
+    type: Date 
+  },
+  formulation: { 
     type: String,
-    required: true
+    trim: true
   },
-  manufacturer: {
+  manufacturer: { 
     type: String,
-    required: true
+    trim: true
   },
-  manufacturerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  pharmacy: {
+  pharmacy: { 
     type: String,
-    default: 'To be assigned'
+    trim: true
   },
-  pharmacyId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+  quantity: { 
+    type: Number, 
+    default: 0,
+    min: 0
   },
-  manufactureDate: {
-    type: Date,
-    required: true
+  status: { 
+    type: String, 
+    default: "active",
+    enum: ["active", "expired", "accepted", "manufactured"]
   },
-  expiryDate: {
-    type: Date,
-    required: true
-  },
-  quantity: {
-    type: Number,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ['active', 'expired', 'recalled'],
-    default: 'active'
-  },
-  blockchainVerified: {
-    type: Boolean,
-    default: false
-  },
-  blockchainTxHash: {
-    type: String
+  blockchainVerified: { 
+    type: Boolean, 
+    default: false 
   }
 }, {
   timestamps: true
 });
 
+// Index for better query performance
 batchSchema.index({ batchNo: 1 });
-batchSchema.index({ manufacturerId: 1 });
-batchSchema.index({ expiryDate: 1 });
 
-module.exports = mongoose.model('Batch', batchSchema);
+
+batchSchema.index({ batchNo: 1 }, { unique: true });
+batchSchema.index({ status: 1, expiry: 1 });
+batchSchema.index({ manufacturer: 1 });
+batchSchema.index({ createdAt: -1 });
+
+
+
+const Batch = mongoose.model("Batch", batchSchema);
+
+export default Batch;
+
+
+
+
+
+// import mongoose from "mongoose";
+
+// const batchSchema = new mongoose.Schema({
+//   batchNo: { type: String, required: true, unique: true },
+//   name: { type: String, required: true },
+//   manufactureDate: { type: Date },
+//   expiry: { type: Date },
+//   formulation: { type: String },
+//   manufacturer: { type: String },
+//   pharmacy: { type: String },
+//   quantity: { type: Number, default: 0 },
+//   status: { type: String, default: "active" },
+//   blockchainVerified: { type: Boolean, default: false },
+// });
+
+// const Batch = mongoose.model("Batch", batchSchema);
+
+// export default Batch;
+
+
+
+
