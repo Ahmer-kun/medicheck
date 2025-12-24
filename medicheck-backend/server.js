@@ -138,8 +138,15 @@ const limiter = rateLimit({
   legacyHeaders: false
 });
 
-
-
+//  DELETE THIS 
+app.get('/api/create-admin', async (req, res) => {
+  try {
+    // Similar logic as above
+    res.json({ success: true, message: 'Admin created/updated' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 app.get('/api/system/health', async (req, res) => {
   try {
