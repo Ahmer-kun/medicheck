@@ -10,7 +10,7 @@ export const emailTemplates = {
     // Create mailto link with proper encoding
     const subject = encodeURIComponent(`Medicheck Support - User: ${user.username}`);
     const body = encodeURIComponent(`Hello Admin,\n\nI need assistance with:\n\nUsername: ${user.username}\nRole: ${user.role}\n\nIssue Description:\n[Please describe your issue here]\n\nThank you,\n${user.name}`);
-    const mailtoLink = `mailto:muhammadahmer1qw2@gmail.com?subject=${subject}&body=${body}`;
+    const mailtoLink = `mailto:contact.medicheck@gmail.com?subject=${subject}&body=${body}`;
     
     return {
       subject: `Welcome to Medicheck - Your Account Has Been Created`,
@@ -121,7 +121,7 @@ export const emailTemplates = {
                         <!-- Manual Option (for email clients that block links) -->
                         <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 20px;">
                             <h4>📧 Manual Option (if link doesn't work):</h4>
-                            <p><strong>To:</strong> muhammadahmer1qw2@gmail.com</p>
+                            <p><strong>To:</strong> contact.medicheck@gmail.com</p>
                             <p><strong>Subject:</strong> Medicheck Support - User: ${user.username}</p>
                             <p><strong>Include in body:</strong> Your username (${user.username}), role (${user.role}), and issue description</p>
                         </div>
@@ -167,7 +167,7 @@ Login URL: ${process.env.APP_URL || 'http://localhost:3000'}
 Click the link in the email to contact admin.
 
 Or manually email:
-To: muhammadahmer1qw2@gmail.com
+To: contact.medicheck@gmail.com
 Subject: Medicheck Support - User: ${user.username}
 Body: Include your username and issue description
 
@@ -187,7 +187,7 @@ This is an automated message.
   passwordReset: (user, newPassword) => {
     const subject = encodeURIComponent(`Medicheck Password Issue - User: ${user.username}`);
     const body = encodeURIComponent(`Hello Admin,\n\nI am having password issues:\n\nUsername: ${user.username}\n\nIssue Description:\n[Please describe your password issue]\n\nThank you,\n${user.name}`);
-    const mailtoLink = `mailto:muhammadahmer1qw2@gmail.com?subject=${subject}&body=${body}`;
+    const mailtoLink = `mailto:contact.medicheck@gmail.com?subject=${subject}&body=${body}`;
     
     return {
       subject: `Medicheck - Password Reset`,
@@ -240,7 +240,7 @@ This is an automated message.
               <!-- Instructions -->
               <div style="background: #f0f8ff; padding: 15px; border-radius: 6px; margin-top: 15px;">
                 <h4>📝 If link doesn't work:</h4>
-                <p><strong>Email:</strong> muhammadahmer1qw2@gmail.com</p>
+                <p><strong>Email:</strong> contact.medicheck@gmail.com</p>
                 <p><strong>Subject:</strong> Medicheck Password Issue - User: ${user.username}</p>
                 <p><strong>Body:</strong> Include your username and describe the password issue</p>
               </div>
@@ -277,7 +277,7 @@ IMPORTANT: This is your new permanent password. If you forget it, contact the ad
 Click the link in email to contact admin for password issues.
 
 Or manually email:
-To: muhammadahmer1qw2@gmail.com
+To: contact.medicheck@gmail.com
 Subject: Medicheck Password Issue - User: ${user.username}
 Body: Include your username and describe the password issue
 
@@ -299,10 +299,10 @@ This is an automated message.
   supportContact: (user, issueType = 'general') => {
     // Create different mailto links for different issue types
     const mailtoLinks = {
-      general: `mailto:muhammadahmer1qw2@gmail.com?subject=${encodeURIComponent(`[Medicheck Support] General Query - ${user.username}`)}&body=${encodeURIComponent(`Hello Admin,\n\nUsername: ${user.username}\nRole: ${user.role}\n\nQuery:\n[Please describe your question]\n\nThank you,\n${user.name}`)}`,
-      urgent: `mailto:muhammadahmer1qw2@gmail.com?subject=${encodeURIComponent(`[URGENT] Medicheck Emergency - ${user.username}`)}&body=${encodeURIComponent(`URGENT - Immediate attention needed\n\nUsername: ${user.username}\nRole: ${user.role}\n\nEmergency Description:\n[Describe the emergency]\n\nThank you,\n${user.name}`)}`,
-      bug: `mailto:muhammadahmer1qw2@gmail.com?subject=${encodeURIComponent(`[BUG] Medicheck Bug Report - ${user.username}`)}&body=${encodeURIComponent(`Bug Report\n\nUsername: ${user.username}\nRole: ${user.role}\n\nBug Description:\n[Describe the bug]\n\nSteps to Reproduce:\n1.\n2.\n3.\n\nExpected Result:\n[What should happen]\n\nActual Result:\n[What actually happens]\n\nThank you,\n${user.name}`)}`,
-      feature: `mailto:muhammadahmer1qw2@gmail.com?subject=${encodeURIComponent(`[FEATURE] Medicheck Feature Request - ${user.username}`)}&body=${encodeURIComponent(`Feature Request\n\nUsername: ${user.username}\nRole: ${user.role}\n\nFeature Request:\n[Describe the feature]\n\nWhy needed:\n[Explain why this feature is needed]\n\nThank you,\n${user.name}`)}`
+      general: `mailto:contact.medicheck@gmail.com?subject=${encodeURIComponent(`[Medicheck Support] General Query - ${user.username}`)}&body=${encodeURIComponent(`Hello Admin,\n\nUsername: ${user.username}\nRole: ${user.role}\n\nQuery:\n[Please describe your question]\n\nThank you,\n${user.name}`)}`,
+      urgent: `mailto:contact.medicheck@gmail.com?subject=${encodeURIComponent(`[URGENT] Medicheck Emergency - ${user.username}`)}&body=${encodeURIComponent(`URGENT - Immediate attention needed\n\nUsername: ${user.username}\nRole: ${user.role}\n\nEmergency Description:\n[Describe the emergency]\n\nThank you,\n${user.name}`)}`,
+      bug: `mailto:contact.medicheck@gmail.com?subject=${encodeURIComponent(`[BUG] Medicheck Bug Report - ${user.username}`)}&body=${encodeURIComponent(`Bug Report\n\nUsername: ${user.username}\nRole: ${user.role}\n\nBug Description:\n[Describe the bug]\n\nSteps to Reproduce:\n1.\n2.\n3.\n\nExpected Result:\n[What should happen]\n\nActual Result:\n[What actually happens]\n\nThank you,\n${user.name}`)}`,
+      feature: `mailto:contact.medicheck@gmail.com?subject=${encodeURIComponent(`[FEATURE] Medicheck Feature Request - ${user.username}`)}&body=${encodeURIComponent(`Feature Request\n\nUsername: ${user.username}\nRole: ${user.role}\n\nFeature Request:\n[Describe the feature]\n\nWhy needed:\n[Explain why this feature is needed]\n\nThank you,\n${user.name}`)}`
     };
 
     const selectedLink = mailtoLinks[issueType] || mailtoLinks.general;
@@ -395,7 +395,7 @@ This is an automated message.
               <h3>📝 Manual Email Instructions:</h3>
               <p>If links don't work in your email client:</p>
               <div style="background: white; padding: 15px; border-radius: 6px; margin-top: 10px;">
-                <p><strong>Email Address:</strong> muhammadahmer1qw2@gmail.com</p>
+                <p><strong>Email Address:</strong> contact.medicheck@gmail.com</p>
                 <p><strong>Subject:</strong> Start with "[Medicheck Support]"</p>
                 <p><strong>Include:</strong> Username (${user.username}), Role (${user.role}), Issue description</p>
               </div>
@@ -432,7 +432,7 @@ Click the link in the email to open a pre-filled email to admin.
 - General Help: Click general help link
 
 📝 MANUAL OPTION (if links don't work):
-Email: muhammadahmer1qw2@gmail.com
+Email: contact.medicheck@gmail.com
 Subject: Start with "[Medicheck Support]"
 Include: Username (${user.username}), Role (${user.role}), Issue description
 
