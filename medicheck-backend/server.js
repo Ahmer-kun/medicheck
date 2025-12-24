@@ -64,29 +64,57 @@ const app = express();
 // ✅ Security middleware
 app.use(helmet());
 
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // 1. Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    // 2. Allow ALL Vercel preview domains automatically
+    if (origin.endsWith('.vercel.app')) {
+      console.log(`✅ Allowing Vercel preview domain: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // 3. Allow your production frontend
+    if (origin === 'https://medicheck-eight.vercel.app') {
+      return callback(null, true);
+    }
+    
+    // 4. Allow local development
+    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      return callback(null, true);
+    }
+    
+    // 5. Reject everything else
+    console.log(`❌ Blocked origin: ${origin}`);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // Cache preflight for 24 hours
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight for ALL routes
+
 // app.use(cors({
-//   origin: ["https://medicheck-eight.vercel.app", "http://localhost:3000", "http://127.0.0.1:3000"],
+//   origin: [
+//     "https://medicheck-eight.vercel.app",  // Your main frontend
+//     "https://medicheck-4zs1428n7-medichecks-projects.vercel.app", // NEW Vercel preview
+//     "https://medicheck-bj6rr1vm1-medichecks-projects.vercel.app", // Previous preview
+//     "http://localhost:3000",
+//     "http://127.0.0.1:3000"
+//   ],
 //   credentials: true,
 //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 //   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
 //   exposedHeaders: ['Content-Range', 'X-Content-Range']
 // }));
-// app.options('*', cors()); // Enable pre-flight for all routes
-
-app.use(cors({
-  origin: [
-    "https://medicheck-eight.vercel.app",  // Your main frontend
-    "https://medicheck-4zs1428n7-medichecks-projects.vercel.app", // NEW Vercel preview
-    "https://medicheck-bj6rr1vm1-medichecks-projects.vercel.app", // Previous preview
-    "http://localhost:3000",
-    "http://127.0.0.1:3000"
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range']
-}));
-app.options('*', cors());
+// app.options('*', cors());
 
 	
 // ✅ Enhanced authentication check middleware
