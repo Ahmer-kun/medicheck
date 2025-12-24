@@ -70,7 +70,7 @@ app.use(helmet());
 //   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 // }));
 app.use(cors({
-  origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+  origin: ["https://medicheck-eight.vercel.app", "http://localhost:3000", "http://127.0.0.1:3000"],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
