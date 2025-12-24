@@ -74,7 +74,7 @@ function PharmacistLoginPage({ onLogin, onBack }) {
       `[Your Name]\n` +
       `[Pharmacy Name]`
     );
-    
+
     window.location.href = `mailto:contact.medicheck@gmail.com?subject=${subject}&body=${body}`;
   };
 
