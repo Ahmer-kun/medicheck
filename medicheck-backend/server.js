@@ -65,19 +65,29 @@ const app = express();
 app.use(helmet());
 
 // app.use(cors({
-//   origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+//   origin: ["https://medicheck-eight.vercel.app", "http://localhost:3000", "http://127.0.0.1:3000"],
 //   credentials: true,
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+//   exposedHeaders: ['Content-Range', 'X-Content-Range']
 // }));
+// app.options('*', cors()); // Enable pre-flight for all routes
+
 app.use(cors({
-  origin: ["https://medicheck-eight.vercel.app", "http://localhost:3000", "http://127.0.0.1:3000"],
+  origin: [
+    "https://medicheck-eight.vercel.app",  // Your main frontend
+    "https://medicheck-bj6rr1vm1-medichecks-projects.vercel.app",  // Vercel preview - ADD THIS
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
-app.options('*', cors()); // Enable pre-flight for all routes
+app.options('*', cors());
 
+	
 // ✅ Enhanced authentication check middleware
 app.use((req, res, next) => {
   // Skip auth for public routes
