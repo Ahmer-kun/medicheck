@@ -140,37 +140,37 @@ const limiter = rateLimit({
 });
 
 //  DELETE THIS 
-app.get('/api/create-admin', async (req, res) => {
-  try {
-    // Similar logic as above
-    res.json({ success: true, message: 'Admin created/updated' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+// app.get('/api/create-admin', async (req, res) => {
+//   try {
+//     // Similar logic as above
+//     res.json({ success: true, message: 'Admin created/updated' });
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
 
-app.get('/api/verify-admin', async (req, res) => {
-  try {
-    const User = mongoose.model('User'); // Or import your User model
-    const admin = await User.findOne({ username: 'admin' });
+// app.get('/api/verify-admin', async (req, res) => {
+//   try {
+//     const User = mongoose.model('User'); // Or import your User model
+//     const admin = await User.findOne({ username: 'admin' });
     
-    if (!admin) {
-      return res.json({ success: false, message: 'No admin user found' });
-    }
+//     if (!admin) {
+//       return res.json({ success: false, message: 'No admin user found' });
+//     }
     
-    res.json({ 
-      success: true, 
-      admin: {
-        username: admin.username,
-        role: admin.role,
-        isActive: admin.isActive,
-        createdAt: admin.createdAt
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+//     res.json({ 
+//       success: true, 
+//       admin: {
+//         username: admin.username,
+//         role: admin.role,
+//         isActive: admin.isActive,
+//         createdAt: admin.createdAt
+//       }
+//     });
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
 
 
 
