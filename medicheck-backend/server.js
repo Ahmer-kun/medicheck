@@ -75,8 +75,9 @@ app.use(helmet());
 
 app.use(cors({
   origin: [
-    "https://medicheck-eight.vercel.app",  // Your main frontend
-    "https://medicheck-bj6rr1vm1-medichecks-projects.vercel.app",  // Vercel preview - ADD THIS
+    "https://medicheck-eight.vercel.app",
+    "https://medicheck-bj6rr1vm1-medichecks-projects.vercel.app", // Keep old one
+    "https://medicheck-4zs1428n7-medichecks-projects.vercel.app", // ADD THIS NEW ONE
     "http://localhost:3000",
     "http://127.0.0.1:3000"
   ],
