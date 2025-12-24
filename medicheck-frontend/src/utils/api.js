@@ -2,7 +2,8 @@
 
 class ApiClient {
   constructor() {
-    this.baseURL = "http://localhost:5000/api";
+    // this.baseURL = "http://localhost:5000/api";
+    this.baseURL = process.env.REACT_APP_API_URL || "https://medicheck-production.up.railway.app/api";
     this.refreshInProgress = false;
     this.refreshQueue = [];
   }
