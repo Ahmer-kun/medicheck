@@ -48,7 +48,7 @@ function MedicheckDashboard() {
     try {
       setBackendStatus('checking');
       // const response = await fetch('http://localhost:5000/api/health');
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/health || http://localhost:5000/api/health`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/health`);
       if (response.ok) {
         setBackendStatus('connected');
         console.log('✅ Backend connected successfully');
