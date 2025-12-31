@@ -3,7 +3,7 @@ import NavLinkItem from "./NavLinkItem";
 import { navigationItems } from "../data/constants";
 
 // Import your logo image
-import logo from "../pictures/CMDS.jpeg"; // Adjust the path to match your actual image location
+import logo from "../pictures/MSG2.jpeg"; // Adjust the path to match your actual image location
 
 function Sidebar({ collapsed, user, onLogout, theme }) {
   return (
