@@ -64,7 +64,16 @@ const pharmacyMedicineSchema = new mongoose.Schema({
   blockchainVerified: {
     type: Boolean,
     default: false
-  }
+  },
+  dualStorageStatus: {
+    type: String,
+    enum: ['pending', 'completed', 'blockchain_failed', 'mongodb_failed'],
+    default: 'pending'
+  },
+  dualStorageError: String,
+  blockchainTransactionHash: String,
+  blockchainBlockNumber: Number,
+  blockchainError: String,
 }, {
   timestamps: true
 });

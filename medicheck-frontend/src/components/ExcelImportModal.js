@@ -118,196 +118,510 @@ function ExcelImportModal({
     reader.readAsBinaryString(file);
   };
 
+
+
   const validateData = (data) => {
-    const errors = [];
+  const errors = [];
+  
+  // First filter out completely empty rows
+  const validData = data.filter(row => !isRowEmpty(row));
+  
+  console.log('Valid data for validation:', validData.length, 'rows');
+  
+  validData.forEach((row, index) => {
+    const rowNumber = row._rowNumber;
     
-    // First filter out completely empty rows
-    const validData = data.filter(row => !isRowEmpty(row));
-    
-    console.log('Valid data for validation:', validData.length, 'rows');
-    
-    validData.forEach((row, index) => {
-      const rowNumber = row._rowNumber;
-      
-      // Check required fields
-      requiredFields.forEach(field => {
-        const mappedHeader = Object.keys(mapping).find(key => mapping[key] === field);
-        if (!mappedHeader || !row[mappedHeader]) {
-          errors.push({
-            row: rowNumber,
-            field: field,
-            message: `${field} is required (column: ${mappedHeader || 'Not mapped'})`
-          });
-        }
-      });
-
-      // Validate batch number format
-      const batchNoHeader = Object.keys(mapping).find(key => mapping[key] === 'batchNo');
-      if (batchNoHeader && row[batchNoHeader]) {
-        const batchNo = String(row[batchNoHeader]).trim();
-        if (batchNo.length < 3) {
-          errors.push({
-            row: rowNumber,
-            field: 'batchNo',
-            message: 'Batch number must be at least 3 characters'
-          });
-        }
-      }
-
-      // Validate quantity
-      const quantityHeader = Object.keys(mapping).find(key => mapping[key] === 'quantity');
-      if (quantityHeader && row[quantityHeader]) {
-        const quantity = parseInt(row[quantityHeader]);
-        if (isNaN(quantity) || quantity <= 0) {
-          errors.push({
-            row: rowNumber,
-            field: 'quantity',
-            message: 'Quantity must be a positive number'
-          });
-        }
-      }
-
-      // Validate dates
-      const mfgDateHeader = Object.keys(mapping).find(key => mapping[key] === 'manufactureDate');
-      const expiryDateHeader = Object.keys(mapping).find(key => mapping[key] === 'expiryDate');
-      
-      if (mfgDateHeader && row[mfgDateHeader]) {
-        const mfgDate = parseExcelDate(row[mfgDateHeader]);
-        if (!mfgDate || isNaN(mfgDate.getTime())) {
-          errors.push({
-            row: rowNumber,
-            field: 'manufactureDate',
-            message: 'Invalid manufacture date format'
-          });
-        }
-      }
-      
-      if (expiryDateHeader && row[expiryDateHeader]) {
-        const expiryDate = parseExcelDate(row[expiryDateHeader]);
-        if (!expiryDate || isNaN(expiryDate.getTime())) {
-          errors.push({
-            row: rowNumber,
-            field: 'expiryDate',
-            message: 'Invalid expiry date format'
-          });
-        }
-      }
-      
-      // Check date order if both dates exist
-      if (mfgDateHeader && expiryDateHeader && row[mfgDateHeader] && row[expiryDateHeader]) {
-        const mfgDate = parseExcelDate(row[mfgDateHeader]);
-        const expiryDate = parseExcelDate(row[expiryDateHeader]);
-        
-        if (mfgDate && expiryDate && !isNaN(mfgDate.getTime()) && !isNaN(expiryDate.getTime())) {
-          if (expiryDate <= mfgDate) {
-            errors.push({
-              row: rowNumber,
-              field: 'expiryDate',
-              message: 'Expiry date must be after manufacture date'
-            });
-          }
-        }
+    // Check required fields
+    requiredFields.forEach(field => {
+      const mappedHeader = Object.keys(mapping).find(key => mapping[key] === field);
+      if (!mappedHeader || !row[mappedHeader]) {
+        errors.push({
+          row: rowNumber,
+          field: field,
+          message: `${field} is required (column: ${mappedHeader || 'Not mapped'})`
+        });
       }
     });
 
-    console.log('Validation errors:', errors.length);
-    return errors;
-  };
+    // ✅ UPDATED: Validate batch number format
+    const batchNoHeader = Object.keys(mapping).find(key => mapping[key] === 'batchNo');
+    if (batchNoHeader && row[batchNoHeader]) {
+      const batchNo = String(row[batchNoHeader]).trim();
+      
+      // Check length
+      if (batchNo.length < 3) {
+        errors.push({
+          row: rowNumber,
+          field: 'batchNo',
+          message: 'Batch number must be at least 3 characters'
+        });
+      }
+      
+      // Check characters
+      if (!/^[A-Za-z0-9\-_]+$/.test(batchNo)) {
+        errors.push({
+          row: rowNumber,
+          field: 'batchNo',
+          message: 'Batch number can only contain letters, numbers, hyphens, and underscores'
+        });
+      }
+    }
+
+    // Validate quantity
+    const quantityHeader = Object.keys(mapping).find(key => mapping[key] === 'quantity');
+    if (quantityHeader && row[quantityHeader]) {
+      const quantity = parseInt(row[quantityHeader]);
+      if (isNaN(quantity) || quantity <= 0) {
+        errors.push({
+          row: rowNumber,
+          field: 'quantity',
+          message: 'Quantity must be a positive number'
+        });
+      }
+    }
+
+    // Validate dates
+    const mfgDateHeader = Object.keys(mapping).find(key => mapping[key] === 'manufactureDate');
+    const expiryDateHeader = Object.keys(mapping).find(key => mapping[key] === 'expiryDate');
+    
+    if (mfgDateHeader && row[mfgDateHeader]) {
+      const mfgDate = parseExcelDate(row[mfgDateHeader]);
+      if (!mfgDate || isNaN(mfgDate.getTime())) {
+        errors.push({
+          row: rowNumber,
+          field: 'manufactureDate',
+          message: 'Invalid manufacture date format'
+        });
+      }
+    }
+    
+    if (expiryDateHeader && row[expiryDateHeader]) {
+      const expiryDate = parseExcelDate(row[expiryDateHeader]);
+      if (!expiryDate || isNaN(expiryDate.getTime())) {
+        errors.push({
+          row: rowNumber,
+          field: 'expiryDate',
+          message: 'Invalid expiry date format'
+        });
+      }
+    }
+    
+    // Check date order if both dates exist
+    if (mfgDateHeader && expiryDateHeader && row[mfgDateHeader] && row[expiryDateHeader]) {
+      const mfgDate = parseExcelDate(row[mfgDateHeader]);
+      const expiryDate = parseExcelDate(row[expiryDateHeader]);
+      
+      if (mfgDate && expiryDate && !isNaN(mfgDate.getTime()) && !isNaN(expiryDate.getTime())) {
+        if (expiryDate <= mfgDate) {
+          errors.push({
+            row: rowNumber,
+            field: 'expiryDate',
+            message: 'Expiry date must be after manufacture date'
+          });
+        }
+      }
+    }
+  });
+
+  console.log('Validation errors:', errors.length);
+  return errors;
+};
+
+
+
+  // const validateData = (data) => {
+  //   const errors = [];
+    
+  //   // First filter out completely empty rows
+  //   const validData = data.filter(row => !isRowEmpty(row));
+    
+  //   console.log('Valid data for validation:', validData.length, 'rows');
+    
+  //   validData.forEach((row, index) => {
+  //     const rowNumber = row._rowNumber;
+      
+  //     // Check required fields
+  //     requiredFields.forEach(field => {
+  //       const mappedHeader = Object.keys(mapping).find(key => mapping[key] === field);
+  //       if (!mappedHeader || !row[mappedHeader]) {
+  //         errors.push({
+  //           row: rowNumber,
+  //           field: field,
+  //           message: `${field} is required (column: ${mappedHeader || 'Not mapped'})`
+  //         });
+  //       }
+  //     });
+
+  //     // Validate batch number format
+  //     const batchNoHeader = Object.keys(mapping).find(key => mapping[key] === 'batchNo');
+  //     if (batchNoHeader && row[batchNoHeader]) {
+  //       const batchNo = String(row[batchNoHeader]).trim();
+  //       if (batchNo.length < 3) {
+  //         errors.push({
+  //           row: rowNumber,
+  //           field: 'batchNo',
+  //           message: 'Batch number must be at least 3 characters'
+  //         });
+  //       }
+  //     }
+
+  //     // Validate quantity
+  //     const quantityHeader = Object.keys(mapping).find(key => mapping[key] === 'quantity');
+  //     if (quantityHeader && row[quantityHeader]) {
+  //       const quantity = parseInt(row[quantityHeader]);
+  //       if (isNaN(quantity) || quantity <= 0) {
+  //         errors.push({
+  //           row: rowNumber,
+  //           field: 'quantity',
+  //           message: 'Quantity must be a positive number'
+  //         });
+  //       }
+  //     }
+
+  //     // Validate dates
+  //     const mfgDateHeader = Object.keys(mapping).find(key => mapping[key] === 'manufactureDate');
+  //     const expiryDateHeader = Object.keys(mapping).find(key => mapping[key] === 'expiryDate');
+      
+  //     if (mfgDateHeader && row[mfgDateHeader]) {
+  //       const mfgDate = parseExcelDate(row[mfgDateHeader]);
+  //       if (!mfgDate || isNaN(mfgDate.getTime())) {
+  //         errors.push({
+  //           row: rowNumber,
+  //           field: 'manufactureDate',
+  //           message: 'Invalid manufacture date format'
+  //         });
+  //       }
+  //     }
+      
+  //     if (expiryDateHeader && row[expiryDateHeader]) {
+  //       const expiryDate = parseExcelDate(row[expiryDateHeader]);
+  //       if (!expiryDate || isNaN(expiryDate.getTime())) {
+  //         errors.push({
+  //           row: rowNumber,
+  //           field: 'expiryDate',
+  //           message: 'Invalid expiry date format'
+  //         });
+  //       }
+  //     }
+      
+  //     // Check date order if both dates exist
+  //     if (mfgDateHeader && expiryDateHeader && row[mfgDateHeader] && row[expiryDateHeader]) {
+  //       const mfgDate = parseExcelDate(row[mfgDateHeader]);
+  //       const expiryDate = parseExcelDate(row[expiryDateHeader]);
+        
+  //       if (mfgDate && expiryDate && !isNaN(mfgDate.getTime()) && !isNaN(expiryDate.getTime())) {
+  //         if (expiryDate <= mfgDate) {
+  //           errors.push({
+  //             row: rowNumber,
+  //             field: 'expiryDate',
+  //             message: 'Expiry date must be after manufacture date'
+  //           });
+  //         }
+  //       }
+  //     }
+  //   });
+
+  //   console.log('Validation errors:', errors.length);
+  //   return errors;
+  // };
+
+
+
+  const checkExistingBatches = async (batchNumbers) => {
+  try {
+    console.log(`🔍 Checking ${batchNumbers.length} batch numbers for duplicates...`);
+    
+    const existingBatches = [];
+    
+    // Check each batch number
+    for (const batchNo of batchNumbers) {
+      try {
+        const response = await api.get(`/batches/${batchNo}`);
+        
+        // If response exists and is not null/404
+        if (response !== null && response.success !== false) {
+          existingBatches.push(batchNo);
+        }
+      } catch (error) {
+        // 404 errors are expected (batch doesn't exist)
+        if (!error.message.includes('not found') && !error.message.includes('404')) {
+          console.warn(`Error checking batch ${batchNo}:`, error.message);
+        }
+      }
+    }
+    
+    return existingBatches;
+    
+  } catch (error) {
+    console.error('Error in batch existence check:', error);
+    return [];
+  }
+};
+
+
 
   const handleImport = async () => {
-    // Filter out empty rows first
-    const validData = previewData.filter(row => !isRowEmpty(row));
-    
-    if (validData.length === 0) {
-      alert('No valid data to import. All rows appear to be empty.');
-      return;
-    }
-    
-    console.log('Importing valid data:', validData.length, 'rows');
-    
-    const errors = validateData(validData);
-    setValidationErrors(errors);
-    
-    if (errors.length > 0) {
-      alert(`Found ${errors.length} validation error(s). Please fix them before importing.`);
-      return;
-    }
+  // Filter out empty rows first
+  const validData = previewData.filter(row => !isRowEmpty(row));
+  
+  if (validData.length === 0) {
+    alert('No valid data to import. All rows appear to be empty.');
+    return;
+  }
+  
+  console.log('Importing valid data:', validData.length, 'rows');
+  
+  // FIRST: Extract batch numbers for duplicate check
+  const batchNumbers = [];
+  const formattedData = validData.map(row => {
+    const formattedRow = {
+      manufacturer: manufacturerName,
+      companyId: companyId
+    };
 
-    setLoading(true);
-    setStep(3);
-
-    try {
-      const formattedData = validData.map(row => {
-        const formattedRow = {
-          manufacturer: manufacturerName,
-          companyId: companyId
-        };
-
-        // Map data according to mapping
-        Object.keys(mapping).forEach(header => {
-          const fieldName = mapping[header];
-          let value = row[header];
-          
-          if (value === undefined || value === null || value === '') return;
-          
-          // Special handling for dates
-          if (fieldName === 'manufactureDate' || fieldName === 'expiryDate') {
-            const parsedDate = parseExcelDate(value);
-            if (parsedDate && !isNaN(parsedDate.getTime())) {
-              value = parsedDate.toISOString().split('T')[0];
-            } else {
-              // If parsing fails, keep original but log warning
-              console.warn(`Could not parse date: ${value}`);
-              value = String(value).trim();
-            }
-          }
-          
-          // Convert quantity to number
-          if (fieldName === 'quantity') {
-            const numValue = Number(value);
-            value = isNaN(numValue) ? 0 : Math.max(0, numValue);
-          }
-          
-          // Trim strings
-          if (typeof value === 'string') {
-            value = value.trim();
-          }
-          
-          formattedRow[fieldName] = value;
-        });
-
-        return formattedRow;
-      }).filter(row => row.batchNo && row.medicineName); // Filter out rows without essential data
-
-      console.log('Sending import data:', {
-        count: formattedData.length,
-        manufacturerCompanyId: companyId,
-        sampleData: formattedData.slice(0, 2)
-      });
-
-      // Send to backend
-      const response = await api.post('/batches/import-excel', {
-        batches: formattedData,
-        manufacturerCompanyId: companyId
-      });
-
-      console.log('Import response:', response);
-
-      if (response.success) {
-        onImportSuccess(response);
-        onClose();
-        alert(`✅ Successfully imported ${response.importedCount || formattedData.length} batch(es)!`);
-      } else {
-        throw new Error(response.message || 'Import failed');
+    // Map data according to mapping
+    Object.keys(mapping).forEach(header => {
+      const fieldName = mapping[header];
+      let value = row[header];
+      
+      if (value === undefined || value === null || value === '') return;
+      
+      // Store batch numbers for duplicate check
+      if (fieldName === 'batchNo') {
+        const batchNo = String(value).trim();
+        formattedRow[fieldName] = batchNo;
+        batchNumbers.push(batchNo);
       }
-    } catch (error) {
-      console.error('Import error:', error);
-      alert(`❌ Import failed: ${error.message || 'Unknown error'}`);
-      setStep(2);
-    } finally {
-      setLoading(false);
+      
+      // Special handling for dates
+      if (fieldName === 'manufactureDate' || fieldName === 'expiryDate') {
+        const parsedDate = parseExcelDate(value);
+        if (parsedDate && !isNaN(parsedDate.getTime())) {
+          value = parsedDate.toISOString().split('T')[0];
+        } else {
+          console.warn(`Could not parse date: ${value}`);
+          value = String(value).trim();
+        }
+      }
+      
+      // Convert quantity to number
+      if (fieldName === 'quantity') {
+        const numValue = Number(value);
+        value = isNaN(numValue) ? 0 : Math.max(0, numValue);
+      }
+      
+      // Trim strings
+      if (typeof value === 'string') {
+        value = value.trim();
+      }
+      
+      if (fieldName !== 'batchNo') {
+        formattedRow[fieldName] = value;
+      }
+    });
+
+    return formattedRow;
+  }).filter(row => row.batchNo && row.medicineName);
+
+  // ✅ NEW: Check for existing batches BEFORE importing
+  const existingBatches = await checkExistingBatches(batchNumbers);
+  
+  if (existingBatches.length > 0) {
+    const duplicateMessage = `❌ ${existingBatches.length} batch(es) already exist in the system:\n\n` +
+      existingBatches.slice(0, 5).map(b => `• ${b}`).join('\n') +
+      (existingBatches.length > 5 ? `\n... and ${existingBatches.length - 5} more` : '') +
+      `\n\nPlease remove or change these batch numbers before importing.`;
+    
+    alert(duplicateMessage);
+    setStep(2); // Go back to preview
+    return;
+  }
+
+  // Then proceed with validation
+  const errors = validateData(validData);
+  setValidationErrors(errors);
+  
+  if (errors.length > 0) {
+    alert(`Found ${errors.length} validation error(s). Please fix them before importing.`);
+    return;
+  }
+
+  setLoading(true);
+  setStep(3);
+
+  try {
+    console.log('Sending import data:', {
+      count: formattedData.length,
+      manufacturerCompanyId: companyId,
+      sampleData: formattedData.slice(0, 2)
+    });
+
+    // Send to backend
+    const response = await api.post('/batches/import-excel', {
+      batches: formattedData,
+      manufacturerCompanyId: companyId
+    });
+
+    console.log('Import response:', response);
+
+    // ✅ UPDATED: Check for DUAL STORAGE FAILURE
+    if (response.success) {
+      // Check if it's a DUAL STORAGE failure
+      if (response.storage && response.storage.status === "rolled_back") {
+        throw new Error(`❌ DUAL STORAGE FAILED: ${response.message || 'Batch registration requires both MongoDB and Blockchain to succeed. Please check blockchain connection.'}`);
+      }
+      
+      // Check if some batches failed due to dual storage requirement
+      if (response.results && response.results.details) {
+        const failedBatches = response.results.details.filter(detail => 
+          detail.status === 'failed' || detail.requirement === 'dual_storage_failed'
+        );
+        
+        if (failedBatches.length > 0) {
+          const errorMessage = `⚠️ IMPORT PARTIALLY FAILED:\n` +
+            `Successfully imported: ${response.results.success || 0} batches\n` +
+            `Failed due to dual storage requirement: ${failedBatches.length} batches\n\n` +
+            `First few failures:\n${failedBatches.slice(0, 3).map(b => `• ${b.batchNo}: ${b.error}`).join('\n')}`;
+          
+          alert(errorMessage);
+        }
+      }
+      
+      // If import was successful (even partially), trigger success callback
+      onImportSuccess(response);
+      
+      // Show success message
+      if (response.importedCount > 0) {
+        alert(`✅ Successfully imported ${response.importedCount || response.results.success || 0} batch(es)!`);
+        onClose();
+      } else {
+        // No batches were imported due to dual storage failure
+        throw new Error('No batches were imported. Dual storage requirement failed for all batches.');
+      }
+    } else {
+      throw new Error(response.message || 'Import failed');
     }
-  };
+  } catch (error) {
+    console.error('Import error:', error);
+    
+    // ✅ UPDATED: Better error messages for dual storage
+    let userMessage = error.message;
+    
+    if (error.message.includes('DUAL STORAGE FAILED') || 
+        error.message.includes('dual_storage_failed') ||
+        error.message.includes('Both MongoDB and Blockchain')) {
+      userMessage = `❌ IMPORT FAILED - DUAL STORAGE REQUIREMENT\n\n` +
+        `For a batch to be registered, it must succeed in BOTH:\n` +
+        `1. MongoDB Database ✅\n` +
+        `2. Blockchain Network ❌\n\n` +
+        `The blockchain appears to be unavailable. Please:\n` +
+        `• Check blockchain network connection\n` +
+        `• Verify contract address is correct\n` +
+        `• Ensure sufficient ETH for gas fees\n` +
+        `• Try importing again later`;
+    }
+    
+    alert(userMessage);
+    setStep(2); // Go back to preview step
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // const handleImport = async () => {
+  //   // Filter out empty rows first
+  //   const validData = previewData.filter(row => !isRowEmpty(row));
+    
+  //   if (validData.length === 0) {
+  //     alert('No valid data to import. All rows appear to be empty.');
+  //     return;
+  //   }
+    
+  //   console.log('Importing valid data:', validData.length, 'rows');
+    
+  //   const errors = validateData(validData);
+  //   setValidationErrors(errors);
+    
+  //   if (errors.length > 0) {
+  //     alert(`Found ${errors.length} validation error(s). Please fix them before importing.`);
+  //     return;
+  //   }
+
+  //   setLoading(true);
+  //   setStep(3);
+
+  //   try {
+  //     const formattedData = validData.map(row => {
+  //       const formattedRow = {
+  //         manufacturer: manufacturerName,
+  //         companyId: companyId
+  //       };
+
+  //       // Map data according to mapping
+  //       Object.keys(mapping).forEach(header => {
+  //         const fieldName = mapping[header];
+  //         let value = row[header];
+          
+  //         if (value === undefined || value === null || value === '') return;
+          
+  //         // Special handling for dates
+  //         if (fieldName === 'manufactureDate' || fieldName === 'expiryDate') {
+  //           const parsedDate = parseExcelDate(value);
+  //           if (parsedDate && !isNaN(parsedDate.getTime())) {
+  //             value = parsedDate.toISOString().split('T')[0];
+  //           } else {
+  //             // If parsing fails, keep original but log warning
+  //             console.warn(`Could not parse date: ${value}`);
+  //             value = String(value).trim();
+  //           }
+  //         }
+          
+  //         // Convert quantity to number
+  //         if (fieldName === 'quantity') {
+  //           const numValue = Number(value);
+  //           value = isNaN(numValue) ? 0 : Math.max(0, numValue);
+  //         }
+          
+  //         // Trim strings
+  //         if (typeof value === 'string') {
+  //           value = value.trim();
+  //         }
+          
+  //         formattedRow[fieldName] = value;
+  //       });
+
+  //       return formattedRow;
+  //     }).filter(row => row.batchNo && row.medicineName); // Filter out rows without essential data
+
+  //     console.log('Sending import data:', {
+  //       count: formattedData.length,
+  //       manufacturerCompanyId: companyId,
+  //       sampleData: formattedData.slice(0, 2)
+  //     });
+
+  //     // Send to backend
+  //     const response = await api.post('/batches/import-excel', {
+  //       batches: formattedData,
+  //       manufacturerCompanyId: companyId
+  //     });
+
+  //     console.log('Import response:', response);
+
+  //     if (response.success) {
+  //       onImportSuccess(response);
+  //       onClose();
+  //       alert(`✅ Successfully imported ${response.importedCount || formattedData.length} batch(es)!`);
+  //     } else {
+  //       throw new Error(response.message || 'Import failed');
+  //     }
+  //   } catch (error) {
+  //     console.error('Import error:', error);
+  //     alert(`❌ Import failed: ${error.message || 'Unknown error'}`);
+  //     setStep(2);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const parseExcelDate = (dateValue) => {
     if (!dateValue) return null;
@@ -615,25 +929,39 @@ function ExcelImportModal({
 
         {/* Step 3: Importing */}
         {step === 3 && (
-          <div className="text-center p-8">
-            <div className="text-6xl mb-4 animate-pulse">⏳</div>
-            <h4 className="text-xl font-semibold text-gray-800 mb-4">
-              Importing {previewData.length} Batches
-            </h4>
-            <p className="text-gray-600 mb-6">
-              Please wait while we process your data...
-            </p>
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-              <div 
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: loading ? '75%' : '100%' }}
-              ></div>
-            </div>
-            <p className="text-gray-500 text-sm">
-              Registering batches on blockchain and updating database
-            </p>
-          </div>
-        )}
+  <div className="text-center p-8">
+    <div className="text-6xl mb-4 animate-pulse">⏳</div>
+    <h4 className="text-xl font-semibold text-gray-800 mb-4">
+      Importing {previewData.length} Batches
+    </h4>
+    <p className="text-gray-600 mb-6">
+      {/* ✅ UPDATED MESSAGE */}
+      Registering batches in BOTH systems (MongoDB + Blockchain)...
+      <br />
+      <span className="text-sm text-orange-600">
+        Note: Both systems must succeed for batch registration
+      </span>
+    </p>
+    <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+      <div 
+        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+        style={{ width: loading ? '75%' : '100%' }}
+      ></div>
+    </div>
+    <div className="grid grid-cols-2 gap-4 text-sm text-gray-500">
+      <div className="text-center p-2 bg-gray-50 rounded">
+        <div className="font-semibold">MongoDB</div>
+        <div className="text-green-600">✅ Database</div>
+      </div>
+      <div className="text-center p-2 bg-gray-50 rounded">
+        <div className="font-semibold">Blockchain</div>
+        <div className={loading ? "text-yellow-600" : "text-green-600"}>
+          {loading ? "⏳ Processing..." : "✅ Network"}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
       </div>
     </div>
   );

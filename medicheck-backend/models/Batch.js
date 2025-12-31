@@ -62,7 +62,16 @@ const batchSchema = new mongoose.Schema({
   blockchainVerified: { 
     type: Boolean, 
     default: false 
-  }
+  },
+  blockchainTransactionHash: String,
+  blockchainBlockNumber: Number,
+  // ✅ Add dual storage tracking
+  dualStorageStatus: {
+    type: String,
+    enum: ['pending', 'completed', 'failed', 'rolled_back'],
+    default: 'pending'
+  },
+  dualStorageError: String,
 }, {
   timestamps: true
 });
