@@ -63,7 +63,7 @@ function VerifyPage({ batches, metamask, user, theme }) {
         headers["Authorization"] = `Bearer ${token}`;
       }
       
-      const response = await fetch("http://localhost:5000/api/pharmacy/medicines", {
+      const response = await fetch("https://medicheck-production.up.railway.app/api/pharmacy/medicines", {
         method: "GET",
         headers: headers
       });
@@ -76,7 +76,7 @@ function VerifyPage({ batches, metamask, user, theme }) {
         }
       } else if (response.status === 401) {
         console.warn("⚠️ Not authenticated - showing medicines anyway");
-        const publicResponse = await fetch("http://localhost:5000/api/pharmacy/medicines");
+        const publicResponse = await fetch("https://medicheck-production.up.railway.app/api/pharmacy/medicines");
         if (publicResponse.ok) {
           const publicData = await publicResponse.json();
           if (publicData.success) {
@@ -87,7 +87,7 @@ function VerifyPage({ batches, metamask, user, theme }) {
     } catch (error) {
       console.error("Error fetching pharmacy medicines:", error);
       try {
-        const fallbackResponse = await fetch("http://localhost:5000/api/pharmacy/medicines");
+        const fallbackResponse = await fetch("https://medicheck-production.up.railway.app/api/pharmacy/medicines");
         if (fallbackResponse.ok) {
           const fallbackData = await fallbackResponse.json();
           if (fallbackData.success) {

@@ -64,20 +64,59 @@ const app = express();
 // ✅ Security middleware
 app.use(helmet());
 
-// app.use(cors({
-//   origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
-//   credentials: true,
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-// }));
-app.use(cors({
-  origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // 1. Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    // 2. Allow ALL Vercel preview domains automatically
+    if (origin.endsWith('.vercel.app')) {
+      console.log(`✅ Allowing Vercel preview domain: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // 3. Allow your production frontend
+    if (origin === 'https://medicheck-eight.vercel.app') {
+      return callback(null, true);
+    }
+    
+    // 4. Allow local development
+    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      return callback(null, true);
+    }
+    
+    // 5. Reject everything else
+    console.log(`❌ Blocked origin: ${origin}`);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range']
-}));
-app.options('*', cors()); // Enable pre-flight for all routes
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // Cache preflight for 24 hours
+};
 
+// Apply CORS middleware
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight for ALL routes
+
+// app.use(cors({
+//   origin: [
+//     "https://medicheck-eight.vercel.app",  // Your main frontend
+//     "https://medicheck-4zs1428n7-medichecks-projects.vercel.app", // NEW Vercel preview
+//     "https://medicheck-bj6rr1vm1-medichecks-projects.vercel.app", // Previous preview
+//     "http://localhost:3000",
+//     "http://127.0.0.1:3000"
+//   ],
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+//   exposedHeaders: ['Content-Range', 'X-Content-Range']
+// }));
+// app.options('*', cors());
+
+	
 // ✅ Enhanced authentication check middleware
 app.use((req, res, next) => {
   // Skip auth for public routes
@@ -128,6 +167,38 @@ const limiter = rateLimit({
   legacyHeaders: false
 });
 
+//  DELETE THIS 
+// app.get('/api/create-admin', async (req, res) => {
+//   try {
+//     // Similar logic as above
+//     res.json({ success: true, message: 'Admin created/updated' });
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
+
+// app.get('/api/verify-admin', async (req, res) => {
+//   try {
+//     const User = mongoose.model('User'); // Or import your User model
+//     const admin = await User.findOne({ username: 'admin' });
+    
+//     if (!admin) {
+//       return res.json({ success: false, message: 'No admin user found' });
+//     }
+    
+//     res.json({ 
+//       success: true, 
+//       admin: {
+//         username: admin.username,
+//         role: admin.role,
+//         isActive: admin.isActive,
+//         createdAt: admin.createdAt
+//       }
+//     });
+//   } catch (error) {
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
 
 
 
@@ -1878,9 +1949,13 @@ const startServer = async () => {
     SyncWorker.start();
     console.log('✅ Background sync worker started');
 
-    app.listen(PORT, () => {
+
+	  app.listen(PORT, '0.0.0.0', () => {
       console.log(`✅ Server running on port ${PORT}`);
     });
+   // app.listen(PORT, () => {
+   //    console.log(`✅ Server running on port ${PORT}`);
+   //  });
 
   } catch (error) {
     console.error('❌ Failed to start server:', error);
