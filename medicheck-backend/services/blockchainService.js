@@ -377,13 +377,13 @@ class BlockchainService {
 //   }
 // }
 
-  async registerCompleteMedicine(batchData) {
+
+    async registerCompleteMedicine(batchData) {
   try {
     console.log('🔍 Web3.js version check:', {
       version: this.web3?.version,
       utilsAvailable: !!this.web3?.utils,
-      hasToBN: typeof this.web3?.utils?.toBN === 'function',
-      hasToBigInt: typeof this.web3?.utils?.toBigInt === 'function'
+      hasToBN: typeof this.web3?.utils?.toBN === 'function'
     });
 
     console.log('📝 Registering medicine on blockchain...');
@@ -401,9 +401,7 @@ class BlockchainService {
       batchNo: blockchainData.batchNo,
       name: blockchainData.name,
       quantity: blockchainData.quantity,
-      manufacturer: blockchainData.manufacturer,
-      manufactureDate: blockchainData.manufactureDate,
-      expiryDate: blockchainData.expiryDate
+      manufacturer: blockchainData.manufacturer
     });
     
     // Check if already exists
@@ -417,23 +415,15 @@ class BlockchainService {
     
     console.log(`👤 Sending from account: ${fromAccount}`);
     
-    // ✅ FIXED: Convert quantity safely for Web3.js v1.10.4
+    // Convert quantity safely
     let quantityForContract;
     try {
-      // Use parseInt to ensure it's a number, then convert to string for BigInt
       quantityForContract = BigInt(parseInt(blockchainData.quantity) || 1);
     } catch (error) {
       console.warn('⚠️ Quantity conversion failed, using default:', error.message);
-      quantityForContract = 1n; // Default to 1
+      quantityForContract = 1n;
     }
     
-    console.log('🔢 Quantity conversion for contract:', {
-      original: blockchainData.quantity,
-      type: typeof blockchainData.quantity,
-      converted: quantityForContract.toString(),
-      convertedType: typeof quantityForContract
-    });
-
     // Prepare transaction method
     const method = this.contract.methods.registerMedicine(
       blockchainData.batchNo,
@@ -459,33 +449,19 @@ class BlockchainService {
       gasEstimate = this.isRealBlockchain ? 1000000 : 500000;
     }
     
-    // ============ TRANSACTION EXECUTION ============
-    
+    // Execute transaction
     let transaction;
-    
     if (this.isRealBlockchain) {
-      // ============ FOR REAL BLOCKCHAIN (SEPOLIA) ============
       transaction = await this.executeSignedTransaction(
-    method, 
-    fromAccount, 
-    this.contractAddress, 
-    blockchainData.batchNo,
-    'registration'
-  );
+        method, 
+        fromAccount, 
+        this.contractAddress, 
+        blockchainData.batchNo,
+        'registration'
+      );
     } else {
-      // ============ FOR LOCAL BLOCKCHAIN ============
       transaction = await this.executeLocalTransaction(method, fromAccount, blockchainData.batchNo);
-      }
-  //     else {
-  // // ============ FOR LOCAL BLOCKCHAIN ============
-  // transaction = await method.send({
-  //   from: fromAccount,
-  //   gas: Math.floor(gasEstimate * 1.2)
-  // });
-  // }
-    
-    
-    // ============ END OF TRANSACTION SECTION ============
+    }
     
     // Track transaction
     this.trackTransaction(transaction.transactionHash, blockchainData.batchNo);
@@ -497,8 +473,7 @@ class BlockchainService {
       blockNumber: transaction.blockNumber,
       from: fromAccount,
       batchNo: blockchainData.batchNo,
-      network: this.isRealBlockchain ? 'real' : 'local',
-      signed: this.isRealBlockchain
+      network: this.isRealBlockchain ? 'real' : 'local'
     };
     
     if (this.isRealBlockchain) {
@@ -506,39 +481,196 @@ class BlockchainService {
       console.log(`🔗 Explorer URL: ${result.explorerUrl}`);
     }
     
-    console.log('🎉 Medicine registered successfully!');
-    
+    console.log('🎉 Medicine registered successfully on blockchain!');
     return result;
     
   } catch (error) {
-    console.error('❌ Error registering medicine:', {
+    console.error('❌ Blockchain registration failed:', {
       message: error.message,
       batchNo: batchData?.batchNo,
       isRealBlockchain: this.isRealBlockchain
     });
     
-    // Enhanced error messages
-    if (error.message.includes('eth_sendTransaction does not exist')) {
-      throw new Error('Public RPC nodes require signed transactions.');
-    } else if (error.message.includes('insufficient funds')) {
-      throw new Error('Insufficient ETH for gas. Please add funds to your wallet.');
+    // Enhanced error messages for dual storage
+    if (error.message.includes('insufficient funds')) {
+      throw new Error('Blockchain: Insufficient ETH for gas. Transaction aborted.');
     } else if (error.message.includes('nonce')) {
-      throw new Error('Transaction nonce error. Please try again.');
+      throw new Error('Blockchain: Transaction nonce error. Please try again.');
     } else if (error.message.includes('revert')) {
-      throw new Error(`Transaction reverted: ${error.reason || 'Check contract requirements'}`);
+      throw new Error(`Blockchain: Transaction reverted - ${error.reason || 'Check contract requirements'}`);
     } else if (error.message.includes('already exists')) {
-      throw new Error(`Batch ${batchData.batchNo} already exists on blockchain`);
+      throw new Error(`Blockchain: Batch ${batchData.batchNo} already exists`);
     } else if (error.message.includes('BigInt')) {
-      throw new Error(`Type conversion error: ${error.message}. Please check quantity format.`);
-    } else if (error.message.includes('Invalid character')) {
-      throw new Error('Transaction signing failed. Check private key format.');
-    } else if (error.message.includes('formatJson')) {
-      throw new Error('Web3.js version compatibility issue. Please update the signing method.');
+      throw new Error(`Blockchain: Type conversion error - ${error.message}`);
     }
     
     throw new Error(`Blockchain registration failed: ${error.message}`);
   }
 }
+
+
+//   async registerCompleteMedicine(batchData) {
+//   try {
+//     console.log('🔍 Web3.js version check:', {
+//       version: this.web3?.version,
+//       utilsAvailable: !!this.web3?.utils,
+//       hasToBN: typeof this.web3?.utils?.toBN === 'function',
+//       hasToBigInt: typeof this.web3?.utils?.toBigInt === 'function'
+//     });
+
+//     console.log('📝 Registering medicine on blockchain...');
+    
+//     // Validate batch data
+//     const validation = this.validateBatchData(batchData);
+//     if (!validation.valid) {
+//       throw new Error(`Invalid batch data: ${validation.errors.join(', ')}`);
+//     }
+    
+//     // Prepare data for blockchain
+//     const blockchainData = this.prepareBlockchainData(batchData);
+    
+//     console.log('📦 Prepared blockchain data:', {
+//       batchNo: blockchainData.batchNo,
+//       name: blockchainData.name,
+//       quantity: blockchainData.quantity,
+//       manufacturer: blockchainData.manufacturer,
+//       manufactureDate: blockchainData.manufactureDate,
+//       expiryDate: blockchainData.expiryDate
+//     });
+    
+//     // Check if already exists
+//     const exists = await this.verifyMedicineExistence(blockchainData.batchNo);
+//     if (exists) {
+//       throw new Error(`Batch ${blockchainData.batchNo} already exists on blockchain`);
+//     }
+    
+//     // Get account for transaction
+//     const fromAccount = await this.getDefaultAccount();
+    
+//     console.log(`👤 Sending from account: ${fromAccount}`);
+    
+//     // ✅ FIXED: Convert quantity safely for Web3.js v1.10.4
+//     let quantityForContract;
+//     try {
+//       // Use parseInt to ensure it's a number, then convert to string for BigInt
+//       quantityForContract = BigInt(parseInt(blockchainData.quantity) || 1);
+//     } catch (error) {
+//       console.warn('⚠️ Quantity conversion failed, using default:', error.message);
+//       quantityForContract = 1n; // Default to 1
+//     }
+    
+//     console.log('🔢 Quantity conversion for contract:', {
+//       original: blockchainData.quantity,
+//       type: typeof blockchainData.quantity,
+//       converted: quantityForContract.toString(),
+//       convertedType: typeof quantityForContract
+//     });
+
+//     // Prepare transaction method
+//     const method = this.contract.methods.registerMedicine(
+//       blockchainData.batchNo,
+//       blockchainData.name,
+//       blockchainData.medicineName,
+//       blockchainData.manufactureDate,
+//       blockchainData.expiryDate,
+//       blockchainData.formulation,
+//       quantityForContract,
+//       blockchainData.manufacturer,
+//       blockchainData.pharmacy,
+//       blockchainData.packaging,
+//       blockchainData.status
+//     );
+    
+//     // Estimate gas
+//     let gasEstimate;
+//     try {
+//       gasEstimate = await method.estimateGas({ from: fromAccount });
+//       console.log(`⛽ Estimated gas: ${gasEstimate}`);
+//     } catch (estimateError) {
+//       console.error('⚠️ Gas estimation failed:', estimateError.message);
+//       gasEstimate = this.isRealBlockchain ? 1000000 : 500000;
+//     }
+    
+//     // ============ TRANSACTION EXECUTION ============
+    
+//     let transaction;
+    
+//     if (this.isRealBlockchain) {
+//       // ============ FOR REAL BLOCKCHAIN (SEPOLIA) ============
+//       transaction = await this.executeSignedTransaction(
+//     method, 
+//     fromAccount, 
+//     this.contractAddress, 
+//     blockchainData.batchNo,
+//     'registration'
+//   );
+//     } else {
+//       // ============ FOR LOCAL BLOCKCHAIN ============
+//       transaction = await this.executeLocalTransaction(method, fromAccount, blockchainData.batchNo);
+//       }
+//   //     else {
+//   // // ============ FOR LOCAL BLOCKCHAIN ============
+//   // transaction = await method.send({
+//   //   from: fromAccount,
+//   //   gas: Math.floor(gasEstimate * 1.2)
+//   // });
+//   // }
+    
+    
+//     // ============ END OF TRANSACTION SECTION ============
+    
+//     // Track transaction
+//     this.trackTransaction(transaction.transactionHash, blockchainData.batchNo);
+    
+//     // Return result
+//     const result = {
+//       success: true,
+//       transactionHash: transaction.transactionHash,
+//       blockNumber: transaction.blockNumber,
+//       from: fromAccount,
+//       batchNo: blockchainData.batchNo,
+//       network: this.isRealBlockchain ? 'real' : 'local',
+//       signed: this.isRealBlockchain
+//     };
+    
+//     if (this.isRealBlockchain) {
+//       result.explorerUrl = this.getExplorerUrl(transaction.transactionHash);
+//       console.log(`🔗 Explorer URL: ${result.explorerUrl}`);
+//     }
+    
+//     console.log('🎉 Medicine registered successfully!');
+    
+//     return result;
+    
+//   } catch (error) {
+//     console.error('❌ Error registering medicine:', {
+//       message: error.message,
+//       batchNo: batchData?.batchNo,
+//       isRealBlockchain: this.isRealBlockchain
+//     });
+    
+//     // Enhanced error messages
+//     if (error.message.includes('eth_sendTransaction does not exist')) {
+//       throw new Error('Public RPC nodes require signed transactions.');
+//     } else if (error.message.includes('insufficient funds')) {
+//       throw new Error('Insufficient ETH for gas. Please add funds to your wallet.');
+//     } else if (error.message.includes('nonce')) {
+//       throw new Error('Transaction nonce error. Please try again.');
+//     } else if (error.message.includes('revert')) {
+//       throw new Error(`Transaction reverted: ${error.reason || 'Check contract requirements'}`);
+//     } else if (error.message.includes('already exists')) {
+//       throw new Error(`Batch ${batchData.batchNo} already exists on blockchain`);
+//     } else if (error.message.includes('BigInt')) {
+//       throw new Error(`Type conversion error: ${error.message}. Please check quantity format.`);
+//     } else if (error.message.includes('Invalid character')) {
+//       throw new Error('Transaction signing failed. Check private key format.');
+//     } else if (error.message.includes('formatJson')) {
+//       throw new Error('Web3.js version compatibility issue. Please update the signing method.');
+//     }
+    
+//     throw new Error(`Blockchain registration failed: ${error.message}`);
+//   }
+// }
 
 // ============ HELPER METHODS ============
 
@@ -581,7 +713,8 @@ async executeRealBlockchainTransaction(method, fromAccount, gasEstimate, blockch
   console.log('🔑 Private key check:', {
     length: privateKey.length,
     startsWith0x: privateKey.startsWith('0x'),
-    first10Chars: privateKey.substring(0, 10) + '...'
+    first10Chars: '***'  // Don't log private key parts
+    // first10Chars: privateKey.substring(0, 10) + '...'
   });
 
   // Validate private key format
@@ -1609,6 +1742,34 @@ async getCompleteMedicineFromBlockchain(batchNo) {
     throw error;
   }
 }
+
+async getPharmacyBlockchainAddress(pharmacyCompanyId) {
+  try {
+    // Import PharmacyCompany model
+    const PharmacyCompany = (await import('../models/PharmacyCompany.js')).default;
+    
+    const pharmacy = await PharmacyCompany.findById(pharmacyCompanyId)
+      .select('blockchainAddress name');
+    
+    if (!pharmacy) {
+      throw new Error('Pharmacy company not found');
+    }
+    
+    // If pharmacy has blockchain address, use it
+    if (pharmacy.blockchainAddress && pharmacy.blockchainAddress.trim() !== '') {
+      return pharmacy.blockchainAddress;
+    }
+    
+    // Otherwise, use the deployer/signer address (for testing)
+    console.warn(`⚠️ Pharmacy "${pharmacy.name}" has no blockchain address, using default account`);
+    return await this.getDefaultAccount();
+    
+  } catch (error) {
+    console.error('Error getting pharmacy blockchain address:', error);
+    return await this.getDefaultAccount(); // Fallback
+  }
+}
+
 
 // Add this new method for ALL signed transactions
 async executeSignedTransaction(method, fromAccount, toAddress, batchNo, action = 'generic') {

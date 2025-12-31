@@ -4,11 +4,10 @@ import BlockchainService from '../services/blockchainService.js'; // ✅ ADD THI
 const dummyBatches = [
 ];
 
-/* --------------------------------------------
-   ➕ Create New Batch (UPDATED - No Quantity Required)
--------------------------------------------- */
-  // Enhanced createBatch with complete dual storage
 
+/* --------------------------------------------
+   ➕ Create New Batch - STRICT DUAL STORAGE
+-------------------------------------------- */
 export const createBatch = async (req, res) => {
   try {
     const {
@@ -24,13 +23,13 @@ export const createBatch = async (req, res) => {
       packSize
     } = req.body;
 
-    console.log("📦 Creating batch with parallel storage:", { batchNo });
+    console.log("📦 Creating batch with STRICT DUAL STORAGE:", { batchNo });
 
-    // ✅ Validate required fields first
-    if (!batchNo || !name || !manufactureDate || !expiry || !quantity) {
+    // ✅ Validate required fields
+    if (!batchNo || !name || !manufactureDate || !expiry || !quantity || !manufacturer) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields: batchNo, name, manufactureDate, expiry, quantity"
+        message: "Missing required fields: batchNo, name, manufactureDate, expiry, quantity, manufacturer"
       });
     }
 
@@ -50,25 +49,17 @@ export const createBatch = async (req, res) => {
       throw new Error('Expiry date must be after manufacture date');
     }
 
-    // ✅ Check if batch already exists (check both in parallel)
-    console.log("🔍 Checking if batch already exists...");
-    const [existingMongoBatch, existingBlockchainBatch] = await Promise.allSettled([
-      Batch.findOne({ batchNo: batchNo.trim() }),
-      BlockchainService.verifyMedicineExistence(batchNo.trim())
-    ]);
-
-    const existsInMongo = existingMongoBatch.status === 'fulfilled' && existingMongoBatch.value;
-    const existsInBlockchain = existingBlockchainBatch.status === 'fulfilled' && existingBlockchainBatch.value;
-
-    if (existsInMongo || existsInBlockchain) {
+    // ✅ Check if batch already exists
+    const existingBatch = await Batch.findOne({ batchNo: batchNo.trim() });
+    if (existingBatch) {
       return res.status(400).json({
         success: false,
-        message: `Batch number "${batchNo}" already exists`,
-        existsIn: existsInMongo ? 'MongoDB' : 'Blockchain'
+        message: `Batch "${batchNo}" already exists`,
+        duplicate: true
       });
     }
 
-    // ✅ Prepare batch data for BOTH storage systems
+    // ✅ Prepare data for BOTH storage systems
     const batchData = {
       batchNo: batchNo.trim(),
       name: name.trim(),
@@ -76,7 +67,7 @@ export const createBatch = async (req, res) => {
       manufactureDate: validManufactureDate,
       expiry: validExpiryDate,
       formulation: formulation?.trim() || 'Tablet',
-      manufacturer: manufacturer?.trim() || 'Unknown Manufacturer',
+      manufacturer: manufacturer.trim(),
       pharmacy: pharmacy?.trim() || "To be assigned",
       quantity: parseInt(quantity) || 1,
       packaging: {
@@ -87,188 +78,392 @@ export const createBatch = async (req, res) => {
     };
 
     const blockchainData = {
-      ...batchData,
+      batchNo: batchData.batchNo,
+      name: batchData.name,
+      medicineName: batchData.medicineName,
       manufactureDate: batchData.manufactureDate.toISOString().split('T')[0],
       expiryDate: batchData.expiry.toISOString().split('T')[0],
+      formulation: batchData.formulation,
+      quantity: parseInt(batchData.quantity),
+      manufacturer: batchData.manufacturer,
+      pharmacy: batchData.pharmacy,
       packaging: JSON.stringify(batchData.packaging),
-      status: "active",
-      quantity: parseInt(batchData.quantity) // ✅ Ensure it's a number, not BigInt
+      status: "active"
     };
-    // const blockchainData = {
-    //   ...batchData,
-    //   manufactureDate: batchData.manufactureDate.toISOString().split('T')[0],
-    //   expiryDate: batchData.expiry.toISOString().split('T')[0],
-    //   packaging: JSON.stringify(batchData.packaging),
-    //   status: "active"
-    // };
 
-    console.log('✅ Data prepared for parallel storage');
-
-    // ⚡⚡⚡ PARALLEL STORAGE IMPLEMENTATION ⚡⚡⚡
+    console.log('✅ Data prepared for DUAL storage');
+    
+    // ============ DUAL STORAGE: MongoDB first, then Blockchain ============
+    
     let mongoResult = null;
     let blockchainResult = null;
-    let mongoSuccess = false;
-    let blockchainSuccess = false;
-    let errors = {};
-
-    // PARALLEL EXECUTION: Store in both systems simultaneously
-    const storagePromises = await Promise.allSettled([
-      // MongoDB Storage
-      (async () => {
-        try {
-          const newBatch = new Batch({
-            ...batchData,
-            blockchainVerified: false
-          });
-          mongoResult = await newBatch.save();
-          mongoSuccess = true;
-          console.log(`✅ MongoDB storage successful: ${batchNo}`);
-          return { system: 'mongodb', success: true, data: mongoResult };
-        } catch (mongoError) {
-          console.error(`❌ MongoDB storage failed for ${batchNo}:`, mongoError.message);
-          errors.mongodb = mongoError.message;
-          return { system: 'mongodb', success: false, error: mongoError.message };
-        }
-      })(),
-
-      // Blockchain Storage
-      (async () => {
-        try {
-          blockchainResult = await BlockchainService.registerCompleteMedicine(blockchainData);
-          blockchainSuccess = true;
-          console.log(`✅ Blockchain storage successful: ${batchNo}`);
-          return { system: 'blockchain', success: true, data: blockchainResult };
-        } catch (blockchainError) {
-          console.error(`❌ Blockchain storage failed for ${batchNo}:`, blockchainError.message);
-          errors.blockchain = blockchainError.message;
-          return { system: 'blockchain', success: false, error: blockchainError.message };
-        }
-      })()
-    ]);
-
-    // ⚡ Analyze results from parallel storage
-    console.log("📊 Parallel storage results:", {
-      mongoSuccess,
-      blockchainSuccess,
-      errors
-    });
-
-    // 📊 Determine operation success based on results
-    let overallSuccess = false;
-    let message = "";
-    let warning = null;
-    let needsSync = false;
-
-    if (mongoSuccess && blockchainSuccess) {
-      // 🎉 PERFECT: Both succeeded
-      overallSuccess = true;
-      message = "Batch created successfully in both MongoDB and Blockchain";
-      
-      // Update MongoDB with blockchain info
-      mongoResult.blockchainVerified = true;
-      mongoResult.blockchainTransactionHash = blockchainResult.transactionHash;
-      mongoResult.blockchainBlockNumber = blockchainResult.blockNumber;
-      await mongoResult.save();
-      
-    } else if (mongoSuccess && !blockchainSuccess) {
-      // ⚠️ MongoDB succeeded, blockchain failed
-      overallSuccess = true; // OPERATION STILL SUCCESSFUL
-      message = "Batch created in database (Blockchain registration failed)";
-      warning = "Blockchain registration failed. Data is stored locally only.";
-      
-      // Mark as not verified
-      mongoResult.blockchainVerified = false;
-      mongoResult.blockchainError = errors.blockchain;
-      await mongoResult.save();
-      
-      // Queue for later blockchain sync
-      needsSync = true;
-      await queueForBlockchainSync(batchData, errors.blockchain);
-      
-    } else if (!mongoSuccess && blockchainSuccess) {
-      // ⚠️ Blockchain succeeded, MongoDB failed
-      overallSuccess = true; // OPERATION STILL SUCCESSFUL (data is immutable)
-      message = "Batch registered on Blockchain (Database storage failed)";
-      warning = "Database storage failed. Data is on blockchain but may not appear in lists.";
-      
-      // Store in temporary collection for MongoDB recovery
-      await storeTemporaryBatch(batchData, blockchainResult);
-      
-    } else {
-      // ❌ Both failed
-      overallSuccess = false;
-      message = "Batch creation failed in both storage systems";
-    }
-
-    // 🔄 If one succeeded, sync to the other later
-    if ((mongoSuccess || blockchainSuccess) && needsSync) {
-      // Start background sync process (non-blocking)
-      setTimeout(async () => {
-        try {
-          await attemptStorageSync(batchData, mongoSuccess, blockchainSuccess);
-        } catch (syncError) {
-          console.error("Background sync failed:", syncError);
-        }
-      }, 0); // Non-blocking
-    }
-
-    // 📤 Prepare response
-    const response = {
-      success: overallSuccess,
-      message,
-      storage: {
-        mongodb: mongoSuccess,
-        blockchain: blockchainSuccess,
-        status: mongoSuccess && blockchainSuccess ? "fully_synced" : 
-                mongoSuccess ? "mongodb_only" : 
-                blockchainSuccess ? "blockchain_only" : "failed"
-      },
-      data: mongoResult || batchData, // Return MongoDB data if available, otherwise original data
-      warnings: warning ? [warning] : []
-    };
-
-    // Add blockchain transaction info if available
-    if (blockchainResult) {
-      response.blockchain = {
-        transactionHash: blockchainResult.transactionHash,
-        blockNumber: blockchainResult.blockNumber
-      };
-    }
-
-    // Add errors if any (for debugging)
-    if (Object.keys(errors).length > 0) {
-      response.errors = errors;
-    }
-
-    console.log(`📤 Final response for ${batchNo}:`, {
-      success: overallSuccess,
-      storageStatus: response.storage.status
-    });
-
-    // Return appropriate status code
-    const statusCode = overallSuccess ? 201 : 500;
-    res.status(statusCode).json(response);
-
-  } catch (error) {
-    console.error("❌ Error in parallel batch creation:", error.message);
     
-    // Handle duplicate key errors
-    if (error.code === 11000) {
-      return res.status(400).json({
+    try {
+      // Step 1: Store in MongoDB
+      console.log('📝 Step 1: Storing in MongoDB...');
+      
+      const newBatch = new Batch({
+        ...batchData,
+        blockchainVerified: false,
+        dualStorageStatus: 'pending'
+      });
+      
+      mongoResult = await newBatch.save();
+      console.log('✅ MongoDB storage successful');
+      
+    } catch (mongoError) {
+      console.error('❌ MongoDB storage failed:', mongoError.message);
+      
+      if (mongoError.code === 11000) {
+        return res.status(400).json({
+          success: false,
+          message: "Batch number already exists",
+          duplicate: true
+        });
+      }
+      
+      return res.status(500).json({
         success: false,
-        message: "Batch number already exists",
-        duplicate: true
+        message: "MongoDB storage failed",
+        error: mongoError.message
       });
     }
     
-    res.status(500).json({
+    // Step 2: Store on Blockchain (only if MongoDB succeeded)
+    if (mongoResult) {
+      try {
+        console.log('🔗 Step 2: Storing on Blockchain...');
+        
+        blockchainResult = await BlockchainService.registerCompleteMedicine(blockchainData);
+        console.log('✅ Blockchain storage successful');
+        
+        // Update MongoDB with blockchain verification
+        mongoResult.blockchainVerified = true;
+        mongoResult.blockchainTransactionHash = blockchainResult.transactionHash;
+        mongoResult.blockchainBlockNumber = blockchainResult.blockNumber;
+        mongoResult.dualStorageStatus = 'completed';
+        await mongoResult.save();
+        
+        // ============ SUCCESS: Both succeeded ============
+        console.log(`🎉 DUAL STORAGE SUCCESSFUL for ${batchNo}`);
+        
+        const response = {
+          success: true,
+          message: "Batch created successfully in both MongoDB and Blockchain",
+          storage: {
+            mongodb: true,
+            blockchain: true,
+            status: "fully_synced",
+            requirement: "dual_storage"
+          },
+          data: mongoResult,
+          blockchain: {
+            transactionHash: blockchainResult.transactionHash,
+            blockNumber: blockchainResult.blockNumber,
+            explorerUrl: blockchainResult.explorerUrl || null
+          }
+        };
+        
+        return res.status(201).json(response);
+        
+      } catch (blockchainError) {
+        console.error('❌ Blockchain storage failed:', blockchainError.message);
+        
+        // 🔴 CRITICAL FIX: ROLLBACK MongoDB since blockchain failed
+        console.log('🔄 Rolling back MongoDB entry due to blockchain failure...');
+        try {
+          await Batch.findByIdAndDelete(mongoResult._id);
+          console.log('✅ MongoDB entry rolled back successfully');
+        } catch (rollbackError) {
+          console.error('❌ Failed to rollback MongoDB entry:', rollbackError.message);
+        }
+        
+        // Return complete failure
+        return res.status(500).json({
+          success: false,
+          message: `Batch registration failed: Both MongoDB and Blockchain storage must succeed. Blockchain error: ${blockchainError.message}`,
+          storage: {
+            mongodb: false,
+            blockchain: false,
+            status: "rolled_back",
+            requirement: "dual_storage_failed"
+          }
+        });
+      }
+    }
+    
+  } catch (error) {
+    console.error("❌ Error in dual batch creation:", error.message);
+    
+    return res.status(500).json({
       success: false,
       message: "Batch creation failed",
       error: error.message,
-      phase: "validation_or_preparation"
+      requires: "Both MongoDB and Blockchain storage must succeed"
     });
   }
 };
+
+// export const createBatch = async (req, res) => {
+//   try {
+//     const {
+//       batchNo,
+//       name,
+//       medicineName,
+//       manufactureDate,
+//       expiry,
+//       formulation,
+//       manufacturer,
+//       pharmacy,
+//       quantity,
+//       packSize
+//     } = req.body;
+
+//     console.log("📦 Creating batch with parallel storage:", { batchNo });
+
+//     // ✅ Validate required fields first
+//     if (!batchNo || !name || !manufactureDate || !expiry || !quantity) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Missing required fields: batchNo, name, manufactureDate, expiry, quantity"
+//       });
+//     }
+
+//     // ✅ Validate dates
+//     const validateDate = (dateString, fieldName) => {
+//       const date = new Date(dateString);
+//       if (isNaN(date.getTime())) {
+//         throw new Error(`Invalid ${fieldName}: ${dateString}`);
+//       }
+//       return date;
+//     };
+
+//     const validManufactureDate = validateDate(manufactureDate, 'manufactureDate');
+//     const validExpiryDate = validateDate(expiry, 'expiryDate');
+
+//     if (validExpiryDate <= validManufactureDate) {
+//       throw new Error('Expiry date must be after manufacture date');
+//     }
+
+//     // ✅ Check if batch already exists (check both in parallel)
+//     console.log("🔍 Checking if batch already exists...");
+//     const [existingMongoBatch, existingBlockchainBatch] = await Promise.allSettled([
+//       Batch.findOne({ batchNo: batchNo.trim() }),
+//       BlockchainService.verifyMedicineExistence(batchNo.trim())
+//     ]);
+
+//     const existsInMongo = existingMongoBatch.status === 'fulfilled' && existingMongoBatch.value;
+//     const existsInBlockchain = existingBlockchainBatch.status === 'fulfilled' && existingBlockchainBatch.value;
+
+//     if (existsInMongo || existsInBlockchain) {
+//       return res.status(400).json({
+//         success: false,
+//         message: `Batch number "${batchNo}" already exists`,
+//         existsIn: existsInMongo ? 'MongoDB' : 'Blockchain'
+//       });
+//     }
+
+//     // ✅ Prepare batch data for BOTH storage systems
+//     const batchData = {
+//       batchNo: batchNo.trim(),
+//       name: name.trim(),
+//       medicineName: (medicineName || name).trim(),
+//       manufactureDate: validManufactureDate,
+//       expiry: validExpiryDate,
+//       formulation: formulation?.trim() || 'Tablet',
+//       manufacturer: manufacturer?.trim() || 'Unknown Manufacturer',
+//       pharmacy: pharmacy?.trim() || "To be assigned",
+//       quantity: parseInt(quantity) || 1,
+//       packaging: {
+//         packSize: packSize?.trim() || "1X1",
+//         unitType: "units"
+//       },
+//       status: "manufactured"
+//     };
+
+//     const blockchainData = {
+//       ...batchData,
+//       manufactureDate: batchData.manufactureDate.toISOString().split('T')[0],
+//       expiryDate: batchData.expiry.toISOString().split('T')[0],
+//       packaging: JSON.stringify(batchData.packaging),
+//       status: "active",
+//       quantity: parseInt(batchData.quantity) // ✅ Ensure it's a number, not BigInt
+//     };
+//     // const blockchainData = {
+//     //   ...batchData,
+//     //   manufactureDate: batchData.manufactureDate.toISOString().split('T')[0],
+//     //   expiryDate: batchData.expiry.toISOString().split('T')[0],
+//     //   packaging: JSON.stringify(batchData.packaging),
+//     //   status: "active"
+//     // };
+
+//     console.log('✅ Data prepared for parallel storage');
+
+//     // ⚡⚡⚡ PARALLEL STORAGE IMPLEMENTATION ⚡⚡⚡
+//     let mongoResult = null;
+//     let blockchainResult = null;
+//     let mongoSuccess = false;
+//     let blockchainSuccess = false;
+//     let errors = {};
+
+//     // PARALLEL EXECUTION: Store in both systems simultaneously
+//     const storagePromises = await Promise.allSettled([
+//       // MongoDB Storage
+//       (async () => {
+//         try {
+//           const newBatch = new Batch({
+//             ...batchData,
+//             blockchainVerified: false
+//           });
+//           mongoResult = await newBatch.save();
+//           mongoSuccess = true;
+//           console.log(`✅ MongoDB storage successful: ${batchNo}`);
+//           return { system: 'mongodb', success: true, data: mongoResult };
+//         } catch (mongoError) {
+//           console.error(`❌ MongoDB storage failed for ${batchNo}:`, mongoError.message);
+//           errors.mongodb = mongoError.message;
+//           return { system: 'mongodb', success: false, error: mongoError.message };
+//         }
+//       })(),
+
+//       // Blockchain Storage
+//       (async () => {
+//         try {
+//           blockchainResult = await BlockchainService.registerCompleteMedicine(blockchainData);
+//           blockchainSuccess = true;
+//           console.log(`✅ Blockchain storage successful: ${batchNo}`);
+//           return { system: 'blockchain', success: true, data: blockchainResult };
+//         } catch (blockchainError) {
+//           console.error(`❌ Blockchain storage failed for ${batchNo}:`, blockchainError.message);
+//           errors.blockchain = blockchainError.message;
+//           return { system: 'blockchain', success: false, error: blockchainError.message };
+//         }
+//       })()
+//     ]);
+
+//     // ⚡ Analyze results from parallel storage
+//     console.log("📊 Parallel storage results:", {
+//       mongoSuccess,
+//       blockchainSuccess,
+//       errors
+//     });
+
+//     // 📊 Determine operation success based on results
+//     let overallSuccess = false;
+//     let message = "";
+//     let warning = null;
+//     let needsSync = false;
+
+//     if (mongoSuccess && blockchainSuccess) {
+//       // 🎉 PERFECT: Both succeeded
+//       overallSuccess = true;
+//       message = "Batch created successfully in both MongoDB and Blockchain";
+      
+//       // Update MongoDB with blockchain info
+//       mongoResult.blockchainVerified = true;
+//       mongoResult.blockchainTransactionHash = blockchainResult.transactionHash;
+//       mongoResult.blockchainBlockNumber = blockchainResult.blockNumber;
+//       await mongoResult.save();
+      
+//     } else if (mongoSuccess && !blockchainSuccess) {
+//       // ⚠️ MongoDB succeeded, blockchain failed
+//       overallSuccess = true; // OPERATION STILL SUCCESSFUL
+//       message = "Batch created in database (Blockchain registration failed)";
+//       warning = "Blockchain registration failed. Data is stored locally only.";
+      
+//       // Mark as not verified
+//       mongoResult.blockchainVerified = false;
+//       mongoResult.blockchainError = errors.blockchain;
+//       await mongoResult.save();
+      
+//       // Queue for later blockchain sync
+//       needsSync = true;
+//       await queueForBlockchainSync(batchData, errors.blockchain);
+      
+//     } else if (!mongoSuccess && blockchainSuccess) {
+//       // ⚠️ Blockchain succeeded, MongoDB failed
+//       overallSuccess = true; // OPERATION STILL SUCCESSFUL (data is immutable)
+//       message = "Batch registered on Blockchain (Database storage failed)";
+//       warning = "Database storage failed. Data is on blockchain but may not appear in lists.";
+      
+//       // Store in temporary collection for MongoDB recovery
+//       await storeTemporaryBatch(batchData, blockchainResult);
+      
+//     } else {
+//       // ❌ Both failed
+//       overallSuccess = false;
+//       message = "Batch creation failed in both storage systems";
+//     }
+
+//     // 🔄 If one succeeded, sync to the other later
+//     if ((mongoSuccess || blockchainSuccess) && needsSync) {
+//       // Start background sync process (non-blocking)
+//       setTimeout(async () => {
+//         try {
+//           await attemptStorageSync(batchData, mongoSuccess, blockchainSuccess);
+//         } catch (syncError) {
+//           console.error("Background sync failed:", syncError);
+//         }
+//       }, 0); // Non-blocking
+//     }
+
+//     // 📤 Prepare response
+//     const response = {
+//       success: overallSuccess,
+//       message,
+//       storage: {
+//         mongodb: mongoSuccess,
+//         blockchain: blockchainSuccess,
+//         status: mongoSuccess && blockchainSuccess ? "fully_synced" : 
+//                 mongoSuccess ? "mongodb_only" : 
+//                 blockchainSuccess ? "blockchain_only" : "failed"
+//       },
+//       data: mongoResult || batchData, // Return MongoDB data if available, otherwise original data
+//       warnings: warning ? [warning] : []
+//     };
+
+//     // Add blockchain transaction info if available
+//     if (blockchainResult) {
+//       response.blockchain = {
+//         transactionHash: blockchainResult.transactionHash,
+//         blockNumber: blockchainResult.blockNumber
+//       };
+//     }
+
+//     // Add errors if any (for debugging)
+//     if (Object.keys(errors).length > 0) {
+//       response.errors = errors;
+//     }
+
+//     console.log(`📤 Final response for ${batchNo}:`, {
+//       success: overallSuccess,
+//       storageStatus: response.storage.status
+//     });
+
+//     // Return appropriate status code
+//     const statusCode = overallSuccess ? 201 : 500;
+//     res.status(statusCode).json(response);
+
+//   } catch (error) {
+//     console.error("❌ Error in parallel batch creation:", error.message);
+    
+//     // Handle duplicate key errors
+//     if (error.code === 11000) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Batch number already exists",
+//         duplicate: true
+//       });
+//     }
+    
+//     res.status(500).json({
+//       success: false,
+//       message: "Batch creation failed",
+//       error: error.message,
+//       phase: "validation_or_preparation"
+//     });
+//   }
+// };
 
 // Helper functions for parallel storage
 async function queueForBlockchainSync(batchData, error) {
@@ -804,9 +999,8 @@ export const initializeBatches = async () => {
   }
 };
 
-
 /* --------------------------------------------
-   📊 IMPORT BATCHES FROM EXCEL
+   📊 IMPORT BATCHES FROM EXCEL - UPDATED
 -------------------------------------------- */
 export const importBatchesFromExcel = async (req, res) => {
   try {
@@ -878,6 +1072,7 @@ export const importBatchesFromExcel = async (req, res) => {
 
         // Format batch data
         const today = new Date();
+        const manufactureDate = batchData.manufactureDate ? new Date(batchData.manufactureDate) : today;
         const expiryDate = batchData.expiryDate ? new Date(batchData.expiryDate) : new Date(today);
         expiryDate.setFullYear(expiryDate.getFullYear() + 1); // Default to 1 year from now
 
@@ -885,7 +1080,7 @@ export const importBatchesFromExcel = async (req, res) => {
           batchNo: batchData.batchNo.trim(),
           name: batchData.medicineName.trim(),
           medicineName: batchData.medicineName.trim(),
-          manufactureDate: batchData.manufactureDate || today.toISOString().split('T')[0],
+          manufactureDate: manufactureDate.toISOString().split('T')[0],
           expiry: expiryDate.toISOString().split('T')[0],
           formulation: batchData.formulation || 'Tablet',
           manufacturer: manufacturerCompany.companyName,
@@ -895,59 +1090,74 @@ export const importBatchesFromExcel = async (req, res) => {
             packSize: batchData.packSize || "1X1",
             unitType: "units"
           },
-          status: "manufactured",
-          blockchainVerified: false,
-          source: 'excel_import'
+          status: "manufactured"
         };
 
         console.log('Formatted batch:', formattedBatch);
 
-        // Save to database
-        const newBatch = new Batch(formattedBatch);
-        await newBatch.save();
-
-        // Try blockchain registration (but don't fail if it doesn't work)
+        // ✅ STRICT DUAL STORAGE IMPLEMENTATION
+        let mongoResult = null;
+        
         try {
+          // Create batch in MongoDB
+          const newBatch = new Batch({
+            ...formattedBatch,
+            blockchainVerified: false,
+            dualStorageStatus: 'pending'
+          });
+          
+          mongoResult = await newBatch.save();
+          console.log('✅ MongoDB storage successful');
+          
+          // Try blockchain registration
           const blockchainData = {
             ...formattedBatch,
             manufactureDate: formattedBatch.manufactureDate,
             expiryDate: formattedBatch.expiry,
             packaging: JSON.stringify(formattedBatch.packaging),
-            status: "active"
+            status: "active",
+            quantity: parseInt(formattedBatch.quantity)
           };
-
+          
           const blockchainResult = await BlockchainService.registerCompleteMedicine(blockchainData);
           
+          // Update MongoDB with blockchain verification
           newBatch.blockchainVerified = true;
           newBatch.blockchainTransactionHash = blockchainResult?.transactionHash;
           newBatch.blockchainBlockNumber = blockchainResult?.blockNumber;
+          newBatch.dualStorageStatus = 'completed';
           await newBatch.save();
-
+          
           results.details.push({
             batchNo: batchData.batchNo,
             status: 'success',
             message: 'Added with blockchain verification',
             transactionHash: blockchainResult?.transactionHash
           });
-
-        } catch (blockchainError) {
-          console.warn(`Blockchain registration failed for ${batchData.batchNo}:`, blockchainError.message);
           
-          // Still save batch even if blockchain fails
-          newBatch.blockchainVerified = false;
-          newBatch.blockchainError = blockchainError.message;
-          await newBatch.save();
-
+          importedBatches.push(newBatch);
+          results.success++;
+          
+        } catch (storageError) {
+          // 🔴 ROLLBACK if either storage fails
+          if (mongoResult) {
+            console.log('🔄 Rolling back MongoDB entry...');
+            try {
+              await Batch.findByIdAndDelete(mongoResult._id);
+              console.log('✅ MongoDB entry rolled back');
+            } catch (rollbackError) {
+              console.error('❌ Rollback failed:', rollbackError.message);
+            }
+          }
+          
           results.details.push({
             batchNo: batchData.batchNo,
-            status: 'partial_success',
-            message: 'Added without blockchain verification',
-            warning: blockchainError.message
+            status: 'failed',
+            error: storageError.message,
+            requirement: 'dual_storage_failed'
           });
+          results.failed++;
         }
-
-        importedBatches.push(newBatch);
-        results.success++;
 
       } catch (error) {
         console.error(`❌ Error importing batch ${batchData.batchNo || 'Unknown'}:`, error.message);
@@ -984,7 +1194,8 @@ export const importBatchesFromExcel = async (req, res) => {
         id: b._id,
         batchNo: b.batchNo,
         name: b.name,
-        quantity: b.quantity
+        quantity: b.quantity,
+        blockchainVerified: b.blockchainVerified
       }))
     });
 
@@ -998,3 +1209,195 @@ export const importBatchesFromExcel = async (req, res) => {
     });
   }
 };
+
+
+// export const importBatchesFromExcel = async (req, res) => {
+//   try {
+//     const { batches, manufacturerCompanyId } = req.body;
+    
+//     console.log(`📊 Importing ${batches?.length || 0} batches from Excel for company: ${manufacturerCompanyId}`);
+
+//     // Validate input
+//     if (!batches || !Array.isArray(batches) || batches.length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "No batch data provided or invalid format"
+//       });
+//     }
+
+//     if (!manufacturerCompanyId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Manufacturer company ID is required"
+//       });
+//     }
+
+//     const ManufacturerCompany = (await import("../models/ManufacturerCompany.js")).default;
+    
+//     // Find manufacturer company
+//     const manufacturerCompany = await ManufacturerCompany.findById(manufacturerCompanyId);
+//     if (!manufacturerCompany) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Manufacturer company not found"
+//       });
+//     }
+
+//     const results = {
+//       total: batches.length,
+//       success: 0,
+//       failed: 0,
+//       details: []
+//     };
+
+//     const importedBatches = [];
+
+//     for (const batchData of batches) {
+//       try {
+//         console.log(`Processing batch: ${batchData.batchNo || 'Unknown'}`);
+        
+//         // Validate required fields
+//         const requiredFields = ['medicineName', 'batchNo', 'quantity'];
+//         const missingFields = requiredFields.filter(field => {
+//           const value = batchData[field];
+//           return !value && value !== 0;
+//         });
+        
+//         if (missingFields.length > 0) {
+//           throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+//         }
+
+//         // Check if batch already exists
+//         const existingBatch = await Batch.findOne({ batchNo: batchData.batchNo.trim() });
+//         if (existingBatch) {
+//           results.details.push({
+//             batchNo: batchData.batchNo,
+//             status: 'skipped',
+//             message: 'Batch already exists'
+//           });
+//           results.failed++;
+//           continue;
+//         }
+
+//         // Format batch data
+//         const today = new Date();
+//         const expiryDate = batchData.expiryDate ? new Date(batchData.expiryDate) : new Date(today);
+//         expiryDate.setFullYear(expiryDate.getFullYear() + 1); // Default to 1 year from now
+
+//         const formattedBatch = {
+//           batchNo: batchData.batchNo.trim(),
+//           name: batchData.medicineName.trim(),
+//           medicineName: batchData.medicineName.trim(),
+//           manufactureDate: batchData.manufactureDate || today.toISOString().split('T')[0],
+//           expiry: expiryDate.toISOString().split('T')[0],
+//           formulation: batchData.formulation || 'Tablet',
+//           manufacturer: manufacturerCompany.companyName,
+//           pharmacy: "To be assigned",
+//           quantity: parseInt(batchData.quantity) || 1,
+//           packaging: {
+//             packSize: batchData.packSize || "1X1",
+//             unitType: "units"
+//           },
+//           status: "manufactured",
+//           blockchainVerified: false,
+//           source: 'excel_import'
+//         };
+
+//         console.log('Formatted batch:', formattedBatch);
+
+//         // Save to database
+//         const newBatch = new Batch(formattedBatch);
+//         await newBatch.save();
+
+//         // Try blockchain registration (but don't fail if it doesn't work)
+//         try {
+//           const blockchainData = {
+//             ...formattedBatch,
+//             manufactureDate: formattedBatch.manufactureDate,
+//             expiryDate: formattedBatch.expiry,
+//             packaging: JSON.stringify(formattedBatch.packaging),
+//             status: "active"
+//           };
+
+//           const blockchainResult = await BlockchainService.registerCompleteMedicine(blockchainData);
+          
+//           newBatch.blockchainVerified = true;
+//           newBatch.blockchainTransactionHash = blockchainResult?.transactionHash;
+//           newBatch.blockchainBlockNumber = blockchainResult?.blockNumber;
+//           await newBatch.save();
+
+//           results.details.push({
+//             batchNo: batchData.batchNo,
+//             status: 'success',
+//             message: 'Added with blockchain verification',
+//             transactionHash: blockchainResult?.transactionHash
+//           });
+
+//         } catch (blockchainError) {
+//           console.warn(`Blockchain registration failed for ${batchData.batchNo}:`, blockchainError.message);
+          
+//           // Still save batch even if blockchain fails
+//           newBatch.blockchainVerified = false;
+//           newBatch.blockchainError = blockchainError.message;
+//           await newBatch.save();
+
+//           results.details.push({
+//             batchNo: batchData.batchNo,
+//             status: 'partial_success',
+//             message: 'Added without blockchain verification',
+//             warning: blockchainError.message
+//           });
+//         }
+
+//         importedBatches.push(newBatch);
+//         results.success++;
+
+//       } catch (error) {
+//         console.error(`❌ Error importing batch ${batchData.batchNo || 'Unknown'}:`, error.message);
+//         results.details.push({
+//           batchNo: batchData.batchNo || 'Unknown',
+//           status: 'failed',
+//           error: error.message
+//         });
+//         results.failed++;
+//       }
+//     }
+
+//     // Update manufacturer company stats
+//     const totalBatches = await Batch.countDocuments({ 
+//       manufacturer: manufacturerCompany.companyName 
+//     });
+    
+//     manufacturerCompany.totalBatches = totalBatches;
+//     await manufacturerCompany.save();
+
+//     console.log(`✅ Excel import completed: ${results.success}/${results.total} successful`);
+
+//     res.json({
+//       success: true,
+//       message: `Import completed: ${results.success} successful, ${results.failed} failed`,
+//       results: results,
+//       importedCount: results.success,
+//       manufacturerCompany: {
+//         id: manufacturerCompany._id,
+//         name: manufacturerCompany.companyName,
+//         updatedBatches: totalBatches
+//       },
+//       importedBatches: importedBatches.map(b => ({
+//         id: b._id,
+//         batchNo: b.batchNo,
+//         name: b.name,
+//         quantity: b.quantity
+//       }))
+//     });
+
+//   } catch (error) {
+//     console.error("❌ Excel import error:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Error importing batches from Excel",
+//       error: error.message,
+//       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+//     });
+//   }
+// };
