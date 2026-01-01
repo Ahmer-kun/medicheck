@@ -166,3 +166,37 @@
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #60a5fa, #a855f7);
 }
+
+
+
+/* For Sidebar invisible Scroller  */
+@layer utilities {
+  /* Invisible scrollbar for sidebar */
+  .sidebar-scroll {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  .sidebar-scroll::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  
+  /* Custom scrollbar for other elements if needed */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.1) transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 2px;
+  }
+}
