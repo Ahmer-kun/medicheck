@@ -10,7 +10,7 @@ function LandingPage() {
   const [activeFeature, setActiveFeature] = useState(0);
   
   // Import your logo
-  const logoImage = require("../pictures/CMDS.jpeg");
+  const logoImage = require("../pictures/MSG2.jpeg");
   
   const features = [
     {
