@@ -11,7 +11,12 @@ import { THEMES } from "./data/themes";
 import ResponsiveContainer from "./components/ResponsiveContainer";
 
 // Import all pages
-import LandingPage from "./pages/LandingPage"; // NEW
+//import LandingPage from "./pages/LandingPage"; // Keep this import for reference
+import HomePage from "./pages/HomePage";
+import HowItWorksPage from "./pages/HowItWorksPage";
+import IndustriesPage from "./pages/IndustriesPage";
+import ContactPage from "./pages/ContactPage";
+
 import RoleSelectionPage from "./pages/RoleSelectionPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import PharmacistLoginPage from "./pages/PharmacistLoginPage";
@@ -169,16 +174,30 @@ function MedicheckDashboard() {
   if (!auth.isAuthenticated) {
     if (!auth.selectedRole) {
       return (
+        // <Router>
+        //   <Routes>
+        //     {/* Landing page as default */}
+        //     <Route path="/" element={<LandingPage />} />
+        //     {/* Role selection page */}
+        //     <Route path="/role-selection" element={<RoleSelectionPage onRoleSelect={auth.selectRole} />} />
+        //     {/* Redirect to landing page for unknown routes */}
+        //     <Route path="*" element={<Navigate to="/" replace />} />
+        //   </Routes>
+        // </Router>
         <Router>
-          <Routes>
-            {/* Landing page as default */}
-            <Route path="/" element={<LandingPage />} />
-            {/* Role selection page */}
-            <Route path="/role-selection" element={<RoleSelectionPage onRoleSelect={auth.selectRole} />} />
-            {/* Redirect to landing page for unknown routes */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
+          {/* Updated Routes */}
+        <Routes>
+          {/* Landing/Home page as default */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/how-it-works" element={<HowItWorksPage />} />
+          <Route path="/industries" element={<IndustriesPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          {/* Role selection page */}
+          <Route path="/role-selection" element={<RoleSelectionPage onRoleSelect={auth.selectRole} />} />
+          {/* Redirect to home page for unknown routes */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
       );
     }
 
