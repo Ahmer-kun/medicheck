@@ -7,11 +7,11 @@ const statsCache = new Map();
 const CACHE_DURATION = 30000; // 30 seconds
 
 /* --------------------------------------------
-   🏭 Get All Manufacturer Companies WITH BULK STATS
+   Get All Manufacturer Companies WITH BULK STATS
 -------------------------------------------- */
 export const getAllManufacturerCompanies = async (req, res) => {
   try {
-    console.log("🔄 Fetching all manufacturer companies with bulk stats...");
+    console.log("Fetching all manufacturer companies with bulk stats...");
     
     const companies = await ManufacturerCompany.find({ isActive: true })
       .sort({ companyName: 1 })
@@ -27,32 +27,7 @@ export const getAllManufacturerCompanies = async (req, res) => {
     // Get company names for bulk query
     const companyNames = companies.map(company => company.companyName);
 
-    // Bulk query for batch counts - EFFICIENT
-    // const batchStats = await Batch.aggregate([
-    //   {
-    //     $match: {
-    //       manufacturer: { $in: companyNames }
-    //     }
-    //   },
-    //   {
-    //     $group: {
-    //       _id: "$manufacturer",
-    //       totalBatches: { $sum: 1 },
-    //       verifiedBatches: {
-    //         $sum: { $cond: [{ $eq: ["$blockchainVerified", true] }, 1, 0] }
-    //       },
-    //       expiredBatches: {
-    //         $sum: {
-    //           $cond: [{ $lt: ["$expiry", new Date()] }, 1, 0]
-    //         }
-    //       }
-    //     }
-    //   }
-    // ]);
-
-
-    // In the getAllManufacturerCompanies function, update the batchStats aggregation:
-
+    // In the getAllManufacturerCompanies function, last updated the batchStats aggregation:
 const batchStats = await Batch.aggregate([
   {
     $match: {
@@ -112,14 +87,14 @@ const batchStats = await Batch.aggregate([
       };
     });
 
-    console.log(`✅ Fetched ${companies.length} manufacturer companies with bulk stats`);
+    console.log(`Fetched ${companies.length} manufacturer companies with bulk stats`);
     
     res.json({
       success: true,
       data: companiesWithStats
     });
   } catch (error) {
-    console.error("❌ Error fetching manufacturer companies:", error);
+    console.error("Error fetching manufacturer companies:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching manufacturer companies",
@@ -129,13 +104,13 @@ const batchStats = await Batch.aggregate([
 };
 
 /* --------------------------------------------
-   📊 Get Manufacturer Company Statistics - OPTIMIZED
+   Get Manufacturer Company Statistics - OPTIMIZED
 -------------------------------------------- */
 export const getManufacturerCompanyStats = async (req, res) => {
   try {
     const { id } = req.params;
 
-    console.log(`📊 Fetching detailed stats for manufacturer company: ${id}`);
+    console.log(`Fetching detailed stats for manufacturer company: ${id}`);
 
     // Validate the ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -158,7 +133,7 @@ export const getManufacturerCompanyStats = async (req, res) => {
     const cacheKey = `manufacturer-stats-${id}`;
     const cached = statsCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      console.log(`📊 Returning cached stats for manufacturer: ${id}`);
+      console.log(`Returning cached stats for manufacturer: ${id}`);
       return res.json({
         success: true,
         data: cached.data,
@@ -238,7 +213,7 @@ export const getManufacturerCompanyStats = async (req, res) => {
       timestamp: Date.now()
     });
 
-    console.log(`📊 Final detailed stats for manufacturer ${id}:`, statsData);
+    console.log(`Final detailed stats for manufacturer ${id}:`, statsData);
 
     res.json({
       success: true,
@@ -247,7 +222,7 @@ export const getManufacturerCompanyStats = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error fetching manufacturer stats:", error);
+    console.error("Error fetching manufacturer stats:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching manufacturer statistics",
@@ -258,7 +233,7 @@ export const getManufacturerCompanyStats = async (req, res) => {
 
 
 /* --------------------------------------------
-   ➕ Create New Manufacturer Company - ENHANCED VALIDATION
+   Create New Manufacturer Company - ENHANCED VALIDATION
 -------------------------------------------- */
 export const createManufacturerCompany = async (req, res) => {
   try {
@@ -271,7 +246,7 @@ export const createManufacturerCompany = async (req, res) => {
       specialties
     } = req.body;
 
-    console.log("🏭 Creating manufacturer company:", { companyName, licenseNumber });
+    console.log("Creating manufacturer company:", { companyName, licenseNumber });
 
     // Enhanced input validation
     if (!companyName?.trim()) {
@@ -389,7 +364,7 @@ export const createManufacturerCompany = async (req, res) => {
 
     await manufacturerCompany.save();
 
-    console.log("✅ Manufacturer company created successfully:", companyName);
+    console.log("Manufacturer company created successfully:", companyName);
 
     res.status(201).json({
       success: true,
@@ -398,7 +373,7 @@ export const createManufacturerCompany = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error creating manufacturer company:", error.message);
+    console.error("Error creating manufacturer company:", error.message);
     
     // Handle MongoDB validation errors
     if (error.name === 'ValidationError') {
@@ -425,75 +400,9 @@ export const createManufacturerCompany = async (req, res) => {
     });
   }
 };
-/* --------------------------------------------
-//    ➕ Create New Manufacturer Company
-// -------------------------------------------- */
-// export const createManufacturerCompany = async (req, res) => {
-//   try {
-//     const {
-//       companyName,
-//       licenseNumber,
-//       address,
-//       contactEmail,
-//       phone,
-//       specialties
-//     } = req.body;
-
-//     console.log("🏭 Creating manufacturer company:", { companyName, licenseNumber });
-
-//     // Check if company already exists
-//     const existingCompany = await ManufacturerCompany.findOne({
-//       $or: [
-//         { companyName: companyName.trim() },
-//         { licenseNumber: licenseNumber.trim() }
-//       ]
-//     });
-
-//     if (existingCompany) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Manufacturer company with this name or license number already exists"
-//       });
-//     }
-
-//     const manufacturerCompany = new ManufacturerCompany({
-//       companyName: companyName.trim(),
-//       licenseNumber: licenseNumber.trim(),
-//       address: {
-//         street: address?.street?.trim() || '',
-//         city: address?.city?.trim() || '',
-//         state: address?.state?.trim() || '',
-//         country: address?.country?.trim() || 'Pakistan',
-//         zipCode: address?.zipCode?.trim() || ''
-//       },
-//       contactEmail: contactEmail.trim().toLowerCase(),
-//       phone: phone.trim(),
-//       specialties: specialties || [],
-//       isActive: true
-//     });
-
-//     await manufacturerCompany.save();
-
-//     console.log("✅ Manufacturer company created successfully:", companyName);
-
-//     res.status(201).json({
-//       success: true,
-//       message: "Manufacturer company created successfully",
-//       data: manufacturerCompany
-//     });
-
-//   } catch (error) {
-//     console.error("❌ Error creating manufacturer company:", error.message);
-//     res.status(500).json({
-//       success: false,
-//       message: "Error creating manufacturer company",
-//       error: error.message
-//     });
-//   }
-// };
 
 /* --------------------------------------------
-   ✏️ Update Manufacturer Company
+   Update Manufacturer Company
 -------------------------------------------- */
 export const updateManufacturerCompany = async (req, res) => {
   try {
@@ -519,7 +428,7 @@ export const updateManufacturerCompany = async (req, res) => {
       data: updatedCompany
     });
   } catch (error) {
-    console.error("❌ Error updating manufacturer company:", error);
+    console.error("Error updating manufacturer company:", error);
     res.status(500).json({
       success: false,
       message: "Error updating manufacturer company",
@@ -529,7 +438,7 @@ export const updateManufacturerCompany = async (req, res) => {
 };
 
 /* --------------------------------------------
-   🗑️ Delete Manufacturer Company (Soft Delete)
+   Delete Manufacturer Company (Soft Delete)
 -------------------------------------------- */
 export const deleteManufacturerCompany = async (req, res) => {
   try {
@@ -554,7 +463,7 @@ export const deleteManufacturerCompany = async (req, res) => {
       data: deletedCompany
     });
   } catch (error) {
-    console.error("❌ Error deleting manufacturer company:", error);
+    console.error("Error deleting manufacturer company:", error);
     res.status(500).json({
       success: false,
       message: "Error deleting manufacturer company",
@@ -564,40 +473,40 @@ export const deleteManufacturerCompany = async (req, res) => {
 };
 
 /* --------------------------------------------
-   🧹 Initialize Dummy Manufacturer Companies
+   Initialize Dummy Manufacturer Companies
 -------------------------------------------- */
 export const initializeManufacturerCompanies = async () => {
   try {
     const count = await ManufacturerCompany.countDocuments({ isActive: true });
     if (count > 0) {
-      console.log("ℹ️ Manufacturer companies already exist, skipping initialization.");
+      console.log("Manufacturer companies already exist, skipping initialization.");
       return;
     }
 
     const dummyManufacturerCompanies = [];
 
     await ManufacturerCompany.insertMany(dummyManufacturerCompanies);
-    console.log("✅ Dummy manufacturer companies initialized successfully.");
+    console.log("Dummy manufacturer companies initialized successfully.");
   } catch (error) {
-    console.error("❌ Error initializing manufacturer companies:", error.message);
+    console.error("Error initializing manufacturer companies:", error.message);
   }
 };
 
 /* --------------------------------------------
-   🔄 Clear Stats Cache (for development)
+   Clear Stats Cache (for development)
 -------------------------------------------- */
 export const clearManufacturerStatsCache = async (req, res) => {
   try {
     const beforeSize = statsCache.size;
     statsCache.clear();
-    console.log(`🧹 Cleared manufacturer stats cache (${beforeSize} entries)`);
+    console.log(`Cleared manufacturer stats cache (${beforeSize} entries)`);
     
     res.json({
       success: true,
       message: `Manufacturer stats cache cleared (${beforeSize} entries)`
     });
   } catch (error) {
-    console.error("❌ Error clearing cache:", error);
+    console.error("Error clearing cache:", error);
     res.status(500).json({
       success: false,
       message: "Error clearing cache",
@@ -608,14 +517,14 @@ export const clearManufacturerStatsCache = async (req, res) => {
 
 
 /* --------------------------------------------
-   🔗 Update Manufacturer Company Blockchain Address
+   Update Manufacturer Company Blockchain Address
 -------------------------------------------- */
 export const updateManufacturerBlockchainAddress = async (req, res) => {
   try {
     const { id } = req.params;
     const { blockchainAddress } = req.body;
 
-    console.log(`🔗 Updating blockchain address for manufacturer company: ${id}`);
+    console.log(`Updating blockchain address for manufacturer company: ${id}`);
 
     // Validate the ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -662,7 +571,7 @@ export const updateManufacturerBlockchainAddress = async (req, res) => {
       });
     }
 
-    console.log(`✅ Blockchain address updated for ${updatedCompany.companyName}: ${updatedCompany.blockchainAddress || 'disconnected'}`);
+    console.log(`Blockchain address updated for ${updatedCompany.companyName}: ${updatedCompany.blockchainAddress || 'disconnected'}`);
 
     res.json({
       success: true,
@@ -678,7 +587,7 @@ export const updateManufacturerBlockchainAddress = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error updating manufacturer blockchain address:", error);
+    console.error("Error updating manufacturer blockchain address:", error);
     res.status(500).json({
       success: false,
       message: "Error updating blockchain address",
@@ -688,7 +597,7 @@ export const updateManufacturerBlockchainAddress = async (req, res) => {
 };
 
 /* --------------------------------------------
-   🔍 Get Manufacturer Company MetaMask Status
+   Get Manufacturer Company MetaMask Status
 -------------------------------------------- */
 export const getManufacturerMetaMaskStatus = async (req, res) => {
   try {
