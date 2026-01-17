@@ -1,13 +1,13 @@
 import SupportTicket from "../models/SupportTicket.js";
 import User from "../models/User.js";
 
-// Create new support ticket
+// Creates new support ticket
 export const createSupportTicket = async (req, res) => {
   try {
     const { subject, message, category, priority } = req.body;
     const userId = req.user.id;
 
-    console.log("🎫 Creating support ticket:", { subject, category, userId });
+    console.log("Creating support ticket:", { subject, category, userId });
 
     const user = await User.findById(userId);
     if (!user) {
@@ -30,7 +30,7 @@ export const createSupportTicket = async (req, res) => {
 
     await supportTicket.save();
 
-    console.log("✅ Support ticket created:", supportTicket._id);
+    console.log("Support ticket created:", supportTicket._id);
 
     res.status(201).json({
       success: true,
@@ -39,7 +39,7 @@ export const createSupportTicket = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error creating support ticket:", error);
+    console.error("Error creating support ticket:", error);
     res.status(500).json({
       success: false,
       message: "Error creating support ticket",
@@ -55,7 +55,7 @@ export const getUserTickets = async (req, res) => {
     const userRole = req.user.role;
     const { status, page = 1, limit = 10 } = req.query;
 
-    console.log("📋 Fetching support tickets for user:", userId, "Role:", userRole);
+    console.log("Fetching support tickets for user:", userId, "Role:", userRole);
 
     // If user is admin, show all tickets. Otherwise, show only user's tickets
     const query = userRole === 'admin' ? {} : { user: userId };
@@ -82,11 +82,11 @@ export const getUserTickets = async (req, res) => {
         totalPages: Math.ceil(total / limit),
         totalTickets: total
       },
-      userRole: userRole // Return role for frontend to adjust UI
+      userRole: userRole // Returns role for frontend to adjust UI
     });
 
   } catch (error) {
-    console.error("❌ Error fetching user tickets:", error);
+    console.error("Error fetching user tickets:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching support tickets",
@@ -102,7 +102,7 @@ export const getTicket = async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    console.log("🔍 Fetching ticket:", id, "User role:", userRole);
+    console.log("Fetching ticket:", id, "User role:", userRole);
 
     // Admin can access any ticket, regular users only their own
     const query = userRole === 'admin' ? { _id: id } : { _id: id, user: userId };
@@ -126,7 +126,7 @@ export const getTicket = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error fetching ticket:", error);
+    console.error("Error fetching ticket:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching ticket",
@@ -143,7 +143,7 @@ export const addTicketResponse = async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
 
-    console.log("💬 Adding response to ticket:", id, "User role:", userRole);
+    console.log("Adding response to ticket:", id, "User role:", userRole);
 
     // Admin can respond to any ticket, users only to their own
     const query = userRole === 'admin' ? { _id: id } : { _id: id, user: userId };
@@ -190,7 +190,7 @@ export const addTicketResponse = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error adding response:", error);
+    console.error("Error adding response:", error);
     res.status(500).json({
       success: false,
       message: "Error adding response",
@@ -204,7 +204,7 @@ export const getAllTickets = async (req, res) => {
   try {
     const { status, priority, category, page = 1, limit = 20, search } = req.query;
 
-    console.log("📊 Admin fetching all tickets");
+    console.log("Admin fetching all tickets");
 
     const query = {};
     if (status && status !== 'all') query.status = status;
@@ -270,7 +270,7 @@ export const getAllTickets = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error fetching all tickets:", error);
+    console.error("Error fetching all tickets:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching tickets",
@@ -285,7 +285,7 @@ export const updateTicketStatus = async (req, res) => {
     const { id } = req.params;
     const { status, assignedTo, priority } = req.body;
 
-    console.log("🔄 Admin updating ticket:", id);
+    console.log("Admin updating ticket:", id);
 
     const updateData = {};
     if (status) updateData.status = status;
@@ -314,7 +314,7 @@ export const updateTicketStatus = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error updating ticket:", error);
+    console.error("Error updating ticket:", error);
     res.status(500).json({
       success: false,
       message: "Error updating ticket",
@@ -328,7 +328,7 @@ export const bulkUpdateTickets = async (req, res) => {
   try {
     const { ticketIds, status, assignedTo, priority } = req.body;
 
-    console.log("🔄 Admin bulk updating tickets:", ticketIds);
+    console.log("Admin bulk updating tickets:", ticketIds);
 
     const updateData = {};
     if (status) updateData.status = status;
@@ -347,7 +347,7 @@ export const bulkUpdateTickets = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error bulk updating tickets:", error);
+    console.error("Error bulk updating tickets:", error);
     res.status(500).json({
       success: false,
       message: "Error bulk updating tickets",
@@ -355,9 +355,6 @@ export const bulkUpdateTickets = async (req, res) => {
     });
   }
 };
-
-
-// new
 
 export const getSupportAnalytics = async (req, res) => {
   try {
@@ -441,7 +438,7 @@ export const getSupportAnalytics = async (req, res) => {
       data: analytics[0]
     });
   } catch (error) {
-    console.error("❌ Error fetching analytics:", error);
+    console.error("Error fetching analytics:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching analytics",
@@ -489,7 +486,7 @@ export const autoAssignTickets = async (req, res) => {
       data: assignmentResults
     });
   } catch (error) {
-    console.error("❌ Error auto-assigning tickets:", error);
+    console.error("Error auto-assigning tickets:", error);
     res.status(500).json({
       success: false,
       message: "Error auto-assigning tickets",
