@@ -607,9 +607,9 @@ function HomePage() {
                 <h4 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 text-gray-200">Contact</h4>
                 <ul className="space-y-1 sm:space-y-2 text-gray-400 text-sm sm:text-base">
                   <li>Email: contact.medicheck@gmail.com</li>
-                  <li>Support: support@medicheck.com</li>
-                  <li>Phone: +1 (555) 123-4567</li>
-                  <li>Address: 123 Medical Blvd, Suite 100</li>
+                  // <li>Support: support@medicheck.com</li>
+                  <li>Phone: +923322473650</li>
+                  <li>Address: IQRA University, North Karachi Campus</li>
                 </ul>
               </div>
             </div>
@@ -1118,3 +1118,4 @@ export default HomePage;
 // }
 
 // export default HomePage;
+
