@@ -566,8 +566,8 @@ function IndustriesPage() {
                 <h4 className="text-base sm:text-lg font-bold mb-4 text-gray-200">Contact</h4>
                 <ul className="space-y-2 text-gray-400 text-sm">
                   <li>Email: contact.medicheck@gmail.com</li>
-                  // <li>Support: support@medicheck.com</li>
-                  <li>Phone: +923322473650</li>
+                  
+                  <li>Phone: +92332-2473-650</li>
                   <li>Address: IQRA University, North Karachi Campus</li>
                 </ul>
               </div>
@@ -1026,4 +1026,5 @@ export default IndustriesPage;
 // }
 
 // export default IndustriesPage;
+
 
