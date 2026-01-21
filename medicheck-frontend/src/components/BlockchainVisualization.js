@@ -105,7 +105,7 @@ function BlockchainVisualization() {
       items: relationships.filter(r => r.type === "supply")
     },
     {
-      title: "Distribution",
+      title: "Pharmacy",
       color: "#8B5CF6",
       items: relationships.filter(r => r.type === "dispense")
     },
