@@ -1,4 +1,3 @@
-// middleware/validation.js
 import Joi from "joi";
 
 // Existing validations
