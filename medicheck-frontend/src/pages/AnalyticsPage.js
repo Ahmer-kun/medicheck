@@ -295,13 +295,7 @@ function AnalyticsPage({ metamask, user, theme }) {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 lg:gap-6 mb-4 md:mb-6">
-              // <Card 
-              //   title="Total Medicines" 
-              //   value={overview?.totalMedicines || 0} 
-              //   gradient="bg-gradient-to-br from-blue-50 to-blue-100"
-              //   icon="💊"
-              //   compact={true}
-              // />
+              {/* Total Medicine Card */}
               <Card 
                 title="Total Medicines" 
                 value={total} 
