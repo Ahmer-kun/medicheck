@@ -1,4 +1,3 @@
-// services/blockchainService.js - COMPLETE WORKING VERSION
 import Web3 from 'web3';
 import { ethers } from 'ethers';
 import { readFile } from 'fs/promises';
@@ -10,7 +9,7 @@ dotenv.config({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '.env'
 
 class BlockchainService {
   constructor() {
-    console.log('🚀 Initializing Blockchain Service...');
+    console.log('Initializing Blockchain Service...');
     
     this.web3 = null;
     this.ethersProvider = null;
@@ -29,7 +28,7 @@ class BlockchainService {
     this.pendingTransactions = new Map();
     this.monitoringInterval = null;
     
-    console.log('🔧 Blockchain Configuration:');
+    console.log('Blockchain Configuration:');
     console.log(`- Network: ${this.network}`);
     console.log(`- Contract Address: ${this.contractAddress || 'Not deployed'}`);
     console.log(`- Type: ${this.isRealBlockchain ? 'REAL BLOCKCHAIN' : 'LOCAL BLOCKCHAIN'}`);
@@ -64,7 +63,7 @@ class BlockchainService {
 
   async initializeProviders() {
   try {
-    console.log('🔗 Connecting to blockchain network...');
+    console.log('Connecting to blockchain network...');
     
     // Initialize Web3 provider
     this.web3 = new Web3(new Web3.providers.HttpProvider(this.network, {
@@ -79,34 +78,34 @@ class BlockchainService {
     // Initialize Ethers provider
     this.ethersProvider = new ethers.JsonRpcProvider(this.network);
     
-    // ✅ CRITICAL FIX: Initialize signer for BOTH local and real blockchain
+    // FIX: Initialize signer for BOTH local and real blockchain
     // We need the private key for signed transactions
     if (process.env.DEPLOYER_PRIVATE_KEY && 
         process.env.DEPLOYER_PRIVATE_KEY.trim() !== '' &&
         !process.env.DEPLOYER_PRIVATE_KEY.includes('your_private_key')) {
       
       try {
-        console.log('🔐 Initializing signer from private key...');
+        console.log('Initializing signer from private key...');
         this.signer = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, this.ethersProvider);
         this.signerAddress = this.signer.address;
         
-        console.log(`👤 Signer address: ${this.signerAddress}`);
-        console.log(`🔑 Signer initialized: ${this.signerAddress.substring(0, 10)}...`);
+        console.log(`Signer address: ${this.signerAddress}`);
+        console.log(`Signer initialized: ${this.signerAddress.substring(0, 10)}...`);
         
         // Verify the private key matches the expected address
         const expectedAddress = process.env.DEPLOYER_ADDRESS;
         if (expectedAddress && this.signerAddress.toLowerCase() !== expectedAddress.toLowerCase()) {
-          console.warn(`⚠️ Address mismatch! Expected: ${expectedAddress}, Got: ${this.signerAddress}`);
+          console.warn(`Address mismatch! Expected: ${expectedAddress}, Got: ${this.signerAddress}`);
         }
         
       } catch (walletError) {
-        console.error('❌ Failed to initialize signer:', walletError.message);
-        console.log('⚠️ Transactions will fail without a valid signer');
+        console.error('Failed to initialize signer:', walletError.message);
+        console.log('Transactions will fail without a valid signer');
       }
       
     } else {
       console.warn('⚠️ DEPLOYER_PRIVATE_KEY not configured properly in .env');
-      console.log('📝 Add to .env: DEPLOYER_PRIVATE_KEY=your_actual_private_key_here');
+      console.log('Add to .env: DEPLOYER_PRIVATE_KEY=your_actual_private_key_here');
       
       // For local development without private key, try to get accounts
       if (!this.isRealBlockchain) {
@@ -114,7 +113,7 @@ class BlockchainService {
           const accounts = await this.web3.eth.getAccounts();
           if (accounts.length > 0) {
             this.signerAddress = accounts[0];
-            console.log(`👤 Using default account: ${this.signerAddress}`);
+            console.log(`Using default account: ${this.signerAddress}`);
           }
         } catch (accountsError) {
           console.warn('Could not get accounts:', accountsError.message);
@@ -134,10 +133,10 @@ class BlockchainService {
     this.startTransactionMonitoring();
     
     this.isAvailable = true;
-    console.log('✅ Blockchain service initialized successfully');
+    console.log('Blockchain service initialized successfully');
     
   } catch (error) {
-    console.error('❌ Failed to initialize blockchain providers:', error.message);
+    console.error('Failed to initialize blockchain providers:', error.message);
     this.isAvailable = false;
   }
 }
@@ -160,7 +159,7 @@ class BlockchainService {
         try {
           const data = await readFile(path, 'utf8');
           this.contractABI = JSON.parse(data);
-          console.log(`✅ Contract ABI loaded from: ${path}`);
+          console.log(`Contract ABI loaded from: ${path}`);
           break;
         } catch (pathError) {
           // Continue to next path
@@ -172,7 +171,7 @@ class BlockchainService {
       }
       
     } catch (error) {
-      console.error('❌ Error loading contract ABI:', error);
+      console.error('Error loading contract ABI:', error);
       throw error;
     }
   }
@@ -183,12 +182,12 @@ class BlockchainService {
       const code = await this.web3.eth.getCode(this.contractAddress);
       
       if (code === '0x' || code === '0x0') {
-        console.warn(`⚠️ No contract code at address: ${this.contractAddress}`);
+        console.warn(`No contract code at address: ${this.contractAddress}`);
         return;
       }
       
-      console.log(`📦 Contract found at address: ${this.contractAddress}`);
-      console.log(`📄 Contract code size: ${code.length} bytes`);
+      console.log(`Contract found at address: ${this.contractAddress}`);
+      console.log(`Contract code size: ${code.length} bytes`);
       
       // Initialize Web3 contract
       this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
@@ -204,16 +203,16 @@ class BlockchainService {
       try {
         if (this.contract.methods.owner) {
           const owner = await this.contract.methods.owner().call();
-          console.log(`👑 Contract Owner: ${owner}`);
+          console.log(`Contract Owner: ${owner}`);
         }
       } catch (testError) {
-        console.warn('⚠️ Could not get contract owner:', testError.message);
+        console.warn('Could not get contract owner:', testError.message);
       }
       
-      console.log('✅ Contract initialized successfully');
+      console.log('Contract initialized successfully');
       
     } catch (error) {
-      console.error('❌ Error initializing contract:', error);
+      console.error('Error initializing contract:', error);
       throw error;
     }
   }
