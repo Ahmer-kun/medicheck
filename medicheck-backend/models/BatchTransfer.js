@@ -1,4 +1,3 @@
-// models/BatchTransfer.js
 import mongoose from "mongoose";
 
 const batchTransferSchema = new mongoose.Schema({
