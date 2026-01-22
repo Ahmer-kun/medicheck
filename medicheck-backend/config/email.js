@@ -69,11 +69,11 @@
 //     };
 
 //     const result = await transporter.sendMail(mailOptions);
-//     console.log('✅ Email sent successfully via Elastic Email:', result.messageId);
+//     console.log('Email sent successfully via Elastic Email:', result.messageId);
 //     return { success: true, messageId: result.messageId };
     
 //   } catch (error) {
-//     console.error('❌ Elastic Email sending error:', error.message);
+//     console.error('Elastic Email sending error:', error.message);
     
 //     // Fallback to simulation
 //     console.log(`📧 [EMAIL FALLBACK] To: ${to}`);
@@ -101,7 +101,7 @@ const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 // Verify setup
 if (resend) {
-  console.log('✅ Resend email service initialized');
+  console.log('Resend email service initialized');
 } else {
   console.warn('⚠️ RESEND_API_KEY not configured - running in simulation mode');
 }
@@ -128,11 +128,11 @@ export const sendEmail = async (to, subject, html, text = '') => {
     });
 
     if (error) {
-      console.error('❌ Resend API error:', error);
+      console.error('Resend API error:', error);
       throw new Error(error.message);
     }
 
-    console.log('✅ Email sent successfully via Resend:', data?.id);
+    console.log('Email sent successfully via Resend:', data?.id);
     return { 
       success: true, 
       messageId: data?.id,
@@ -140,7 +140,7 @@ export const sendEmail = async (to, subject, html, text = '') => {
     };
     
   } catch (error) {
-    console.error('❌ Error sending email via Resend:', error.message);
+    console.error('Error sending email via Resend:', error.message);
     
     // Fallback to simulation
     console.log(`📧 [EMAIL FALLBACK] To: ${to}`);
