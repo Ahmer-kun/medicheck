@@ -2,7 +2,8 @@ import express from "express";
 import { 
   login, 
   initializeUsers, 
-  registerViewer,  // new  refreshToken     // imp
+  registerViewer,
+  refreshToken     // imp
 } from "../controllers/authController.js";
 import { 
   authValidation, 
