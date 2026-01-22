@@ -13,7 +13,7 @@ const pharmacyCompanySchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
-  // 🔥 MetaMask Connection Fields (same as manufacturer)
+  // MetaMask Connection Fields (same as manufacturer)
   metamaskConnected: {
     type: Boolean,
     default: false
