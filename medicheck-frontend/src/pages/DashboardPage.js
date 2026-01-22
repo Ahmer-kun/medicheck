@@ -24,16 +24,36 @@ function DashboardPage({ batches, metamask, user, theme }) {
   const [weeklyActivityData, setWeeklyActivityData] = useState([]);
   
   // Filter out duplicates and use only unique batches - memoized
-  const uniqueBatches = useMemo(() => {
-    return batches.reduce((acc, current) => {
-      const x = acc.find(item => item.batchNo === current.batchNo);
-      if (!x) {
-        return acc.concat([current]);
-      } else {
-        return acc;
-      }
-    }, []);
-  }, [batches]);
+  // const uniqueBatches = useMemo(() => {
+  //   return batches.reduce((acc, current) => {
+  //     const x = acc.find(item => item.batchNo === current.batchNo);
+  //     if (!x) {
+  //       return acc.concat([current]);
+  //     } else {
+  //       return acc;
+  //     }
+  //   }, []);
+  // }, [batches]);
+  // In DashboardPage.js, update the uniqueBatches calculation:
+
+const uniqueBatches = useMemo(() => {
+  if (!batches || batches.length === 0) return [];
+  
+  // First filter out any null/undefined or batches that might have been deleted
+  const validBatches = batches.filter(batch => batch && batch.batchNo);
+  
+  // Then remove duplicates by batchNo
+  const seen = new Set();
+  return validBatches.reduce((acc, current) => {
+    if (!current.batchNo) return acc; // Skip if no batch number
+    
+    if (!seen.has(current.batchNo)) {
+      seen.add(current.batchNo);
+      return acc.concat([current]);
+    }
+    return acc;
+  }, []);
+}, [batches]);
 
   // Memoized calculations for batch statistics
   const batchStats = useMemo(() => {
