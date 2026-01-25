@@ -19,7 +19,7 @@ import rateLimit from 'express-rate-limit';
 // Routes
 import authRoutes from "./routes/authRoutes.js";
 import batchRoutes from "./routes/batchRoutes.js";
-// import pharmacyRoutes from "./routes/pharmacyRoutes.js"; // ✅ Pharmacy dashboard routes
+// import pharmacyRoutes from "./routes/pharmacyRoutes.js"; // Pharmacy dashboard routes
 import pharmacyMedicineRoutes from "./routes/pharmacyMedicineRoutes.js"; // Pharmacy medicine routes
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import manufacturerRoutes from './routes/manufacturerRoutes.js';
@@ -32,7 +32,7 @@ import metamaskRoutes from "./routes/metamaskRoutes.js";
 // Initialize demo data
 import { initializeUsers } from "./controllers/authController.js";
 import { initializeBatches } from "./controllers/batchController.js";
-import { initializePharmacyMedicines } from "./controllers/pharmacyMedicineController.js"; // ✅ Correct import
+import { initializePharmacyMedicines } from "./controllers/pharmacyMedicineController.js"; //  Correct import
 import { initializePharmacyCompanies } from "./controllers/pharmacyCompanyController.js";
 
 // added this new import 11-11-25
