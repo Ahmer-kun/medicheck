@@ -47,10 +47,10 @@ const __dirname = dirname(__filename);
 // Load .env file from the root directory
 dotenv.config({ path: join(__dirname, '.env') });
 // Debug: Check if environment variables are loaded
-console.log('🔍 Environment Variables Loaded:');
+console.log('Environment Variables Loaded:');
 console.log('- PORT:', process.env.PORT);
 console.log('- CONTRACT_ADDRESS:', process.env.CONTRACT_ADDRESS);
-console.log('- MONGODB_URI:', process.env.MONGODB_URI ? '✓ Loaded' : '✗ Not Loaded');
+console.log('- MONGODB_URI:', process.env.MONGODB_URI ? 'Loaded' : 'Not Loaded');
 
 
 BigInt.prototype.toJSON = function() {
