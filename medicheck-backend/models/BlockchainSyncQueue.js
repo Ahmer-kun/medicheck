@@ -1,4 +1,3 @@
-// Create new file: models/BlockchainSyncQueue.js
 import mongoose from "mongoose";
 
 const blockchainSyncQueueSchema = new mongoose.Schema({
