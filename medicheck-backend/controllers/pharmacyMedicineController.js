@@ -1,4 +1,3 @@
-// controllers/pharmacyMedicineController.js
 import PharmacyMedicine from "../models/PharmacyMedicine.js";
 import PharmacyCompany from "../models/PharmacyCompany.js";
 import Batch from "../models/Batch.js";
@@ -25,11 +24,11 @@ const logMedicineData = (medicine, title = "MEDICINE DATA") => {
   console.log('============================================');
 };
 
-// Temporary storage models (will be created if they don't exist)
+// Temporary storage models 
 let TemporaryBatch, BlockchainSyncQueue;
 
 /* --------------------------------------------
-   🏗️ Initialize Temporary Models
+   Initialize Temporary Models | Future Use
 -------------------------------------------- */
 // const initializeTemporaryModels = async () => {
 //   try {
@@ -92,7 +91,7 @@ let TemporaryBatch, BlockchainSyncQueue;
 //                            mongoose.model('BlockchainSyncQueue', syncQueueSchema, 'blockchain_sync_queue');
 //     }
 //   } catch (error) {
-//     console.warn("⚠️ Could not initialize temporary models:", error.message);
+//     console.warn("Could not initialize temporary models:", error.message);
 //   }
 // };
 
@@ -100,7 +99,7 @@ let TemporaryBatch, BlockchainSyncQueue;
 // initializeTemporaryModels();
 
 /* --------------------------------------------
-   ⚡ HELPER FUNCTIONS FOR PARALLEL STORAGE
+   HELPER FUNCTIONS FOR PARALLEL STORAGE
 -------------------------------------------- */
 // const queueForBlockchainSync = async (batchData, error) => {
 //   try {
@@ -114,7 +113,7 @@ let TemporaryBatch, BlockchainSyncQueue;
 //       status: 'pending'
 //     });
     
-//     console.log(`📋 Queued ${batchData.batchNo} for blockchain sync`);
+//     console.log(`Queued ${batchData.batchNo} for blockchain sync`);
 //   } catch (queueError) {
 //     console.error("Failed to queue for sync:", queueError);
 //   }
@@ -133,7 +132,7 @@ let TemporaryBatch, BlockchainSyncQueue;
 //       createdAt: new Date()
 //     });
     
-//     console.log(`💾 Stored ${batchData.batchNo} in temporary storage`);
+//     console.log(`Stored ${batchData.batchNo} in temporary storage`);
 //   } catch (tempError) {
 //     console.error("Failed to store in temporary storage:", tempError);
 //   }
@@ -141,7 +140,7 @@ let TemporaryBatch, BlockchainSyncQueue;
 
 // const attemptStorageSync = async (batchData, mongoSuccess, blockchainSuccess) => {
 //   try {
-//     console.log(`🔄 Attempting storage sync for ${batchData.batchNo}...`);
+//     console.log(`Attempting storage sync for ${batchData.batchNo}...`);
     
 //     if (!mongoSuccess && blockchainSuccess) {
 //       // Try to save to MongoDB
@@ -152,7 +151,7 @@ let TemporaryBatch, BlockchainSyncQueue;
 //       });
       
 //       await newPharmacyMedicine.save();
-//       console.log(`✅ Successfully synced ${batchData.batchNo} to PharmacyMedicine`);
+//       console.log(`Successfully synced ${batchData.batchNo} to PharmacyMedicine`);
 //     }
     
 //     if (!blockchainSuccess && mongoSuccess) {
@@ -172,16 +171,16 @@ let TemporaryBatch, BlockchainSyncQueue;
 //       };
       
 //       await BlockchainService.registerCompleteMedicine(blockchainData);
-//       console.log(`✅ Successfully synced ${batchData.batchNo} to Blockchain`);
+//       console.log(`Successfully synced ${batchData.batchNo} to Blockchain`);
 //     }
 //   } catch (syncError) {
-//     console.error(`❌ Sync failed for ${batchData.batchNo}:`, syncError.message);
+//     console.error(`Sync failed for ${batchData.batchNo}:`, syncError.message);
 //   }
 // };
 
 
 /* --------------------------------------------
-   ➕ Add Medicine to Specific Pharmacy Company - STRICT DUAL
+   Add Medicine to Specific Pharmacy Company - STRICT DUAL
 -------------------------------------------- */
 export const addPharmacyMedicine = async (req, res) => {
   try {
@@ -198,7 +197,7 @@ export const addPharmacyMedicine = async (req, res) => {
       status = 'Active'
     } = req.body;
 
-    console.log("📦 Adding medicine to pharmacy with STRICT DUAL STORAGE...");
+    console.log("Adding medicine to pharmacy with STRICT DUAL STORAGE...");
 
     // Validate required fields
     if (!name || !batchNo || !medicineName || !manufactureDate || !expiryDate || !formulation || !quantity || !manufacturer || !pharmacyCompanyId) {
@@ -264,7 +263,7 @@ export const addPharmacyMedicine = async (req, res) => {
       status: status
     };
 
-    console.log('✅ Data prepared for DUAL storage');
+    console.log('Data prepared for DUAL storage');
 
     // ============ STRICT DUAL STORAGE ============
     
@@ -273,7 +272,7 @@ export const addPharmacyMedicine = async (req, res) => {
     
     try {
       // Step 1: Store in MongoDB
-      console.log('📝 Step 1: Storing in MongoDB...');
+      console.log('Step 1: Storing in MongoDB...');
       
       pharmacyMedicineResult = new PharmacyMedicine({
         ...pharmacyMedicineData,
@@ -282,10 +281,10 @@ export const addPharmacyMedicine = async (req, res) => {
       });
       
       await pharmacyMedicineResult.save();
-      console.log('✅ MongoDB storage successful');
+      console.log('MongoDB storage successful');
       
     } catch (mongoError) {
-      console.error('❌ MongoDB storage failed:', mongoError.message);
+      console.error('MongoDB storage failed:', mongoError.message);
       
       if (mongoError.code === 11000) {
         return res.status(400).json({
@@ -305,10 +304,10 @@ export const addPharmacyMedicine = async (req, res) => {
     // Step 2: Store on Blockchain
     if (pharmacyMedicineResult) {
       try {
-        console.log('🔗 Step 2: Storing on Blockchain...');
+        console.log('Step 2: Storing on Blockchain...');
         
         blockchainResult = await BlockchainService.registerCompleteMedicine(blockchainData);
-        console.log('✅ Blockchain storage successful');
+        console.log('Blockchain storage successful');
         
         // Update MongoDB with blockchain verification
         pharmacyMedicineResult.blockchainVerified = true;
@@ -318,7 +317,7 @@ export const addPharmacyMedicine = async (req, res) => {
         await pharmacyMedicineResult.save();
         
         // ============ SUCCESS: Both succeeded ============
-        console.log(`🎉 DUAL STORAGE SUCCESSFUL for medicine: ${batchNo}`);
+        console.log(`DUAL STORAGE SUCCESSFUL for medicine: ${batchNo}`);
         
         const response = {
           success: true,
@@ -340,18 +339,18 @@ export const addPharmacyMedicine = async (req, res) => {
         return res.status(201).json(response);
         
       } catch (blockchainError) {
-        console.error('❌ Blockchain storage failed:', blockchainError.message);
+        console.error('Blockchain storage failed:', blockchainError.message);
         
-        // 🔴 CRITICAL FIX: ROLLBACK MongoDB since blockchain failed
-        console.log('🔄 Rolling back MongoDB entry due to blockchain failure...');
+        // CRITICAL STEP: ROLLBACK MongoDB since blockchain failed
+        console.log('Rolling back MongoDB entry due to blockchain failure...');
         try {
           await PharmacyMedicine.findByIdAndDelete(pharmacyMedicineResult._id);
-          console.log('✅ MongoDB entry rolled back successfully');
+          console.log('MongoDB entry rolled back successfully');
         } catch (rollbackError) {
-          console.error('❌ Failed to rollback MongoDB entry:', rollbackError.message);
+          console.error('Failed to rollback MongoDB entry:', rollbackError.message);
         }
         
-        // Return complete failure
+        // Returns complete failure
         return res.status(500).json({
           success: false,
           message: `Medicine registration failed: Both MongoDB and Blockchain storage must succeed. Blockchain error: ${blockchainError.message}`,
@@ -366,7 +365,7 @@ export const addPharmacyMedicine = async (req, res) => {
     }
     
   } catch (error) {
-    console.error("❌ Error adding pharmacy medicine:", error.message);
+    console.error("Error adding pharmacy medicine:", error.message);
     
     if (error.code === 11000) {
       return res.status(400).json({
@@ -384,348 +383,15 @@ export const addPharmacyMedicine = async (req, res) => {
   }
 };
 
-
-// export const addPharmacyMedicine = async (req, res) => {
-//   try {
-//     const {
-//       name,
-//       batchNo,
-//       medicineName,
-//       manufactureDate,
-//       expiryDate,
-//       formulation,
-//       quantity,
-//       manufacturer,
-//       pharmacyCompanyId,
-//       status = 'Active'
-//     } = req.body;
-
-//     console.log("📦 Adding medicine to pharmacy company with PARALLEL storage:", { name, batchNo, pharmacyCompanyId });
-
-//     // Validate required fields
-//     if (!name || !batchNo || !medicineName || !manufactureDate || !expiryDate || !formulation || !quantity || !manufacturer || !pharmacyCompanyId) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "All required fields must be provided"
-//       });
-//     }
-
-//     // Validate ObjectId
-//     if (!mongoose.Types.ObjectId.isValid(pharmacyCompanyId)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid pharmacy company ID"
-//       });
-//     }
-
-//     // ⚡ PARALLEL VALIDATION
-//     console.log("🔍 Starting parallel validation...");
-    
-//     const [pharmacyCompany, existingMedicine, existingBatch] = await Promise.allSettled([
-//       // Verify pharmacy company exists
-//       PharmacyCompany.findById(pharmacyCompanyId),
-      
-//       // Check if batch already exists in pharmacy medicine
-//       PharmacyMedicine.findOne({ batchNo: batchNo.trim() }),
-      
-//       // Check if batch exists in manufacturer batches
-//       Batch.findOne({ batchNo: batchNo.trim() })
-//     ]);
-
-//     // Process validation results
-//     const pharmacyCompanyValue = pharmacyCompany.status === 'fulfilled' ? pharmacyCompany.value : null;
-//     if (!pharmacyCompanyValue) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Pharmacy company not found"
-//       });
-//     }
-
-//     const existingMedicineValue = existingMedicine.status === 'fulfilled' ? existingMedicine.value : null;
-//     const existingBatchValue = existingBatch.status === 'fulfilled' ? existingBatch.value : null;
-    
-//     if (existingMedicineValue) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Medicine with this batch number already exists in pharmacy"
-//       });
-//     }
-
-//     // Prepare data for parallel storage
-//     const pharmacyMedicineData = {
-//       name: name.trim(),
-//       batchNo: batchNo.trim(),
-//       medicineName: (medicineName || name).trim(),
-//       manufactureDate: new Date(manufactureDate),
-//       expiryDate: new Date(expiryDate),
-//       formulation: formulation.trim(),
-//       quantity: parseInt(quantity),
-//       manufacturer: manufacturer.trim(),
-//       pharmacyCompany: pharmacyCompanyId,
-//       pharmacyName: pharmacyCompanyValue.name,
-//       status: status,
-//       blockchainVerified: false
-//     };
-
-//     const batchData = {
-//       batchNo: batchNo.trim(),
-//       name: name.trim(),
-//       medicineName: (medicineName || name).trim(),
-//       manufactureDate: new Date(manufactureDate),
-//       expiry: new Date(expiryDate),
-//       formulation: formulation.trim(),
-//       manufacturer: manufacturer.trim(),
-//       pharmacy: pharmacyCompanyValue.name,
-//       quantity: parseInt(quantity),
-//       status: 'active',
-//       blockchainVerified: false
-//     };
-
-//     const blockchainData = {
-//       batchNo: batchNo.trim(),
-//       name: name.trim(),
-//       medicineName: (medicineName || name).trim(),
-//       manufactureDate: new Date(manufactureDate).toISOString().split('T')[0],
-//       expiryDate: new Date(expiryDate).toISOString().split('T')[0],
-//       formulation: formulation.trim(),
-//       quantity: parseInt(quantity),
-//       manufacturer: manufacturer.trim(),
-//       pharmacy: pharmacyCompanyValue.name,
-//       packaging: {},
-//       status: 'At Pharmacy'
-//     };
-
-//     console.log('✅ Data prepared for parallel storage');
-
-//     // ⚡⚡⚡ PARALLEL STORAGE IMPLEMENTATION ⚡⚡⚡
-//     let pharmacyMedicineResult = null;
-//     let batchResult = null;
-//     let blockchainResult = null;
-    
-//     let pharmacyMedicineSuccess = false;
-//     let batchSuccess = false;
-//     let blockchainSuccess = false;
-    
-//     let errors = {};
-
-//     // PARALLEL EXECUTION: Store in all systems simultaneously
-//     const storagePromises = await Promise.allSettled([
-//       // 1. Save to PharmacyMedicine collection
-//       (async () => {
-//         try {
-//           const pharmacyMedicine = new PharmacyMedicine(pharmacyMedicineData);
-//           pharmacyMedicineResult = await pharmacyMedicine.save();
-//           pharmacyMedicineSuccess = true;
-//           console.log(`✅ PharmacyMedicine storage successful: ${batchNo}`);
-//           return { system: 'pharmacy_medicine', success: true, data: pharmacyMedicineResult };
-//         } catch (error) {
-//           console.error(`❌ PharmacyMedicine storage failed for ${batchNo}:`, error.message);
-//           errors.pharmacyMedicine = error.message;
-//           return { system: 'pharmacy_medicine', success: false, error: error.message };
-//         }
-//       })(),
-
-//       // 2. Save to Batch collection
-//       (async () => {
-//         try {
-//           const batch = new Batch(batchData);
-//           batchResult = await batch.save();
-//           batchSuccess = true;
-//           console.log(`✅ Batch collection storage successful: ${batchNo}`);
-//           return { system: 'batch', success: true, data: batchResult };
-//         } catch (error) {
-//           console.error(`❌ Batch collection storage failed for ${batchNo}:`, error.message);
-//           errors.batch = error.message;
-//           return { system: 'batch', success: false, error: error.message };
-//         }
-//       })(),
-
-//       // 3. Register on blockchain (optional)
-//       (async () => {
-//         try {
-//           blockchainResult = await BlockchainService.registerCompleteMedicine(blockchainData);
-//           blockchainSuccess = true;
-//           console.log(`✅ Blockchain storage successful: ${batchNo}`);
-//           return { system: 'blockchain', success: true, data: blockchainResult };
-//         } catch (error) {
-//           console.warn(`⚠️ Blockchain storage failed for ${batchNo}:`, error.message);
-//           errors.blockchain = error.message;
-//           return { system: 'blockchain', success: false, error: error.message };
-//         }
-//       })()
-//     ]);
-
-//     // ⚡ Analyze results from parallel storage
-//     console.log("📊 Parallel storage results:", {
-//       pharmacyMedicineSuccess,
-//       batchSuccess,
-//       blockchainSuccess,
-//       errors
-//     });
-
-//     // 📊 Determine operation success based on results
-//     let overallSuccess = false;
-//     let message = "";
-//     let warning = null;
-//     let needsSync = false;
-
-//     if (pharmacyMedicineSuccess && batchSuccess && blockchainSuccess) {
-//       // 🎉 PERFECT: All three succeeded
-//       overallSuccess = true;
-//       message = "Medicine added successfully to all systems";
-      
-//       // Update records with blockchain info
-//       pharmacyMedicineResult.blockchainVerified = true;
-//       pharmacyMedicineResult.blockchainTransactionHash = blockchainResult.transactionHash;
-//       await pharmacyMedicineResult.save();
-      
-//       batchResult.blockchainVerified = true;
-//       batchResult.blockchainTransactionHash = blockchainResult.transactionHash;
-//       await batchResult.save();
-      
-//     } else if (pharmacyMedicineSuccess && batchSuccess && !blockchainSuccess) {
-//       // ⚠️ MongoDB succeeded, blockchain failed
-//       overallSuccess = true; // OPERATION STILL SUCCESSFUL
-//       message = "Medicine added to database (Blockchain registration failed)";
-//       warning = "Blockchain registration failed. Data is stored locally only.";
-      
-//       // Mark as not verified
-//       pharmacyMedicineResult.blockchainVerified = false;
-//       pharmacyMedicineResult.blockchainError = errors.blockchain;
-//       await pharmacyMedicineResult.save();
-      
-//       batchResult.blockchainVerified = false;
-//       batchResult.blockchainError = errors.blockchain;
-//       await batchResult.save();
-      
-//       // Queue for later blockchain sync
-//       needsSync = true;
-//       await queueForBlockchainSync(pharmacyMedicineData, errors.blockchain);
-      
-//     } else if ((pharmacyMedicineSuccess || batchSuccess) && !blockchainSuccess) {
-//       // ⚠️ At least one MongoDB succeeded, blockchain failed
-//       overallSuccess = true; // OPERATION STILL SUCCESSFUL
-//       message = "Medicine added partially (Blockchain registration failed)";
-//       warning = "Blockchain registration failed. Some data may be incomplete.";
-      
-//       // Queue for sync
-//       needsSync = true;
-//       await queueForBlockchainSync(pharmacyMedicineData, errors.blockchain);
-      
-//     } else if (!pharmacyMedicineSuccess && !batchSuccess && blockchainSuccess) {
-//       // ⚠️ Blockchain succeeded, MongoDB failed
-//       overallSuccess = true; // OPERATION STILL SUCCESSFUL (data is immutable)
-//       message = "Medicine registered on Blockchain (Database storage failed)";
-//       warning = "Database storage failed. Data is on blockchain but may not appear in lists.";
-      
-//       // Store in temporary collection for MongoDB recovery
-//       await storeInTemporaryBatch(pharmacyMedicineData, blockchainResult);
-      
-//     } else if (pharmacyMedicineSuccess || batchSuccess || blockchainSuccess) {
-//       // ⚠️ At least one succeeded
-//       overallSuccess = true;
-//       message = "Medicine added partially";
-//       warning = "Some storage systems failed. Data may be incomplete.";
-      
-//       // Queue for sync
-//       needsSync = true;
-      
-//     } else {
-//       // ❌ All failed
-//       overallSuccess = false;
-//       message = "Medicine addition failed in all storage systems";
-//     }
-
-//     // 🔄 If one succeeded, sync to the other later
-//     if ((pharmacyMedicineSuccess || batchSuccess || blockchainSuccess) && needsSync) {
-//       // Start background sync process (non-blocking)
-//       setTimeout(async () => {
-//         try {
-//           await attemptStorageSync(pharmacyMedicineData, pharmacyMedicineSuccess || batchSuccess, blockchainSuccess);
-//         } catch (syncError) {
-//           console.error("Background sync failed:", syncError);
-//         }
-//       }, 0); // Non-blocking
-//     }
-
-//     // 📤 Prepare response
-//     const response = {
-//       success: overallSuccess,
-//       message,
-//       storage: {
-//         pharmacyMedicine: pharmacyMedicineSuccess,
-//         batch: batchSuccess,
-//         blockchain: blockchainSuccess,
-//         status: pharmacyMedicineSuccess && batchSuccess && blockchainSuccess ? "fully_synced" : 
-//                 (pharmacyMedicineSuccess || batchSuccess) && blockchainSuccess ? "partial_synced" :
-//                 (pharmacyMedicineSuccess || batchSuccess) ? "mongodb_only" :
-//                 blockchainSuccess ? "blockchain_only" : "failed"
-//       },
-//       data: pharmacyMedicineResult || pharmacyMedicineData, // Return PharmacyMedicine data if available
-//       warnings: warning ? [warning] : []
-//     };
-
-//     // Add blockchain transaction info if available
-//     if (blockchainResult) {
-//       response.blockchain = {
-//         transactionHash: blockchainResult.transactionHash,
-//         blockNumber: blockchainResult.blockNumber
-//       };
-//     }
-
-//     // Add errors if any (for debugging)
-//     if (Object.keys(errors).length > 0) {
-//       response.errors = errors;
-//     }
-
-//     console.log(`📤 Final response for ${batchNo}:`, {
-//       success: overallSuccess,
-//       storageStatus: response.storage.status
-//     });
-
-//     // Return appropriate status code
-//     const statusCode = overallSuccess ? 201 : 500;
-//     res.status(statusCode).json(response);
-
-//   } catch (error) {
-//     console.error("❌ Error in parallel medicine addition:", error.message);
-    
-//     // Handle duplicate key errors
-//     if (error.code === 11000) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Medicine with this batch number already exists",
-//         duplicate: true
-//       });
-//     }
-    
-//     // Handle validation errors
-//     if (error.name === 'ValidationError') {
-//       const errors = Object.values(error.errors).map(err => err.message);
-//       return res.status(400).json({
-//         success: false,
-//         message: "Validation error",
-//         errors: errors
-//       });
-//     }
-    
-//     res.status(500).json({
-//       success: false,
-//       message: "Error adding medicine",
-//       error: error.message
-//     });
-//   }
-// };
-
 /* --------------------------------------------
-   📋 Accept Manufacturer Batch - STRICT DUAL
+   Accept Manufacturer Batch - STRICT DUAL
 -------------------------------------------- */
 export const acceptManufacturerBatchWithVerification = async (req, res) => {
   try {
     const { batchNo, pharmacyCompanyId, acceptedQuantity } = req.body;
     const user = req.user;
 
-    console.log(`🏥 Pharmacy accepting batch ${batchNo} with STRICT DUAL STORAGE...`);
+    console.log(`Pharmacy accepting batch ${batchNo} with STRICT DUAL STORAGE...`);
 
     // 1. Find pharmacy company
     const pharmacyCompany = await PharmacyCompany.findById(pharmacyCompanyId);
@@ -740,10 +406,10 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
     try {
       const BlockchainService = (await import('../services/blockchainService.js')).default;
       pharmacyBlockchainAddress = await BlockchainService.getPharmacyBlockchainAddress(pharmacyCompanyId);
-      console.log(`🏥 Pharmacy blockchain address: ${pharmacyBlockchainAddress}`);
+      console.log(`Pharmacy blockchain address: ${pharmacyBlockchainAddress}`);
     } catch (addressError) {
-      console.warn('⚠️ Could not get pharmacy blockchain address:', addressError.message);
-      // Fallback to default account
+      console.warn('Could not get pharmacy blockchain address:', addressError.message);
+      // Fallbacks to default account
       const BlockchainService = (await import('../services/blockchainService.js')).default;
       pharmacyBlockchainAddress = await BlockchainService.getDefaultAccount();
     }
@@ -801,7 +467,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
       status: 'At Pharmacy'
     };
 
-    console.log('✅ Data prepared for DUAL storage');
+    console.log('Data prepared for DUAL storage');
 
     // ============ STRICT DUAL STORAGE ============
     
@@ -810,7 +476,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
     
     try {
       // Step 1: Store in MongoDB
-      console.log('📝 Step 1: Storing in MongoDB...');
+      console.log('Step 1: Storing in MongoDB...');
       
       pharmacyMedicineResult = new PharmacyMedicine({
         ...pharmacyMedicineData,
@@ -819,10 +485,10 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
       });
       
       await pharmacyMedicineResult.save();
-      console.log('✅ MongoDB storage successful');
+      console.log('MongoDB storage successful');
       
     } catch (mongoError) {
-      console.error('❌ MongoDB storage failed:', mongoError.message);
+      console.error('MongoDB storage failed:', mongoError.message);
       
       if (mongoError.code === 11000) {
         return res.status(400).json({
@@ -843,15 +509,14 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 
     if (pharmacyMedicineResult) {
   try {
-    console.log('🔗 Step 2: Updating on Blockchain...');
+    console.log('Step 2: Updating on Blockchain...');
     
     // Check if batch already exists on blockchain
     const existsOnBlockchain = await BlockchainService.verifyMedicineExistence(batchNo);
     
     if (existsOnBlockchain) {
-      // ✅ RESTORING ORIGINAL 2-STEP PROCESS:
+      // Important 2-STEP PROCESS:
       // 1. First, record the TRANSFER from manufacturer to pharmacy
-      
       // Get pharmacy company to get its blockchain address
       const pharmacyCompany = await PharmacyCompany.findById(pharmacyCompanyId);
       
@@ -866,7 +531,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
         action: 'Pharmacy Acceptance'
       };
       
-      console.log('📦 Recording transfer on blockchain...');
+      console.log('Recording transfer on blockchain...');
       
       // Call transferMedicine function
       const transferResult = await BlockchainService.transferMedicine(
@@ -876,10 +541,10 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
         JSON.stringify(transferMetadata)
       );
       
-      console.log(`✅ Transfer recorded: ${transferResult.transactionHash}`);
+      console.log(`Transfer recorded: ${transferResult.transactionHash}`);
       
       // 2. Second, UPDATE the medicine status and details
-      console.log('📝 Updating medicine status on blockchain...');
+      console.log('Updating medicine status on blockchain...');
       
       blockchainResult = await BlockchainService.updateMedicineOnBlockchain(
         batchNo,
@@ -888,7 +553,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
         parseInt(acceptedQuantity || originalBatch.quantity)
       );
       
-      console.log(`✅ Status updated: ${blockchainResult.transactionHash}`);
+      console.log(`Status updated: ${blockchainResult.transactionHash}`);
       
       // Combine both results
       blockchainResult = {
@@ -905,7 +570,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
     } else {
       // Batch doesn't exist on blockchain yet, register it
       blockchainResult = await BlockchainService.registerCompleteMedicine(blockchainData);
-      console.log('✅ Blockchain registration successful');
+      console.log('Blockchain registration successful');
     }
     
     // Update MongoDB with blockchain verification
@@ -923,7 +588,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
     await originalBatch.save();
     
     // ============ SUCCESS: Both succeeded ============
-    console.log(`🎉 DUAL STORAGE SUCCESSFUL for pharmacy acceptance: ${batchNo}`);
+    console.log(`DUAL STORAGE SUCCESSFUL for pharmacy acceptance: ${batchNo}`);
     
     const response = {
       success: true,
@@ -946,15 +611,15 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
     return res.status(201).json(response);
     
   } catch (blockchainError) {
-    console.error('❌ Blockchain update failed:', blockchainError.message);
+    console.error('Blockchain update failed:', blockchainError.message);
     
-    // 🔴 CRITICAL FIX: ROLLBACK MongoDB since blockchain failed
-    console.log('🔄 Rolling back MongoDB entry due to blockchain failure...');
+    // CRITICAL STEP: ROLLBACK MongoDB since blockchain failed
+    console.log('Rolling back MongoDB entry due to blockchain failure...');
     try {
       await PharmacyMedicine.findByIdAndDelete(pharmacyMedicineResult._id);
-      console.log('✅ MongoDB entry rolled back successfully');
+      console.log('MongoDB entry rolled back successfully');
     } catch (rollbackError) {
-      console.error('❌ Failed to rollback MongoDB entry:', rollbackError.message);
+      console.error('Failed to rollback MongoDB entry:', rollbackError.message);
     }
     
     // Return complete failure
@@ -970,94 +635,9 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
     });
   }
 }
-
-
-    // ONLY HAS UPDATE LOGIC FOR ACCEPTANCE @ BlockChain
-    // if (pharmacyMedicineResult) {
-    //   try {
-    //     console.log('🔗 Step 2: Updating on Blockchain...');
-        
-    //     // Check if batch already exists on blockchain
-    //     const existsOnBlockchain = await BlockchainService.verifyMedicineExistence(batchNo);
-        
-    //     if (existsOnBlockchain) {
-    //       // Update existing blockchain record
-    //       blockchainResult = await BlockchainService.updateMedicineOnBlockchain(
-    //         batchNo,
-    //         "At Pharmacy",
-    //         pharmacyCompany.name,
-    //         parseInt(acceptedQuantity || originalBatch.quantity)
-    //       );
-    //       console.log('✅ Blockchain update successful');
-    //     } else {
-    //       // Register new on blockchain
-    //       blockchainResult = await BlockchainService.registerCompleteMedicine(blockchainData);
-    //       console.log('✅ Blockchain registration successful');
-    //     }
-        
-    //     // Update MongoDB with blockchain verification
-    //     pharmacyMedicineResult.blockchainVerified = true;
-    //     pharmacyMedicineResult.blockchainTransactionHash = blockchainResult.transactionHash;
-    //     pharmacyMedicineResult.blockchainBlockNumber = blockchainResult.blockNumber;
-    //     pharmacyMedicineResult.dualStorageStatus = 'completed';
-    //     await pharmacyMedicineResult.save();
-        
-    //     // Update original batch status
-    //     originalBatch.status = 'accepted';
-    //     originalBatch.pharmacy = pharmacyCompany.name;
-    //     originalBatch.updatedAt = new Date();
-    //     await originalBatch.save();
-        
-    //     // ============ SUCCESS: Both succeeded ============
-    //     console.log(`🎉 DUAL STORAGE SUCCESSFUL for pharmacy acceptance: ${batchNo}`);
-        
-    //     const response = {
-    //       success: true,
-    //       message: "Batch accepted successfully in both MongoDB and Blockchain",
-    //       storage: {
-    //         mongodb: true,
-    //         blockchain: true,
-    //         status: "fully_synced",
-    //         requirement: "dual_storage"
-    //       },
-    //       data: pharmacyMedicineResult,
-    //       blockchain: {
-    //         transactionHash: blockchainResult.transactionHash,
-    //         blockNumber: blockchainResult.blockNumber,
-    //         explorerUrl: blockchainResult.explorerUrl || null
-    //       }
-    //     };
-        
-    //     return res.status(201).json(response);
-        
-    //   } catch (blockchainError) {
-    //     console.error('❌ Blockchain update failed:', blockchainError.message);
-        
-    //     // 🔴 CRITICAL FIX: ROLLBACK MongoDB since blockchain failed
-    //     console.log('🔄 Rolling back MongoDB entry due to blockchain failure...');
-    //     try {
-    //       await PharmacyMedicine.findByIdAndDelete(pharmacyMedicineResult._id);
-    //       console.log('✅ MongoDB entry rolled back successfully');
-    //     } catch (rollbackError) {
-    //       console.error('❌ Failed to rollback MongoDB entry:', rollbackError.message);
-    //     }
-        
-    //     // Return complete failure
-    //     return res.status(500).json({
-    //       success: false,
-    //       message: `Batch acceptance failed: Both MongoDB and Blockchain storage must succeed. Blockchain error: ${blockchainError.message}`,
-    //       storage: {
-    //         mongodb: false,
-    //         blockchain: false,
-    //         status: "rolled_back",
-    //         requirement: "dual_storage_failed"
-    //       }
-    //     });
-    //   }
-    // }
-    
+//   5. If we reach here, something went wrong
   } catch (error) {
-    console.error("❌ Error in pharmacy batch acceptance:", error.message);
+    console.error("Error in pharmacy batch acceptance:", error.message);
     
     return res.status(500).json({
       success: false,
@@ -1068,6 +648,9 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
   }
 };
 
+// /* --------------------------------------------
+//    Accept Manufacturer Batch - ORIGINAL SINGLE BLOCKCHAIN VERIFICATION | Broken but we keep for reference
+// -------------------------------------------- */
 
 // const batchProcessing = new Set(); // Track ongoing batch processing
 
@@ -1076,9 +659,9 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //     const { batchNo, pharmacyCompanyId, acceptedQuantity } = req.body;
 //     const user = req.user;
 
-//     console.log(`🏥 Pharmacy accepting batch ${batchNo} from manufacturer...`);
+//     console.log(`Pharmacy accepting batch ${batchNo} from manufacturer...`);
 
-//     // ⚡ DEBOUNCE CHECK: Prevent duplicate processing
+//     // DEBOUNCE CHECK: Prevent duplicate processing
 //     if (batchProcessing.has(batchNo)) {
 //       return res.status(400).json({
 //         success: false,
@@ -1099,7 +682,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //       });
 //     }
 
-//     // 🔥 Check if pharmacy has blockchain address
+//     // Check if pharmacy has blockchain address
 //     if (!pharmacyCompany.blockchainAddress || pharmacyCompany.blockchainAddress === "") {
 //       batchProcessing.delete(batchNo);
 //       return res.status(400).json({
@@ -1120,7 +703,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //       });
 //     }
 
-//     // ⚡ DUPLICATE CHECK: Check if already accepted by THIS pharmacy
+//     // DUPLICATE CHECK: Check if already accepted by THIS pharmacy
 //     const existingPharmacyMedicine = await PharmacyMedicine.findOne({
 //       batchNo: batchNo,
 //       pharmacyCompany: pharmacyCompanyId
@@ -1151,16 +734,16 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
       
 //       if (manufacturerCompany && manufacturerCompany.blockchainAddress) {
 //         manufacturerAddress = manufacturerCompany.blockchainAddress;
-//         console.log(`🏭 Found manufacturer blockchain address: ${manufacturerAddress}`);
+//         console.log(`Found manufacturer blockchain address: ${manufacturerAddress}`);
 //       } else {
-//         console.log(`⚠️ Manufacturer ${originalBatch.manufacturer} has no blockchain address, using default`);
+//         console.log(`Manufacturer ${originalBatch.manufacturer} has no blockchain address, using default`);
 //       }
 //     } catch (error) {
-//       console.log(`⚠️ Could not find manufacturer company: ${error.message}`);
+//       console.log(`Could not find manufacturer company: ${error.message}`);
 //     }
 
 //     // 4. VERIFY ON BLOCKCHAIN BEFORE ACCEPTING
-//     console.log(`🔍 Step 1: Verifying batch ${batchNo} on blockchain...`);
+//     console.log(`Step 1: Verifying batch ${batchNo} on blockchain...`);
 //     let blockchainVerification = null;
 //     let blockchainVerificationError = null;
     
@@ -1187,10 +770,10 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //         });
 //       }
       
-//       console.log(`✅ Batch ${batchNo} verified on blockchain`);
+//       console.log(`Batch ${batchNo} verified on blockchain`);
       
 //       // Log the original medicine data from blockchain
-//       console.log('📋 ORIGINAL MEDICINE DATA FROM BLOCKCHAIN:');
+//       console.log('ORIGINAL MEDICINE DATA FROM BLOCKCHAIN:');
 //       logMedicineData(blockchainVerification);
       
 //       // Check expiry date
@@ -1204,13 +787,13 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //         });
 //       }
       
-//       // 🔥 Get current owner from blockchain
+//       // Get current owner from blockchain
 //       const ownerResult = await BlockchainService.getMedicineOwner(batchNo);
-//       console.log(`👤 Current owner on blockchain: ${ownerResult.owner}`);
+//       console.log(`Current owner on blockchain: ${ownerResult.owner}`);
       
 //     } catch (error) {
 //       blockchainVerificationError = error.message;
-//       console.error(`❌ Blockchain verification failed: ${blockchainVerificationError}`);
+//       console.error(`Blockchain verification failed: ${blockchainVerificationError}`);
       
 //       if (error.message.includes("Too Many Requests")) {
 //         batchProcessing.delete(batchNo);
@@ -1239,7 +822,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //       });
 //     }
 
-//     // 6. 🔥 CRITICAL: TRANSFER OWNERSHIP AND UPDATE MEDICINE ON BLOCKCHAIN
+//     // 6. CRITICAL: TRANSFER OWNERSHIP AND UPDATE MEDICINE ON BLOCKCHAIN
 //     console.log(`🔗 Step 2: Transferring ownership AND updating medicine on blockchain...`);
 //     let blockchainTransferResult = null;
 //     let blockchainUpdateResult = null;
@@ -1248,7 +831,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //     let medicineUpdated = false;
 
 //     try {
-//       console.log(`📤 Transferring batch ${batchNo} from ${manufacturerAddress} to ${pharmacyCompany.blockchainAddress}`);
+//       console.log(`Transferring batch ${batchNo} from ${manufacturerAddress} to ${pharmacyCompany.blockchainAddress}`);
       
 //       // Prepare metadata for transfer
 //       const transferMetadata = {
@@ -1264,7 +847,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //         action: "ownership_transfer_and_update"
 //       };
       
-//       // 🔥 STEP A: TRANSFER OWNERSHIP (creates event log)
+//       // STEP A: TRANSFER OWNERSHIP (creates event log)
 //       blockchainTransferResult = await BlockchainService.transferMedicine(
 //         batchNo,
 //         pharmacyCompany.blockchainAddress,
@@ -1273,12 +856,12 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //       );
       
 //       ownershipTransferred = true;
-//       console.log(`✅ Ownership transferred successfully!`);
+//       console.log(`Ownership transferred successfully!`);
 //       console.log(`   Transaction Hash: ${blockchainTransferResult.transactionHash}`);
       
-//       // 🔥 STEP B: UPDATE ACTUAL MEDICINE DATA ON BLOCKCHAIN
-//       console.log(`🔄 Step 3: Updating actual medicine data on blockchain...`);
-//       console.log('📝 Updating medicine with:', {
+//       // STEP B: UPDATE ACTUAL MEDICINE DATA ON BLOCKCHAIN
+//       console.log(`Step 3: Updating actual medicine data on blockchain...`);
+//       console.log('Updating medicine with:', {
 //         batchNo: batchNo,
 //         newStatus: "At Pharmacy",
 //         newPharmacy: pharmacyCompany.name,
@@ -1295,32 +878,32 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //         );
         
 //         medicineUpdated = true;
-//         console.log(`✅ Medicine data updated on blockchain!`);
+//         console.log(`Medicine data updated on blockchain!`);
 //         console.log(`   Update Transaction Hash: ${blockchainUpdateResult.transactionHash}`);
         
 //       } catch (updateError) {
-//         console.error(`❌ Medicine update failed: ${updateError.message}`);
-//         console.log('⚠️ Ownership was transferred but medicine details not updated');
+//         console.error(`Medicine update failed: ${updateError.message}`);
+//         console.log('Ownership was transferred but medicine details not updated');
 //         // Continue anyway - at least ownership is transferred
 //       }
       
 //     } catch (transferError) {
 //       blockchainTransferError = transferError.message;
-//       console.error(`⚠️ Blockchain transfer failed: ${blockchainTransferError}`);
+//       console.error(`Blockchain transfer failed: ${blockchainTransferError}`);
       
 //       if (transferError.message.includes("Too Many Requests")) {
-//         console.log('🔄 Rate limited, trying verification as fallback...');
+//         console.log('Rate limited, trying verification as fallback...');
         
 //         try {
 //           blockchainTransferResult = await BlockchainService.verifyMedicine(batchNo);
-//           console.log(`✅ Fallback verification successful: ${blockchainTransferResult.transactionHash}`);
+//           console.log(`Fallback verification successful: ${blockchainTransferResult.transactionHash}`);
 //         } catch (verifyError) {
-//           console.error(`❌ Both transfer and verification failed: ${verifyError.message}`);
+//           console.error(`Both transfer and verification failed: ${verifyError.message}`);
 //         }
 //       }
 //     }
 
-//     // 7. 🔍 GET AND VERIFY UPDATED MEDICINE DATA FROM BLOCKCHAIN
+//     // 7. GET AND VERIFY UPDATED MEDICINE DATA FROM BLOCKCHAIN
 //     console.log(`🔍 Step 4: Fetching updated medicine data from blockchain...`);
 //     let updatedBlockchainData = null;
 //     try {
@@ -1330,7 +913,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //       updatedBlockchainData = await BlockchainService.getCompleteMedicineFromBlockchain(batchNo);
       
 //       if (updatedBlockchainData.exists) {
-//         console.log('✅ UPDATED MEDICINE DATA FROM BLOCKCHAIN:');
+//         console.log('UPDATED MEDICINE DATA FROM BLOCKCHAIN:');
 //         console.log('============================================');
 //         console.log(`batchNo: ${updatedBlockchainData.batchNo}`);
 //         console.log(`name: ${updatedBlockchainData.name}`);
@@ -1358,21 +941,21 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //           ownerUpdated: updatedBlockchainData.currentOwner.toLowerCase() === pharmacyCompany.blockchainAddress.toLowerCase()
 //         };
         
-//         console.log('📊 UPDATE VERIFICATION:', updateVerification);
+//         console.log('UPDATE VERIFICATION:', updateVerification);
         
 //         if (!updateVerification.pharmacyUpdated) {
-//           console.warn(`⚠️ Pharmacy not updated correctly. Expected: ${pharmacyCompany.name}, Got: ${updatedBlockchainData.pharmacy}`);
+//           console.warn(`Pharmacy not updated correctly. Expected: ${pharmacyCompany.name}, Got: ${updatedBlockchainData.pharmacy}`);
 //         }
         
 //         if (!updateVerification.statusUpdated) {
-//           console.warn(`⚠️ Status not updated correctly. Expected: At Pharmacy, Got: ${updatedBlockchainData.status}`);
+//           console.warn(`Status not updated correctly. Expected: At Pharmacy, Got: ${updatedBlockchainData.status}`);
 //         }
         
 //       } else {
-//         console.warn('⚠️ Could not fetch updated medicine data from blockchain - medicine does not exist');
+//         console.warn('Could not fetch updated medicine data from blockchain - medicine does not exist');
 //       }
 //     } catch (fetchError) {
-//       console.error('❌ Error fetching updated medicine data:', fetchError.message);
+//       console.error('Error fetching updated medicine data:', fetchError.message);
 //       updatedBlockchainData = {
 //         error: fetchError.message,
 //         exists: false
@@ -1434,10 +1017,10 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 
 //     try {
 //       await pharmacyMedicine.save();
-//       console.log(`✅ Pharmacy medicine record created for ${batchNo}`);
+//       console.log(`Pharmacy medicine record created for ${batchNo}`);
 //     } catch (saveError) {
 //       if (saveError.code === 11000) {
-//         console.log(`⚠️ Duplicate batch detected, fetching existing record`);
+//         console.log(`Duplicate batch detected, fetching existing record`);
 //         const existingRecord = await PharmacyMedicine.findOne({
 //           batchNo: batchNo,
 //           pharmacyCompany: pharmacyCompanyId
@@ -1448,7 +1031,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //           existingRecord.updatedAt = new Date();
 //           await existingRecord.save();
           
-//           console.log(`✅ Updated existing record for ${batchNo}`);
+//           console.log(`Updated existing record for ${batchNo}`);
 //         }
 //       } else {
 //         throw saveError;
@@ -1477,7 +1060,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
     
 //     await originalBatch.save();
 
-//     console.log(`✅ Pharmacy ${pharmacyCompany.name} successfully accepted batch: ${batchNo}`);
+//     console.log(`Pharmacy ${pharmacyCompany.name} successfully accepted batch: ${batchNo}`);
     
 //     // 10. PREPARE RESPONSE
 //     const response = {
@@ -1595,8 +1178,8 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //     }
 
 //     // Log success
-//     console.log(`🎉 Pharmacy acceptance complete for ${batchNo}`);
-//     console.log(`📊 Batch now owned by: ${pharmacyCompany.name} (${pharmacyCompany.blockchainAddress})`);
+//     console.log(`Pharmacy acceptance complete for ${batchNo}`);
+//     console.log(`Batch now owned by: ${pharmacyCompany.name} (${pharmacyCompany.blockchainAddress})`);
     
 //     // Clean up processing set
 //     batchProcessing.delete(batchNo);
@@ -1607,7 +1190,7 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //     // Clean up processing set on any error
 //     if (batchNo) batchProcessing.delete(batchNo);
     
-//     console.error("❌ Error in batch acceptance process:", error);
+//     console.error("Error in batch acceptance process:", error);
     
 //     if (error.code === 11000) {
 //       return res.status(400).json({
@@ -1635,14 +1218,14 @@ export const acceptManufacturerBatchWithVerification = async (req, res) => {
 //};
 
 /* --------------------------------------------
-   🔍 MANUAL VERIFICATION FOR EXISTING INVENTORY
+   MANUAL VERIFICATION FOR EXISTING INVENTORY
 -------------------------------------------- */
 export const verifyBatchManually = async (req, res) => {
   try {
     const { batchNo } = req.params;
     const user = req.user;
 
-    console.log(`🔍 Manual verification requested for batch: ${batchNo}`);
+    console.log(`Manual verification requested for batch: ${batchNo}`);
 
     const verificationResult = await BlockchainService.getMedicineFromBlockchain(batchNo);
     
@@ -1650,7 +1233,7 @@ export const verifyBatchManually = async (req, res) => {
       return res.json({
         success: false,
         verified: false,
-        message: "❌ Batch not found in blockchain system - may be counterfeit"
+        message: "Batch not found in blockchain system - may be counterfeit"
       });
     }
 
@@ -1664,8 +1247,8 @@ export const verifyBatchManually = async (req, res) => {
       verified: true,
       authentic: !isExpired,
       message: isExpired ? 
-        "✅ Batch verified but EXPIRED - do not dispense" : 
-        "✅ Batch verified and AUTHENTIC",
+        "Batch verified but EXPIRED - do not dispense" : 
+        "Batch verified and AUTHENTIC",
       data: {
         batchNo: verificationResult.batchNo,
         name: verificationResult.name,
@@ -1677,7 +1260,7 @@ export const verifyBatchManually = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Manual verification error:", error);
+    console.error("Manual verification error:", error);
     res.status(500).json({
       success: false,
       verified: false,
@@ -1687,7 +1270,7 @@ export const verifyBatchManually = async (req, res) => {
 };
 
 /* --------------------------------------------
-   📋 Get Medicines for a Pharmacy Company
+   Get Medicines for a Pharmacy Company
 -------------------------------------------- */
 export const getPharmacyMedicines = async (req, res) => {
   try {
@@ -1714,14 +1297,14 @@ export const getPharmacyMedicines = async (req, res) => {
         .populate('pharmacyCompany', 'name licenseNumber contact');
     }
 
-    console.log(`✅ Fetched ${medicines.length} pharmacy medicines`);
+    console.log(`Fetched ${medicines.length} pharmacy medicines`);
     
     res.json({
       success: true,
       data: medicines
     });
   } catch (error) {
-    console.error("❌ Error fetching pharmacy medicines:", error);
+    console.error("Error fetching pharmacy medicines:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching medicines",
@@ -1731,18 +1314,18 @@ export const getPharmacyMedicines = async (req, res) => {
 };
 
 /* --------------------------------------------
-   📋 Get All Medicines (All Pharmacies)
+   Get All Medicines (All Pharmacies)
 -------------------------------------------- */
 export const getAllPharmacyMedicines = async (req, res) => {
   try {
-    console.log("📋 Fetching all pharmacy medicines for verification...");
+    console.log("Fetching all pharmacy medicines for verification...");
     
     const medicines = await PharmacyMedicine.find()
       .sort({ createdAt: -1 })
       .populate('pharmacyCompany', 'name licenseNumber contact manager')
       .select('name batchNo medicineName manufactureDate expiryDate formulation manufacturer quantity status blockchainVerified pharmacyCompany pharmacyName acceptedFromManufacturer');
     
-    console.log(`✅ Fetched ${medicines.length} medicines from all pharmacies for verification`);
+    console.log(`Fetched ${medicines.length} medicines from all pharmacies for verification`);
     
     // Return simplified data for public access
     const publicMedicines = medicines.map(medicine => ({
@@ -1765,7 +1348,7 @@ export const getAllPharmacyMedicines = async (req, res) => {
       data: publicMedicines
     });
   } catch (error) {
-    console.error("❌ Error fetching all pharmacy medicines:", error);
+    console.error("Error fetching all pharmacy medicines:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching medicines for verification",
@@ -1775,7 +1358,7 @@ export const getAllPharmacyMedicines = async (req, res) => {
 };
 
 /* --------------------------------------------
-   ✏️ Update Pharmacy Medicine Status
+   Update Pharmacy Medicine Status
 -------------------------------------------- */
 export const updatePharmacyMedicine = async (req, res) => {
   try {
@@ -1818,7 +1401,7 @@ export const updatePharmacyMedicine = async (req, res) => {
       data: updatedMedicine
     });
   } catch (error) {
-    console.error("❌ Error updating pharmacy medicine:", error);
+    console.error("Error updating pharmacy medicine:", error);
     res.status(500).json({
       success: false,
       message: "Error updating medicine",
@@ -1828,7 +1411,7 @@ export const updatePharmacyMedicine = async (req, res) => {
 };
 
 /* --------------------------------------------
-   🔍 Verify Pharmacy Medicine
+   Verify Pharmacy Medicine
 -------------------------------------------- */
 export const verifyPharmacyMedicine = async (req, res) => {
   try {
@@ -1856,11 +1439,11 @@ export const verifyPharmacyMedicine = async (req, res) => {
     // Prepare message
     let message = "";
     if (isExpired) {
-      message = "❌ This medicine is EXPIRED. Do not use!";
+      message = "This medicine is EXPIRED. Do not use!";
     } else if (medicine.blockchainVerified) {
-      message = "✅ Medicine VERIFIED on Blockchain - Safe to Use";
+      message = "Medicine VERIFIED on Blockchain - Safe to Use";
     } else {
-      message = "⚠️ Medicine found but not blockchain verified";
+      message = "Medicine found but not blockchain verified";
     }
 
     res.json({
@@ -1890,7 +1473,7 @@ export const verifyPharmacyMedicine = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error verifying pharmacy medicine:", error);
+    console.error("Error verifying pharmacy medicine:", error);
     res.status(500).json({
       success: false,
       message: "Error verifying medicine",
@@ -1900,7 +1483,7 @@ export const verifyPharmacyMedicine = async (req, res) => {
 };
 
 /* --------------------------------------------
-   🗑️ Delete Pharmacy Medicine
+    Delete Pharmacy Medicine
 -------------------------------------------- */
 export const deletePharmacyMedicine = async (req, res) => {
   try {
@@ -1929,12 +1512,12 @@ export const deletePharmacyMedicine = async (req, res) => {
     // Also delete from Batch collection if it exists there
     try {
       await Batch.findOneAndDelete({ batchNo: deletedMedicine.batchNo });
-      console.log(`✅ Also removed from Batch collection: ${deletedMedicine.batchNo}`);
+      console.log(`Also removed from Batch collection: ${deletedMedicine.batchNo}`);
     } catch (batchError) {
-      console.log("ℹ️ No matching batch found to delete, or error deleting batch:", batchError.message);
+      console.log("No matching batch found to delete, or error deleting batch:", batchError.message);
     }
 
-    console.log(`✅ Successfully deleted medicine: ${deletedMedicine.name} (${deletedMedicine.batchNo})`);
+    console.log(`Successfully deleted medicine: ${deletedMedicine.name} (${deletedMedicine.batchNo})`);
 
     res.json({
       success: true,
@@ -1947,7 +1530,7 @@ export const deletePharmacyMedicine = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error deleting pharmacy medicine:", error);
+    console.error("Error deleting pharmacy medicine:", error);
     res.status(500).json({
       success: false,
       message: "Error deleting medicine",
@@ -1957,25 +1540,25 @@ export const deletePharmacyMedicine = async (req, res) => {
 };
 
 /* --------------------------------------------
-   🧹 Initialize Dummy Pharmacy Medicines
+   Initialize Dummy Pharmacy Medicines
 -------------------------------------------- */
 export const initializePharmacyMedicines = async () => {
   try {
     const count = await PharmacyMedicine.countDocuments();
     if (count > 0) {
-      console.log("ℹ️ Pharmacy medicines already exist, skipping initialization.");
+      console.log("Pharmacy medicines already exist, skipping initialization.");
       return;
     }
 
     // Get existing pharmacy companies
     const pharmacyCompanies = await PharmacyCompany.find({ isActive: true });
     if (pharmacyCompanies.length === 0) {
-      console.log("⚠️ No pharmacy companies found for medicine initialization");
+      console.log("No pharmacy companies found for medicine initialization");
       return;
     }
 
     const dummyMedicines = [
-      // Your dummy medicines array here
+      //  dummy medicines here
     ];
 
     // Distribute medicines among pharmacy companies
@@ -1987,7 +1570,7 @@ export const initializePharmacyMedicines = async () => {
 
     await PharmacyMedicine.insertMany(pharmacyMedicines);
     
-    // Also add to Batch collection
+    // Add to Batch collection
     const batchData = pharmacyMedicines.map(med => ({
       batchNo: med.batchNo,
       name: med.name,
@@ -2004,8 +1587,8 @@ export const initializePharmacyMedicines = async () => {
     
     await Batch.insertMany(batchData);
     
-    console.log("✅ Dummy pharmacy medicines initialized successfully.");
+    console.log("Dummy pharmacy medicines initialized successfully.");
   } catch (error) {
-    console.error("❌ Error initializing pharmacy medicines:", error.message);
+    console.error("Error initializing pharmacy medicines:", error.message);
   }
 };

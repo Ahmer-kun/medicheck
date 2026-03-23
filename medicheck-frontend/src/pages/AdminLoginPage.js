@@ -278,6 +278,8 @@ function AdminLoginPage({ onLogin, onBack }) {
 
 export default AdminLoginPage;
 
+// Keep this commented version for reference
+
 // import React, { useState } from "react";
 // import BackgroundFix from "../components/BackgroundFix";
 // import { THEMES } from "../data/themes";

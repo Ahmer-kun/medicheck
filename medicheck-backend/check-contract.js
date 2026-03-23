@@ -1,4 +1,3 @@
-// check-contract.js
 import { ethers } from 'ethers';
 
 async function checkContract() {
@@ -6,18 +5,18 @@ async function checkContract() {
     const provider = new ethers.JsonRpcProvider('http://localhost:8545');
     const address = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
     
-    console.log('🔍 Checking contract at address:', address);
+    console.log('Checking contract at address:', address);
     
     // Get contract code
     const code = await provider.getCode(address);
-    console.log('📦 Contract code length:', code.length);
+    console.log('Contract code length:', code.length);
     
     if (code === '0x' || code.length <= 2) {
-      console.log('❌ Contract NOT FOUND at this address');
-      console.log('💡 Need to deploy contract first');
+      console.log('Contract NOT FOUND at this address');
+      console.log('Need to deploy contract first');
     } else {
-      console.log('✅ Contract EXISTS at this address');
-      console.log('📝 Code (first 100 chars):', code.substring(0, 100));
+      console.log('Contract EXISTS at this address');
+      console.log('Code (first 100 chars):', code.substring(0, 100));
     }
     
     // Get network info
@@ -26,11 +25,11 @@ async function checkContract() {
     
     // Get accounts
     const accounts = await provider.listAccounts();
-    console.log('👤 Available accounts:', accounts.length);
-    console.log('📋 First account:', accounts[0]);
+    console.log('Available accounts:', accounts.length);
+    console.log('First account:', accounts[0]);
     
   } catch (error) {
-    console.error('❌ Error checking contract:', error.message);
+    console.error('Error checking contract:', error.message);
   }
 }
 

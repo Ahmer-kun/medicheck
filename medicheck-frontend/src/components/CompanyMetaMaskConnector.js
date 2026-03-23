@@ -10,7 +10,7 @@ function CompanyMetaMaskConnector({ companyId, companyName, companyType, current
   const [success, setSuccess] = useState('');
 
   const handleConnect = async () => {
-    // Check if MetaMask is available using the hook
+    // Checks if MetaMask is available using the hook
     if (!metamask.isMetaMaskInstalled) {
       setError('MetaMask is not installed. Please install MetaMask first.');
       return;
@@ -21,7 +21,7 @@ function CompanyMetaMaskConnector({ companyId, companyName, companyType, current
       setError('');
       setSuccess('');
 
-      // Connect to MetaMask using the hook
+      // Connects to MetaMask using the hook
       const connected = await metamask.connect();
       
       if (!connected || !metamask.account) {
@@ -30,7 +30,7 @@ function CompanyMetaMaskConnector({ companyId, companyName, companyType, current
 
       const connectedAddress = metamask.account;
       
-      // Update company with blockchain address
+      // Updates company with blockchain address
       const endpoint = companyType === 'manufacturer' 
         ? `/manufacturer-companies/${companyId}/blockchain-address`
         : `/pharmacy-companies/${companyId}/blockchain-address`;
@@ -43,7 +43,7 @@ function CompanyMetaMaskConnector({ companyId, companyName, companyType, current
         setAddress(connectedAddress);
         setSuccess(`Blockchain address connected: ${connectedAddress.substring(0, 8)}...`);
         
-        // Notify parent component
+        // Notifies parent component
         if (onConnectionChange) {
           onConnectionChange({
             connected: true,

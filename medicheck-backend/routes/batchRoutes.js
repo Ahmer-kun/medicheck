@@ -20,18 +20,18 @@ import { importBatchesFromExcel } from '../controllers/batchController.js';
 const router = express.Router();
 
 /* --------------------------------------------
-   🌐 PUBLIC ROUTES
+   PUBLIC ROUTES
 -------------------------------------------- */
 router.get('/', getAllBatches);
 
-// IMPORTANT: Put the verify route BEFORE the :batchNo route to avoid conflicts
+// Note: Remember to Put the verify route BEFORE the :batchNo route to avoid conflicts | that goes for other projects too
 router.get('/verify/:batchNo', verifyBatch);
 
-// Get single batch by batchNo - THIS SHOULD BE AFTER MORE SPECIFIC ROUTES
+// Get single batch by batchNo - Only after specific routes
 router.get('/:batchNo', getBatch);
 
 /* --------------------------------------------
-   🔒 PROTECTED ROUTES (require auth)
+   PROTECTED ROUTES (require auth)
 -------------------------------------------- */
 router.use(auth);
 
@@ -40,13 +40,13 @@ router.put('/:batchNo', updateBatch);
 router.put('/accept/:batchNo', authorize('admin', 'pharmacy'), acceptBatch);
 
 /* --------------------------------------------
-   🗑️ DELETE BATCH ROUTE - ENHANCED
+   DELETE BATCH ROUTE - ENHANCED
 -------------------------------------------- */
 router.delete('/:identifier', async (req, res) => {
   try {
     const { identifier } = req.params;
     
-    console.log(`🗑️ Deleting batch with identifier: ${identifier}`);
+    console.log(`Deleting batch with identifier: ${identifier}`);
     
     let deletedBatch;
     
@@ -70,7 +70,7 @@ router.delete('/:identifier', async (req, res) => {
       });
       
       if (deletedPharmacyMedicine) {
-        console.log(`✅ Pharmacy medicine deleted: ${deletedPharmacyMedicine.batchNo}`);
+        console.log(`Pharmacy medicine deleted: ${deletedPharmacyMedicine.batchNo}`);
         return res.json({
           success: true,
           message: "Pharmacy medicine deleted successfully",
@@ -89,7 +89,7 @@ router.delete('/:identifier', async (req, res) => {
       });
     }
     
-    console.log(`✅ Batch deleted: ${deletedBatch.batchNo}`);
+    console.log(`Batch deleted: ${deletedBatch.batchNo}`);
     
     res.json({
       success: true,
@@ -103,7 +103,7 @@ router.delete('/:identifier', async (req, res) => {
     });
     
   } catch (error) {
-    console.error("❌ Error deleting batch:", error);
+    console.error("Error deleting batch:", error);
     res.status(500).json({
       success: false,
       message: "Error deleting batch",
@@ -113,7 +113,7 @@ router.delete('/:identifier', async (req, res) => {
 });
 
 /* --------------------------------------------
-   📦 GET AVAILABLE MANUFACTURER BATCHES
+   GET AVAILABLE MANUFACTURER BATCHES
 -------------------------------------------- */
 router.get('/available/manufacturer', getAvailableManufacturerBatches);
 
@@ -125,7 +125,7 @@ router.get('/manufacturer/:manufacturerName/available', async (req, res) => {
     // Get batches from THIS manufacturer that are NOT accepted by any pharmacy
     const batches = await Batch.find({
       manufacturer: manufacturerName,
-      status: { $nin: ['accepted', 'at_pharmacy'] } // ✅ Only show available batches
+      status: { $nin: ['accepted', 'at_pharmacy'] } 
     }).sort({ createdAt: -1 });
     
     res.json({
@@ -143,7 +143,7 @@ router.get('/manufacturer/:manufacturerName/available', async (req, res) => {
 });
 
 /* --------------------------------------------
-   🧩 DEVELOPMENT UTILITIES
+   DEVELOPMENT UTILITIES
 -------------------------------------------- */
 router.post('/initialize/batches', async (req, res) => {
   try {
@@ -161,15 +161,15 @@ router.post('/initialize/batches', async (req, res) => {
   }
 });
 
-// Add this route in the batchRoutes.js (after other POST routes)
+// Excel Import Route
 router.post('/import-excel', auth, authorize('manufacturer', 'admin'), async (req, res) => {
   try {
-    console.log('📊 Excel import request received');
+    console.log('Excel import request received');
     
     // Use the controller function directly
     await importBatchesFromExcel(req, res);
   } catch (error) {
-    console.error('❌ Excel import route error:', error);
+    console.error('Excel import route error:', error);
     res.status(500).json({
       success: false,
       message: "Excel import route error",

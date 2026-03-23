@@ -197,82 +197,6 @@ const fetchManufacturerCompanies = async () => {
   }
 };
 
-//   const fetchManufacturerCompanies = async () => {
-//   try {
-//     setLoading(true);
-//     console.log("🔄 Fetching manufacturer companies with stats...");
-    
-//     const response = await api.get("/manufacturer-companies");
-//     console.log("📦 Raw API response:", response);
-    
-//     if (response.success) {
-//       const companiesData = response.data || [];
-//       console.log("✅ Companies data:", companiesData);
-      
-//       // Get ALL batches once to avoid multiple API calls
-//       const batchesResponse = await api.get("/batches");
-//       const allBatches = batchesResponse.success ? batchesResponse.data : [];
-      
-//       // Process each company with filtered batches - FILTER OUT ACCEPTED BATCHES
-//       const companiesWithStats = companiesData.map(company => {
-//         // Filter batches by this specific manufacturer AND status is not 'accepted'
-//         const manufacturerBatches = allBatches.filter(batch => {
-//           // Make sure we're comparing the same manufacturer
-//           const batchManufacturer = batch.manufacturer?.trim().toLowerCase();
-//           const companyName = company.companyName?.trim().toLowerCase();
-          
-//           // Only include batches that are NOT already accepted by pharmacy
-//           return batchManufacturer === companyName && 
-//                  batch.status !== 'accepted' && 
-//                  batch.status !== 'at_pharmacy';
-//         });
-        
-//         // Calculate stats
-//         const totalBatches = manufacturerBatches.length;
-//         const verifiedBatches = manufacturerBatches.filter(b => b.blockchainVerified).length;
-//         const expiredBatches = manufacturerBatches.filter(b => {
-//           const expiryDate = new Date(b.expiry || b.expiryDate);
-//           return expiryDate < new Date();
-//         }).length;
-//         const activeBatches = totalBatches - expiredBatches;
-        
-//         return {
-//           ...company,
-//           stats: {
-//             totalBatches,
-//             verifiedBatches,
-//             expiredBatches,
-//             activeBatches
-//           },
-//           _batchCount: totalBatches,
-//           batches: manufacturerBatches // Store filtered batches
-//         };
-//       });
-      
-//       setManufacturerCompanies(companiesWithStats);
-//       console.log("✅ Final processed companies:", companiesWithStats.map(c => ({
-//         name: c.companyName,
-//         batches: c.stats.totalBatches,
-//         availableBatches: c.batches.length
-//       })));
-//     } else {
-//       console.error("❌ API response not successful:", response);
-//       setManufacturerCompanies([]);
-//     }
-//   } catch (error) {
-//     console.error("❌ Error fetching manufacturer companies:", error);
-//     alert("❌ Failed to load manufacturer companies. Please try again.");
-//     setManufacturerCompanies([]);
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-
-  // In ManufacturerPage.js - Replace the fetchManufacturerBatches function with this:
-
-
-  
 const fetchManufacturerBatches = async () => {
   try {
     setLoadingBatches(true);
@@ -301,36 +225,6 @@ const fetchManufacturerBatches = async () => {
     setLoadingBatches(false);
   }
 };
-
-//   const fetchManufacturerBatches = async () => {
-//   try {
-//     setLoadingBatches(true);
-//     console.log("🔄 Fetching available manufacturer batches...");
-    
-//     const response = await api.get("/batches");
-//     if (response.success) {
-//       // Filter batches for this specific manufacturer that are NOT accepted
-//       // AND are not duplicate entries (check for pharmacyCompanyId)
-//       const availableBatches = response.data.filter(batch => {
-//         const isThisManufacturer = batch.manufacturer?.trim().toLowerCase() === 
-//                                   getSelectedCompanyName().trim().toLowerCase();
-//         const isAvailable = !['accepted', 'at_pharmacy'].includes(batch.status?.toLowerCase());
-//         const notTransferred = !batch.pharmacyCompanyId; // Not linked to pharmacy
-//         const isOriginalBatch = batch.source !== 'pharmacy'; // Not from pharmacy collection
-        
-//         return isThisManufacturer && isAvailable && notTransferred && isOriginalBatch;
-//       });
-      
-//       setManufacturerBatches(availableBatches);
-//       console.log(`✅ Loaded ${availableBatches.length} available manufacturer batches`);
-//     }
-//   } catch (error) {
-//     console.error("❌ Error fetching manufacturer batches:", error);
-//     setManufacturerBatches([]);
-//   } finally {
-//     setLoadingBatches(false);
-//   }
-// };
 
   const fetchManufacturerMedicines = async (manufacturerName) => {
   try {
@@ -557,176 +451,6 @@ const registerBatch = async (batchData) => {
     throw error;
   }
 };
-
-
-
-
-//   const handleSubmit = async (e) => {
-//   e.preventDefault();
-//   console.log("🔄 Form submitted, starting validation...");
-  
-//   setSubmitting(true);
-//   setMessage(null);
-
-//   const validationData = {
-//     batchNo: form.batchNo,
-//     name: form.medicineName,
-//     medicineName: form.medicineName,
-//     manufactureDate: form.manufactureDate,
-//     expiry: form.expiryDate,
-//     formulation: form.formulation,
-//     manufacturer: form.manufacturer,
-//     quantity: form.quantity,
-//     packaging: {
-//       packSize: form.packSize
-//     }
-//   };
-  
-//   console.log("📋 Validation data:", validationData);
-  
-//   const validation = validateBatch(validationData);
-  
-//   console.log("📋 Validation result:", validation);
-  
-//   if (!validation.isValid) {
-//     console.log("❌ Validation failed:", validation.errors);
-//     setErrors(validation.errors);
-//     setSubmitting(false);
-//     return;
-//   }
-
-//   try {
-//     console.log(`🔍 Checking if batch ${form.batchNo} already exists...`);
-    
-//     const checkResponse = await api.get(`/batches/${form.batchNo}`);
-    
-//     // Check if batch exists - checkResponse is null if batch doesn't exist
-//     if (checkResponse !== null) {
-//       // Batch exists (in any format)
-//       setMessage({
-//         type: "error",
-//         text: `❌ Batch number "${form.batchNo}" already exists in the system. Please use a different batch number.`
-//       });
-//       setSubmitting(false);
-//       return;
-//     }
-    
-//     // Batch doesn't exist (checkResponse is null) - good to proceed
-//     console.log("✅ Batch doesn't exist, proceeding with registration...");
-    
-//     setMessage({ type: "info", text: "🔄 Registering batch..." });
-
-//     try {
-//       const success = await registerBatch({
-//         batchNo: form.batchNo.trim(),
-//         name: form.medicineName.trim(),
-//         medicineName: form.medicineName.trim(),
-//         manufactureDate: form.manufactureDate,
-//         expiry: form.expiryDate,
-//         formulation: form.formulation.trim(),
-//         manufacturer: form.manufacturer,
-//         pharmacy: "To be assigned",
-//         quantity: parseInt(form.quantity) || 0,
-//         packSize: form.packSize.trim()
-//       });
-
-//       if (success) {
-//         setMessage({ 
-//           type: "success", 
-//           text: `✅ Batch "${form.batchNo}" registered successfully!` 
-//         });
-//         resetForm();
-//         setShowRegisterBatchForm(false);
-//         fetchManufacturerBatches();
-//       } else {
-//         setMessage({
-//           type: "error",
-//           text: "Failed to register batch. Please try again."
-//         });
-//       }
-//     } catch (error) {
-//       if (error.message.includes('already exists') || error.message.includes('duplicate')) {
-//         setMessage({
-//           type: "error",
-//           text: `❌ Batch number "${form.batchNo}" already exists. Please use a different batch number.`
-//         });
-//       } else if (error.message.includes("Session expired")) {
-//         setMessage({
-//           type: "error",
-//           text: "Your session has expired. Please log in again."
-//         });
-//         setTimeout(() => {
-//           window.location.href = '/';
-//         }, 3000);
-//       } else {
-//         setMessage({
-//           type: "error",
-//           text: `Error: ${error.message}`
-//         });
-//       }
-//     }
-//   } catch (error) {
-//     // This catch block is for the initial batch check
-//     console.error("❌ Error during batch check:", error);
-//     setMessage({
-//       type: "error",
-//       text: `Error checking batch: ${error.message}`
-//     });
-//     setSubmitting(false);
-//     return;
-//   } finally {
-//     setSubmitting(false);
-//   }
-// };
-
-  // const registerBatch = async (batchData) => {
-  //   try {
-  //     console.log("🚀 Sending batch data to API:", batchData);
-      
-  //     const formattedBatchData = {
-  //       batchNo: batchData.batchNo.trim(),
-  //       name: batchData.name.trim(),
-  //       medicineName: batchData.medicineName.trim(),
-  //       manufactureDate: batchData.manufactureDate,
-  //       expiry: batchData.expiry,
-  //       formulation: batchData.formulation.trim(),
-  //       manufacturer: batchData.manufacturer.trim(),
-  //       pharmacy: batchData.pharmacy || "To be assigned",
-  //       quantity: parseInt(batchData.quantity) || 0,
-  //       packSize: batchData.packSize || "1X1"
-  //     };
-
-  //     console.log("📦 Formatted batch data:", formattedBatchData);
-
-  //     const response = await api.post("/batches", formattedBatchData);
-  //     console.log("📨 API Response:", response);
-      
-  //     if (response.success === true) {
-  //       console.log("✅ Batch registered successfully");
-  //       return true;
-  //     }
-  //     else if (response._id || response.batchNo) {
-  //       console.log("✅ Batch registered successfully in database");
-  //       return true;
-  //     }
-  //     else if (typeof response === 'object' && response.batchNo) {
-  //       console.log("✅ Batch registered successfully (direct object)");
-  //       return true;
-  //     }
-  //     else {
-  //       console.log("❌ Unexpected API response format:", response);
-  //       throw new Error(response.message || "Failed to register batch - invalid response format");
-  //     }
-  //   } catch (error) {
-  //     console.error("❌ API Error:", error);
-  //     console.error("❌ API Error Details:", {
-  //       message: error.message,
-  //       response: error.response
-  //     });
-      
-  //     throw error;
-  //   }
-  // };
 
   const handleDeleteBatch = async (batchId, batchNo) => {
     if (!window.confirm(`Are you sure you want to delete batch "${batchNo}"? This action cannot be undone.`)) {
@@ -1066,7 +790,7 @@ const registerBatch = async (batchData) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {/* ✅ CORRECT FILTER: Show ONLY manufacturer batches, hide pharmacy-accepted ones */}
+              {/* Show ONLY manufacturer batches, hide pharmacy-accepted ones */}
               {manufacturerBatches
                 .filter(batch => {
                   const status = batch.status?.toLowerCase() || '';
@@ -1548,36 +1272,36 @@ const registerBatch = async (batchData) => {
 
                   {/* Status Messages */}
                   {message && (
-  <div
-    className={`mt-3 md:mt-6 p-2 md:p-4 rounded-lg md:rounded-xl border-2 ${
-      message.type === "success"
-        ? "bg-green-50 text-green-700 border-green-200"
-        : message.type === "error"
-        ? "bg-red-50 text-red-700 border-red-200"
-        : "bg-blue-50 text-blue-700 border-blue-200"
-    }`}
-  >
-    <div className="flex items-center gap-1 md:gap-2">
-      <span className="text-base md:text-lg">
-        {message.type === "success" ? "✅" : 
-         message.type === "error" ? "❌" : "🔄"}
-      </span>
-      <div>
-        <span className="text-xs md:text-sm font-semibold">{message.text}</span>
-        {message.details && (
-          <div className="text-xs mt-1 opacity-75">
-            {message.details}
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-)}
+                  <div
+                    className={`mt-3 md:mt-6 p-2 md:p-4 rounded-lg md:rounded-xl border-2 ${
+                      message.type === "success"
+                        ? "bg-green-50 text-green-700 border-green-200"
+                        : message.type === "error"
+                        ? "bg-red-50 text-red-700 border-red-200"
+                        : "bg-blue-50 text-blue-700 border-blue-200"
+                  }`}
+                  >
+                  <div className="flex items-center gap-1 md:gap-2">
+                    <span className="text-base md:text-lg">
+                      {message.type === "success" ? "✅" : 
+                      message.type === "error" ? "❌" : "🔄"}
+                    </span>
+                  <div>
+                    <span className="text-xs md:text-sm font-semibold">{message.text}</span>
+                      {message.details && (
+                      <div className="text-xs mt-1 opacity-75">
+                        {message.details}
+                      </div>
+                      )}
+                    </div>
+                  </div>
+                  </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Add Manufacturer Company Form Modal */}
+            {/* Manufacturer Company Form Modal */}
             {showAddCompanyForm && (
               <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
                 <div className="bg-white rounded-lg md:rounded-2xl p-3 md:p-6 w-full max-w-full md:max-w-2xl max-h-[90vh] overflow-y-auto">

@@ -157,60 +157,6 @@ const PharmacyPage = ({ batches, onAccept, metamask, user, theme, onRefresh }) =
   }
 };
 
-  // const handleAcceptManufacturerBatch = async (batch) => {
-  //   if (!selectedCompany) {
-  //     alert("Please select a pharmacy company first.");
-  //     return;
-  //   }
-
-  //   try {
-  //     console.log("🏥 Accepting manufacturer batch WITH blockchain...", { 
-  //       batchNo: batch.batchNo, 
-  //       pharmacyCompanyId: selectedCompany,
-  //       batchData: batch 
-  //     });
-      
-  //     const response = await api.post("/pharmacy/accept-batch", {
-  //       batchNo: batch.batchNo,
-  //       pharmacyCompanyId: selectedCompany,
-  //       acceptedQuantity: batch.quantity || batch.packaging?.tabletsPerStrip || 100
-  //     });
-
-  //     console.log("✅ Accept batch response:", response);
-
-  //     if (response.success) {
-  //       // Check blockchain status
-  //       if (response.blockchain && response.blockchain.registered) {
-  //         alert(`✅ Batch "${batch.batchNo}" accepted successfully!\n\n📊 Blockchain Status: ✅ Registered\n🔗 Transaction: ${response.blockchain.transactionHash.substring(0, 20)}...`);
-  //       } else if (response.blockchain && response.blockchain.warning) {
-  //         alert(`⚠️ Batch "${batch.batchNo}" accepted locally but blockchain registration failed.\n\n📊 Blockchain Status: ⚠️ Local Only\n📝 Note: ${response.blockchain.warning}`);
-  //       } else {
-  //         alert(`✅ Batch "${batch.batchNo}" accepted successfully!`);
-  //       }
-        
-  //       await fetchMedicines();
-  //       await fetchManufacturerBatches();
-  //     } else {
-  //       throw new Error(response.message || 'Failed to accept batch');
-  //     }
-  //   } catch (error) {
-  //     console.error("❌ Error accepting batch:", error);
-  //     console.error("❌ Error details:", {
-  //       message: error.message,
-  //       response: error.response
-  //     });
-      
-  //     // Show more detailed error message
-  //     if (error.message.includes('already exists')) {
-  //       alert(`❌ This batch is already in your pharmacy inventory.`);
-  //     } else if (error.message.includes('not found')) {
-  //       alert(`❌ Batch not found. Please refresh the page and try again.`);
-  //     } else {
-  //       alert(`❌ Failed to accept batch: ${error.message}`);
-  //     }
-  //   }
-  // };
-
   const handleBlockchainSync = async () => {
     try {
       if (!metamask.isConnected) {

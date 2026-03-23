@@ -6,11 +6,10 @@ import EmailService from '../services/emailService.js';
 import mongoose from 'mongoose';
 
 
-
-// ✅ Get Admin Dashboard Statistics
+// Get Admin Dashboard Statistics
 export const getAdminStats = async (req, res) => {
   try {
-    console.log("📊 Fetching admin dashboard statistics...");
+    console.log("Fetching admin dashboard statistics...");
 
     // Get counts from all collections
     const [
@@ -70,16 +69,16 @@ export const getAdminStats = async (req, res) => {
         pendingBatches: pendingBatchesCount
       },
       systemHealth,
-      recentActivity: recentActivities.slice(0, 10) // Get top 10 most recent
+      recentActivity: recentActivities.slice(0, 10) // Gets top 10 most recent
     };
 
-    console.log("✅ Admin stats fetched successfully");
+    console.log("Admin stats fetched successfully");
     res.json({
       success: true,
       data: stats
     });
   } catch (error) {
-    console.error("❌ Error fetching admin stats:", error);
+    console.error("Error fetching admin stats:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching admin statistics",
@@ -88,7 +87,7 @@ export const getAdminStats = async (req, res) => {
   }
 };
 
-// ✅ Get Recent Activity (Automated)
+// Get Recent Activity (Automated)
 const getRecentActivity = async (sinceDate) => {
   try {
     const [recentBatches, recentMedicines, recentUsers] = await Promise.all([
@@ -154,12 +153,7 @@ const getRecentActivity = async (sinceDate) => {
   }
 };
 
-// ✅ NEW CHANGE LOG FOR ACTIVE DEACTIVATE ETC
-  // controllers/adminController.js
-
-
 // Toggle User Status (Combined deactivate/reactivate)
-// ✅ Toggle User Status (Combined deactivate/reactivate)
 export const toggleUserStatus = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -207,7 +201,7 @@ export const toggleUserStatus = async (req, res) => {
     ).select('username role name isActive deactivatedAt reactivatedAt');
 
     const action = newStatus ? 'reactivated' : 'deactivated';
-    console.log(`✅ User ${action}: ${updatedUser.username} by admin ${req.user.username}`);
+    console.log(`User ${action}: ${updatedUser.username} by admin ${req.user.username}`);
 
     res.json({
       success: true,
@@ -216,7 +210,7 @@ export const toggleUserStatus = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error toggling user status:", error);
+    console.error("Error toggling user status:", error);
     res.status(500).json({
       success: false,
       message: "Error updating user status",
@@ -225,7 +219,7 @@ export const toggleUserStatus = async (req, res) => {
   }
 };
 
-// ✅ Deactivate User
+// Deactivate User
 export const deactivateUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -258,7 +252,7 @@ export const deactivateUser = async (req, res) => {
       });
     }
 
-    console.log(`✅ User deactivated: ${user.username} by admin ${req.user.username}`);
+    console.log(`User deactivated: ${user.username} by admin ${req.user.username}`);
 
     res.json({
       success: true,
@@ -267,7 +261,7 @@ export const deactivateUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error deactivating user:", error);
+    console.error("Error deactivating user:", error);
     res.status(500).json({
       success: false,
       message: "Error deactivating user",
@@ -276,7 +270,7 @@ export const deactivateUser = async (req, res) => {
   }
 };
 
-// ✅ Reactivate User
+// Reactivate User
 export const reactivateUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -301,7 +295,7 @@ export const reactivateUser = async (req, res) => {
       });
     }
 
-    console.log(`✅ User reactivated: ${user.username} by admin ${req.user.username}`);
+    console.log(`User reactivated: ${user.username} by admin ${req.user.username}`);
 
     res.json({
       success: true,
@@ -310,7 +304,7 @@ export const reactivateUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error reactivating user:", error);
+    console.error("Error reactivating user:", error);
     res.status(500).json({
       success: false,
       message: "Error reactivating user",
@@ -319,7 +313,7 @@ export const reactivateUser = async (req, res) => {
   }
 };
 
-// Get user status history (optional)
+// Get user status history (OPT)
 export const getUserStatusHistory = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -354,7 +348,7 @@ export const getUserStatusHistory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error fetching user status history:", error);
+    console.error("Error fetching user status history:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching user status history",
@@ -366,7 +360,7 @@ export const getUserStatusHistory = async (req, res) => {
 
 
 
-// ✅ Get All Users (Fixed)
+// Get All Users (Fixed)
 export const getSystemUsers = async (req, res) => {
   try {
     console.log("👥 Fetching all system users...");
@@ -376,14 +370,14 @@ export const getSystemUsers = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    console.log(`✅ Found ${users.length} users`);
+    console.log(`Found ${users.length} users`);
     
     res.json({
       success: true,
       data: users
     });
   } catch (error) {
-    console.error("❌ Error fetching system users:", error);
+    console.error("Error fetching system users:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching system users",
@@ -393,8 +387,7 @@ export const getSystemUsers = async (req, res) => {
 };
 
 
-// ✅ Update User
-// ✅ Update User
+// Update User
 export const updateUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -428,7 +421,7 @@ export const updateUser = async (req, res) => {
       data: updatedUser
     });
   } catch (error) {
-    console.error("❌ Error updating user:", error);
+    console.error("Error updating user:", error);
     res.status(500).json({
       success: false,
       message: "Error updating user",
@@ -437,12 +430,12 @@ export const updateUser = async (req, res) => {
   }
 };
 
-// ✅ Delete User
+// Delete User
 export const deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    console.log("🗑️ Deleting user:", userId);
+    console.log("Deleting user:", userId);
 
     // Prevent admin from deleting themselves
     if (req.user.id === userId) {
@@ -461,7 +454,7 @@ export const deleteUser = async (req, res) => {
       });
     }
 
-    console.log("✅ User deleted successfully:", deletedUser.username);
+    console.log("User deleted successfully:", deletedUser.username);
 
     res.json({
       success: true,
@@ -473,7 +466,7 @@ export const deleteUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error deleting user:", error);
+    console.error("Error deleting user:", error);
     res.status(500).json({
       success: false,
       message: "Error deleting user",
@@ -482,24 +475,24 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-// ✅ Get All Batches (Fixed)
+// Get All Batches (Enhanced)
 export const getAllBatches = async (req, res) => {
   try {
-    console.log("📦 Fetching all batches for admin...");
+    console.log("Fetching all batches for admin...");
 
     const batches = await Batch.find()
       .sort({ createdAt: -1 })
       .select('batchNo name medicineName manufactureDate expiry formulation manufacturer pharmacy quantity status blockchainVerified createdAt')
       .lean();
 
-    // Also get pharmacy medicines
+    // Also gets pharmacy medicines
     const pharmacyMedicines = await PharmacyMedicine.find()
       .populate('pharmacyCompany', 'name')
       .sort({ createdAt: -1 })
       .select('name batchNo medicineName manufactureDate expiryDate formulation manufacturer quantity status blockchainVerified pharmacyCompany createdAt')
       .lean();
 
-    // Combine and format all batches
+    // Combine and formats all batches
     const allBatches = [
       ...batches.map(batch => ({
         ...batch,
@@ -518,14 +511,14 @@ export const getAllBatches = async (req, res) => {
       }))
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    console.log(`✅ Found ${allBatches.length} total batches`);
+    console.log(`Found ${allBatches.length} total batches`);
 
     res.json({
       success: true,
       data: allBatches
     });
   } catch (error) {
-    console.error("❌ Error fetching batches:", error);
+    console.error("Error fetching batches:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching batches",
@@ -534,10 +527,10 @@ export const getAllBatches = async (req, res) => {
   }
 };
 
-// ✅ Get Pending Batches for Approval
+// Get Pending Batches for Approval | Future Implementation
 export const getPendingBatches = async (req, res) => {
   try {
-    console.log("🔄 Fetching pending batches for admin approval...");
+    console.log("Fetching pending batches for admin approval...");
 
     // Find batches that need admin approval (not verified, or specific status)
     const pendingBatches = await Batch.find({
@@ -575,14 +568,14 @@ export const getPendingBatches = async (req, res) => {
       }))
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    console.log(`✅ Found ${allPendingItems.length} pending items`);
+    console.log(`Found ${allPendingItems.length} pending items`);
     
     res.json({
       success: true,
       data: allPendingItems
     });
   } catch (error) {
-    console.error("❌ Error fetching pending batches:", error);
+    console.error("Error fetching pending batches:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching pending batches",
@@ -591,13 +584,13 @@ export const getPendingBatches = async (req, res) => {
   }
 };
 
-// ✅ Approve/Reject Batch
+// Approve/Reject Batch | Future Implementation
 export const updateBatchStatus = async (req, res) => {
   try {
     const { batchId } = req.params;
     const { action, reason } = req.body; // action: 'approve' or 'reject'
 
-    console.log(`🔄 Admin ${action} for batch: ${batchId}`);
+    console.log(`Admin ${action} for batch: ${batchId}`);
 
     let updatedItem;
     
@@ -629,7 +622,7 @@ export const updateBatchStatus = async (req, res) => {
       });
     }
 
-    console.log(`✅ Admin ${action} successful for: ${updatedItem.batchNo || updatedItem.name}`);
+    console.log(`Admin ${action} successful for: ${updatedItem.batchNo || updatedItem.name}`);
     
     res.json({
       success: true,
@@ -637,7 +630,7 @@ export const updateBatchStatus = async (req, res) => {
       data: updatedItem
     });
   } catch (error) {
-    console.error("❌ Error updating batch status:", error);
+    console.error("Error updating batch status:", error);
     res.status(500).json({
       success: false,
       message: "Error updating batch status",
@@ -646,10 +639,10 @@ export const updateBatchStatus = async (req, res) => {
   }
 };
 
-// ✅ Get System Logs (Automated)
+// Get System Logs (Automated)
 export const getSystemLogs = async (req, res) => {
   try {
-    console.log("📋 Fetching system logs...");
+    console.log("Fetching system logs...");
 
     // Get recent activities as logs
     const sevenDaysAgo = new Date();
@@ -673,7 +666,7 @@ export const getSystemLogs = async (req, res) => {
       data: logs
     });
   } catch (error) {
-    console.error("❌ Error fetching system logs:", error);
+    console.error("Error fetching system logs:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching system logs",
@@ -682,10 +675,10 @@ export const getSystemLogs = async (req, res) => {
   }
 };
 
-// ✅ Get Recall List
+// Get Recall List
 export const getRecallList = async (req, res) => {
   try {
-    console.log("⚠️ Fetching recall list...");
+    console.log("Fetching recall list...");
 
     // Find expired batches and medicines
     const expiredBatches = await Batch.find({
@@ -725,14 +718,14 @@ export const getRecallList = async (req, res) => {
       }))
     ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    console.log(`✅ Found ${recallList.length} items for recall`);
+    console.log(`Found ${recallList.length} items for recall`);
 
     res.json({
       success: true,
       data: recallList
     });
   } catch (error) {
-    console.error("❌ Error fetching recall list:", error);
+    console.error("Error fetching recall list:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching recall list",
@@ -741,14 +734,14 @@ export const getRecallList = async (req, res) => {
   }
 };
 
-// ✅ Delete Recall Item
+// Delete Recall Item
 export const deleteRecall = async (req, res) => {
   try {
     const { recallId } = req.params;
 
     console.log(`🗑️ Deleting recall item: ${recallId}`);
 
-    // Extract type and ID from recallId format: "type-id"
+    // This Extracts type and ID from recallId format: "type-id"
     const [type, id] = recallId.split('-');
 
     if (type === 'batch') {
@@ -762,7 +755,7 @@ export const deleteRecall = async (req, res) => {
       message: "Recall item deleted successfully"
     });
   } catch (error) {
-    console.error("❌ Error deleting recall:", error);
+    console.error("Error deleting recall:", error);
     res.status(500).json({
       success: false,
       message: "Error deleting recall item",
@@ -772,7 +765,7 @@ export const deleteRecall = async (req, res) => {
 };
 
 
-// ✅ Create New User (Enhanced with email)
+// Create New User 
 export const createUser = async (req, res) => {
   try {
     const { username, password, role, name, email, phone, cnic, address } = req.body;
@@ -835,14 +828,14 @@ export const createUser = async (req, res) => {
       createdAt: newUser.createdAt
     };
 
-    console.log("✅ User created successfully:", username);
+    console.log("User created successfully:", username);
 
-    // 🔥 Send welcome email (async - don't wait for response)
+    // Send welcome email (async - don't wait for response)
     try {
       await EmailService.sendUserRegistrationEmail(userResponse, password);
-      console.log("✅ Welcome email sent to:", userResponse.email);
+      console.log("Welcome email sent to:", userResponse.email);
     } catch (emailError) {
-      console.error("❌ Failed to send welcome email:", emailError);
+      console.error("Failed to send welcome email:", emailError);
       // Don't fail the request if email fails
     }
 
@@ -854,7 +847,7 @@ export const createUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error creating user:", error);
+    console.error("Error creating user:", error);
     
     // Handle duplicate key errors
     if (error.code === 11000) {
@@ -874,7 +867,7 @@ export const createUser = async (req, res) => {
   }
 };
 
-// ✅ Update Password Reset to send email
+// Update Password Reset to send email
 export const resetUserPassword = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -904,14 +897,14 @@ export const resetUserPassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    console.log(`✅ Password reset for user: ${user.username} by admin ${req.user.username}`);
+    console.log(`Password reset for user: ${user.username} by admin ${req.user.username}`);
 
-    // 🔥 Send password reset email
+    // Send password reset email
     try {
       await EmailService.sendPasswordResetEmail(user, newPassword);
-      console.log("✅ Password reset email sent to:", user.email);
+      console.log("Password reset email sent to:", user.email);
     } catch (emailError) {
-      console.error("❌ Failed to send password reset email:", emailError);
+      console.error("Failed to send password reset email:", emailError);
     }
 
     res.json({
@@ -921,7 +914,7 @@ export const resetUserPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error resetting password:", error);
+    console.error("Error resetting password:", error);
     res.status(500).json({
       success: false,
       message: "Error resetting password",

@@ -5,7 +5,6 @@ import connectDB from "./config/db.js";
 import Web3 from 'web3';
 import BlockchainService from "./services/blockchainService.js";
 import SyncWorker from "./services/syncWorker.js";
-// Add this import at the top of server.js (after other imports)
 import { checkMongoDBHealth, checkBlockchainHealth, safeModelCount, getSystemInfo } from './utils/healthHelper.js';
 import transactionMonitor from './services/transactionMonitor.js';
 import { fileURLToPath } from 'url';
@@ -19,27 +18,23 @@ import rateLimit from 'express-rate-limit';
 // Routes
 import authRoutes from "./routes/authRoutes.js";
 import batchRoutes from "./routes/batchRoutes.js";
-// import pharmacyRoutes from "./routes/pharmacyRoutes.js"; // ✅ Pharmacy dashboard routes
-import pharmacyMedicineRoutes from "./routes/pharmacyMedicineRoutes.js"; // Pharmacy medicine routes
+// import pharmacyRoutes from "./routes/pharmacyRoutes.js"; // Pharmacy dashboard routes
+import pharmacyMedicineRoutes from "./routes/pharmacyMedicineRoutes.js"; 
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import manufacturerRoutes from './routes/manufacturerRoutes.js';
 import adminRoutes from './routes/admin.js';
 import pharmacyCompanyRoutes from "./routes/pharmacyCompanyRoutes.js";
 import manufacturerCompanyRoutes from "./routes/manufacturerCompanyRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
-// Add this import
 import metamaskRoutes from "./routes/metamaskRoutes.js";
 // Initialize demo data
 import { initializeUsers } from "./controllers/authController.js";
 import { initializeBatches } from "./controllers/batchController.js";
-import { initializePharmacyMedicines } from "./controllers/pharmacyMedicineController.js"; // ✅ Correct import
+import { initializePharmacyMedicines } from "./controllers/pharmacyMedicineController.js"; 
 import { initializePharmacyCompanies } from "./controllers/pharmacyCompanyController.js";
-
-// added this new import 11-11-25
 import { initializeManufacturers } from "./controllers/manufacturerController.js";
 
 // dotenv.config(); // This loads .env into process.env
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -47,7 +42,7 @@ const __dirname = dirname(__filename);
 // Load .env file from the root directory
 dotenv.config({ path: join(__dirname, '.env') });
 // Debug: Check if environment variables are loaded
-console.log('🔍 Environment Variables Loaded:');
+console.log('+ Environment Variables Loaded:');
 console.log('- PORT:', process.env.PORT);
 console.log('- CONTRACT_ADDRESS:', process.env.CONTRACT_ADDRESS);
 console.log('- MONGODB_URI:', process.env.MONGODB_URI ? '✓ Loaded' : '✗ Not Loaded');
@@ -57,11 +52,11 @@ BigInt.prototype.toJSON = function() {
   return this.toString();
 };
 
-// console.log('🔍 CONTRACT_ADDRESS loaded:', process.env.CONTRACT_ADDRESS); // Add this for debugging
+// console.log('CONTRACT_ADDRESS loaded:', process.env.CONTRACT_ADDRESS); // Add this for debugging
 
 const app = express();
 
-// ✅ Security middleware
+// Security middleware
 app.use(helmet());
 
 
@@ -72,7 +67,7 @@ const corsOptions = {
     
     // 2. Allow ALL Vercel preview domains automatically
     if (origin.endsWith('.vercel.app')) {
-      console.log(`✅ Allowing Vercel preview domain: ${origin}`);
+      console.log(`Allowing Vercel preview domain: ${origin}`);
       return callback(null, true);
     }
     
@@ -87,7 +82,7 @@ const corsOptions = {
     }
     
     // 5. Reject everything else
-    console.log(`❌ Blocked origin: ${origin}`);
+    console.log(`X Blocked origin: ${origin}`);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -117,7 +112,7 @@ app.options('*', cors(corsOptions)); // Handle preflight for ALL routes
 // app.options('*', cors());
 
 	
-// ✅ Enhanced authentication check middleware
+// Enhanced authentication check middleware
 app.use((req, res, next) => {
   // Skip auth for public routes
   const publicRoutes = [
@@ -138,7 +133,7 @@ app.use((req, res, next) => {
     return next();
   }
 
-  // Check for token in protected routes
+  // Checks for token in protected routes
   const token = req.header('Authorization')?.replace('Bearer ', '');
   if (!token) {
     return res.status(401).json({
@@ -150,15 +145,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ Body parser limits
+// Body parser limits
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ✅ Rate limiting
-  // Rate limiting - MORE LENIENT FOR DEVELOPMENT
+// Rate limiting
+
 const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute instead of 15
-  max: 1000, // 1000 requests per minute instead of 100
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 1000, // 1000 requests per minute 
   message: {
     success: false,
     message: 'Too many requests, please try again later.'
@@ -167,10 +162,9 @@ const limiter = rateLimit({
   legacyHeaders: false
 });
 
-//  DELETE THIS 
+//  Use this if needed
 // app.get('/api/create-admin', async (req, res) => {
 //   try {
-//     // Similar logic as above
 //     res.json({ success: true, message: 'Admin created/updated' });
 //   } catch (error) {
 //     res.status(500).json({ success: false, error: error.message });
@@ -204,7 +198,7 @@ const limiter = rateLimit({
 
 app.get('/api/system/health', async (req, res) => {
   try {
-    console.log('🔍 Health check called');
+    console.log('Health check called');
     
     // 1. Check MongoDB connection - IMPROVED
     let mongoStatus = 'unknown';
@@ -220,7 +214,7 @@ app.get('/api/system/health', async (req, res) => {
         throw new Error('Mongoose not available');
       }
       
-      // Check if we have a connection object
+      // Checks if we have a connection object
       if (!mongoose.connection) {
         throw new Error('Mongoose connection object not available');
       }
@@ -296,11 +290,11 @@ app.get('/api/system/health', async (req, res) => {
       message: getHealthMessage(mongoHealthy, blockchainHealthy)
     };
     
-    console.log('✅ Health check completed');
+    console.log('Health check completed');
     res.json(response);
     
   } catch (error) {
-    console.error('❌ Health check error:', error);
+    console.error('Health check error:', error);
     res.status(500).json({
       success: false,
       message: 'Health check failed',
@@ -376,8 +370,6 @@ app.get('/api/debug-sync-queue', async (req, res) => {
   }
 });
 
-
-  // ✅ Manual sync trigger
 // POST endpoint for manual sync
 app.post('/api/synchronize', async (req, res) => {
   try {
@@ -397,7 +389,7 @@ app.post('/api/synchronize', async (req, res) => {
       method: 'POST'
     });
   } catch (error) {
-    console.error('❌ Manual sync failed:', error);
+    console.error('Manual sync failed:', error);
     res.status(500).json({
       success: false,
       message: 'Manual synchronization failed',
@@ -410,7 +402,7 @@ app.post('/api/synchronize', async (req, res) => {
 // Also add a GET endpoint for easier testing
 app.get('/api/synchronize', async (req, res) => {
   try {
-    console.log('🔄 Manual sync triggered via GET request');
+    console.log('Manual sync triggered via GET request');
     
     const SyncWorkerModule = await import('./services/syncWorker.js');
     const SyncWorker = SyncWorkerModule.default;
@@ -424,7 +416,7 @@ app.get('/api/synchronize', async (req, res) => {
       method: 'GET'
     });
   } catch (error) {
-    console.error('❌ Manual sync failed:', error);
+    console.error('Manual sync failed:', error);
     res.status(500).json({
       success: false,
       message: 'Manual synchronization failed',
@@ -442,7 +434,7 @@ app.get('/api/blockchain/medicine/:batchNo/full', async (req, res) => {
     const { batchNo } = req.params;
     const BlockchainService = (await import('./services/blockchainService.js')).default;
     
-    console.log(`🔍 Fetching full medicine data for: ${batchNo}`);
+    console.log(`Fetching full medicine data for: ${batchNo}`);
     
     // Get complete medicine data from blockchain
     const medicineData = await BlockchainService.getCompleteMedicineFromBlockchain(batchNo);
@@ -474,7 +466,7 @@ app.get('/api/blockchain/medicine/:batchNo/full', async (req, res) => {
       verifiedAt: medicineData.verifiedAt
     };
     
-    console.log('📊 FULL MEDICINE DATA FROM BLOCKCHAIN:');
+    console.log('++ FULL MEDICINE DATA FROM BLOCKCHAIN:');
     console.log('=======================================');
     console.log(`batchNo: ${formattedData.batchNo}`);
     console.log(`name: ${formattedData.name}`);
@@ -498,7 +490,7 @@ app.get('/api/blockchain/medicine/:batchNo/full', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Error fetching medicine data:', error);
+    console.error('X Error fetching medicine data:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching medicine data from blockchain',
@@ -510,18 +502,18 @@ app.get('/api/blockchain/medicine/:batchNo/full', async (req, res) => {
 
 
 
-// In server.js
+// debug-medicine-compare endpoint
 app.get('/api/debug-medicine-compare/:batchNo', async (req, res) => {
   try {
     const { batchNo } = req.params;
     const BlockchainService = (await import('./services/blockchainService.js')).default;
     
-    console.log(`🔍 Comparing medicine data for: ${batchNo}`);
+    console.log(`+ Comparing medicine data for: ${batchNo}`);
     
-    // Get current data
+    // Gets current data
     const currentData = await BlockchainService.getCompleteMedicineFromBlockchain(batchNo);
     
-    // Also check transaction history
+    // Also checks transaction history
     let transferHistory = [];
     try {
       if (BlockchainService.contract?.methods?.getMedicineHistory) {
@@ -563,9 +555,7 @@ app.get('/api/debug-medicine-compare/:batchNo', async (req, res) => {
 });
 
 
-
-
-// ✅ Check sync worker status
+// Checks sync worker status
 app.get('/api/sync-worker/status', async (req, res) => {
   try {
     const SyncWorkerModule = await import('./services/syncWorker.js');
@@ -589,7 +579,7 @@ app.get('/api/sync-worker/status', async (req, res) => {
   }
 });
 
-// ✅ Restart sync worker
+// Restarts sync worker
 app.post('/api/sync-worker/restart', async (req, res) => {
   try {
     const SyncWorkerModule = await import('./services/syncWorker.js');
@@ -613,7 +603,7 @@ app.post('/api/sync-worker/restart', async (req, res) => {
 
 
 
-  // Add this to server.js - Debug MongoDB endpoint
+  //Debug MongoDB endpoint
 app.get('/api/debug/mongodb', async (req, res) => {
   try {
     console.log('🔍 Debugging MongoDB connection...');
@@ -666,7 +656,7 @@ app.get('/api/debug/mongodb', async (req, res) => {
 });
 
 
-
+// Test route for blockchain connection
   app.get('/api/test-blockchain', async (req, res) => {
   try {
     const BlockchainService = (await import('./services/blockchainService.js')).default;
@@ -686,15 +676,16 @@ app.get('/api/debug/mongodb', async (req, res) => {
   }
 });
 
-// In server.js, add a test route
+// Test blockchain deployment and contract interaction
 app.get('/api/test-blockchain-deploy', async (req, res) => {
   try {
     const blockchainService = (await import('./services/blockchainService.js')).default;
     
-    // Test connection
+    // Tests connection
+
     // await blockchainService.initialize();
-    
-    // Test contract call
+
+    // Tests contract call
     const account = await blockchainService.getDefaultAccount();
     const contractAddress = process.env.CONTRACT_ADDRESS;
     
@@ -718,16 +709,11 @@ app.get('/api/test-blockchain-deploy', async (req, res) => {
 
 
 
-
-
-
-
-
+// API to check contract health and basic calls without BigInt issues
   app.get('/api/contract-health', async (req, res) => {
   try {
     const BlockchainService = (await import('./services/blockchainService.js')).default;
     // await BlockchainService.initialize();
-    
     // Test basic contract calls (no BigInt)
     const owner = await BlockchainService.contract.methods.owner().call();
     const allBatches = await BlockchainService.contract.methods.getAllBatchNumbers().call();
@@ -811,7 +797,7 @@ app.get('/api/blockchain/simple-health', async (req, res) => {
 });
 
 
-// Test contract methods directly
+// Tests contract methods directly
 app.get('/api/blockchain/test-methods', async (req, res) => {
   try {
     const BlockchainService = (await import('./services/blockchainService.js')).default;
@@ -859,7 +845,7 @@ app.get('/api/blockchain/test-methods', async (req, res) => {
 
 app.use('/api/', limiter);
 
-// ✅ Request logging middleware
+// Request logging middleware
 // app.use((req, res, next) => {
 //   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
 //   next();
@@ -874,7 +860,7 @@ app.use('/api/', limiter);
   next();
 });
 
-// ✅ API routes - ORGANIZED PROPERLY
+// API routes - ORGANIZED PROPERLY
 app.use("/api/auth", authRoutes);
 app.use("/api/batches", batchRoutes);
 app.use("/api/analytics", analyticsRoutes);
@@ -882,11 +868,11 @@ app.use("/api/manufacturers", manufacturerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/pharmacy-companies", pharmacyCompanyRoutes);
 app.use("/api/manufacturer-companies", manufacturerCompanyRoutes);
-// ✅ Pharmacy routes - BOTH FILES
+// Pharmacy routes - BOTH FILES
 // app.use("/api/pharmacy", pharmacyRoutes);        // Dashboard & general routes
 app.use("/api/pharmacy", pharmacyMedicineRoutes); // Medicine management routes
 app.use("/api/support", supportRoutes);
-// ✅ Health check
+// Health check
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
@@ -896,7 +882,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ✅ Root route
+// Root route
 app.get(['/', '/api'], (req, res) => {
   res.json({ 
     message: 'Medicheck Backend API',
@@ -922,7 +908,7 @@ app.get(['/', '/api'], (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
-// Add this route configuration
+// API metamask routes
 app.use("/api/metamask", metamaskRoutes);
 
   // CHECKPOINT TO SYNCHORIZE BLOCKCHAIN WITH OUR PHARMACY
@@ -931,7 +917,7 @@ app.post('/api/pharmacy/synchronize-blockchain', async (req, res) => {
     const PharmacyMedicine = (await import('./models/PharmacyMedicine.js')).default;
     const blockchainService = (await import('./services/blockchainService.js')).default;
     
-    // Get all pharmacy medicines not on blockchain
+    // Gets all pharmacy medicines not on blockchain
     const medicines = await PharmacyMedicine.find({ 
       blockchainVerified: false,
       acceptedFromManufacturer: true 
@@ -1000,7 +986,7 @@ app.post('/api/pharmacy/synchronize-blockchain', async (req, res) => {
   }
 });
 
-  // ADDED THIS CHECKPOINT TO CHECK A SPECIFIC BATCH'S STATUS
+  // CHECKPOINT TO CHECK A SPECIFIC BATCH'S STATUS
 app.get('/api/debug-batch/:batchNo', async (req, res) => {
   try {
     const { batchNo } = req.params;
@@ -1010,7 +996,7 @@ app.get('/api/debug-batch/:batchNo', async (req, res) => {
     const Batch = (await import('./models/Batch.js')).default;
     const BlockchainService = (await import('./services/blockchainService.js')).default;
     
-    // 1. Check MongoDB
+    // 1. Checks MongoDB
     const mongoBatch = await Batch.findOne({ batchNo });
     console.log('📋 MongoDB batch:', mongoBatch ? {
       exists: true,
@@ -1019,25 +1005,25 @@ app.get('/api/debug-batch/:batchNo', async (req, res) => {
       error: mongoBatch.blockchainError
     } : { exists: false });
     
-    // 2. Initialize blockchain
+    // 2. Initializes blockchain
     // await BlockchainService.initialize();
     
-    // 3. Check blockchain
+    // 3. Checks blockchain
     let blockchainExists = false;
     try {
       blockchainExists = await BlockchainService.contract.methods.verifyMedicineExistence(batchNo).call();
-      console.log('🔗 Blockchain exists:', blockchainExists);
+      console.log('+ Blockchain exists:', blockchainExists);
     } catch (blockchainError) {
-      console.error('❌ Blockchain check failed:', blockchainError.message);
+      console.error('X Blockchain check failed:', blockchainError.message);
     }
     
     // 4. Get all batch numbers from blockchain to see what's actually there
     let allBatchNumbers = [];
     try {
       allBatchNumbers = await BlockchainService.contract.methods.getAllBatchNumbers().call();
-      console.log('📊 All batches on blockchain:', allBatchNumbers);
+      console.log('+ All batches on blockchain:', allBatchNumbers);
     } catch (error) {
-      console.error('❌ Could not get all batch numbers:', error.message);
+      console.error('X Could not get all batch numbers:', error.message);
     }
     
     res.json({
@@ -1072,42 +1058,40 @@ app.get('/api/debug-batch/:batchNo', async (req, res) => {
   }
 });
 
-// });
-
 // 				DEBUG CONTACT FUNCTION
 app.get('/api/debug-contract', async (req, res) => {
   try {
     const BlockchainService = (await import('./services/blockchainService.js')).default;
     // await BlockchainService.initialize();
     
-    console.log('🔍 Debugging contract...');
+    console.log('Debugging contract...');
     
     // Get all method names from the contract
     const methodNames = Object.keys(BlockchainService.contract.methods);
-    console.log('📋 Contract methods:', methodNames);
+    console.log('Contract methods:', methodNames);
     
     // Try to call verifyMedicineExistence with different signatures
     let simpleResult;
     try {
       // Try the simplest call
       simpleResult = await BlockchainService.contract.methods.verifyMedicineExistence('TEST123').call();
-      console.log('✅ verifyMedicineExistence works:', simpleResult);
+      console.log('+ verifyMedicineExistence works:', simpleResult);
     } catch (simpleError) {
-      console.log('❌ verifyMedicineExistence failed:', simpleError.message);
+      console.log('X verifyMedicineExistence failed:', simpleError.message);
     }
     
     // Try getMedicine
     let getMedicineResult;
     try {
       getMedicineResult = await BlockchainService.contract.methods.getMedicine('TEST123').call();
-      console.log('✅ getMedicine works');
+      console.log('+ getMedicine works');
     } catch (getMedicineError) {
-      console.log('❌ getMedicine failed:', getMedicineError.message);
+      console.log('X getMedicine failed:', getMedicineError.message);
     }
     
     // Get contract bytecode to verify
     const code = await BlockchainService.web3.eth.getCode(process.env.CONTRACT_ADDRESS);
-    console.log('🔗 Contract code length:', code.length);
+    console.log(' Contract code length:', code.length);
     
     res.json({
       success: true,
@@ -1127,6 +1111,7 @@ app.get('/api/debug-contract', async (req, res) => {
     });
   }
 });
+
 				//DEBUG CONTRACTS ABI 
 app.get('/api/debug-contract-abi', async (req, res) => {
   try {
@@ -1207,7 +1192,7 @@ async function getAllContractMethods(contractAddress) {
 
 
 
-// Add to server.js for testing
+// API to debug gas price and balance
 app.get('/api/debug-gas-price', async (req, res) => {
   try {
     const Web3 = await import('web3');
@@ -1257,7 +1242,7 @@ app.get('/api/debug-gas-price', async (req, res) => {
   }
 });
 
-// Test ownership transfer
+// API to test ownership transfer
 app.post('/api/test-ownership-transfer', async (req, res) => {
   try {
     const { batchNo, toAddress } = req.body;
@@ -1284,7 +1269,7 @@ app.post('/api/test-ownership-transfer', async (req, res) => {
   }
 });
 
-// Get batch owner
+// Gets batch owner
 app.get('/api/blockchain/batch/:batchNo/owner', async (req, res) => {
   try {
     const { batchNo } = req.params;
@@ -1301,7 +1286,7 @@ app.get('/api/blockchain/batch/:batchNo/owner', async (req, res) => {
   }
 });
 
-// Update pharmacy blockchain address
+// Updates pharmacy blockchain address
 app.put('/api/pharmacy-companies/:id/blockchain-address', async (req, res) => {
   try {
     const { id } = req.params;
@@ -1338,9 +1323,10 @@ app.put('/api/pharmacy-companies/:id/blockchain-address', async (req, res) => {
 
   app.get('/api/debug-contract-methods', async (req, res) => {
   try {
-    // Import the blockchain service
+    // Imports blockchain service
     const BlockchainService = (await import('./services/blockchainService.js')).default;
     
+    // NOTE:
     // NO NEED TO CALL initialize() - it auto-initializes
     // if (!BlockchainService.isInitialized) {
     //   await BlockchainService.initialize(); // REMOVE THIS
@@ -1403,7 +1389,7 @@ app.put('/api/pharmacy-companies/:id/blockchain-address', async (req, res) => {
   }
 });
 
-// ✅ Enhanced error handling middleware
+// Enhanced error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error Stack:', err.stack);
   
@@ -1495,7 +1481,7 @@ app.use((err, req, res, next) => {
   }
 });
 
-// Replaced the verify-contract-deployment endpoint
+// Error handling for verify-contract-deployment endpoint
 app.get('/api/verify-contract-deployment', async (req, res) => {
   try {
     const Web3 = await import('web3');
@@ -1696,7 +1682,7 @@ app.get('/api/test-all-blockchain', async (req, res) => {
 });
 
 
-  // Enhanced blockchain status endpoint
+  // Blockchain status endpoint
 app.get('/api/blockchain/status', async (req, res) => {
   try {
     const web3 = new Web3(process.env.BLOCKCHAIN_NETWORK || 'http://localhost:8545');
@@ -1790,10 +1776,10 @@ app.get('/api/blockchain/health', async (req, res) => {
   }
 });
 
-// Add this route in server.js, near the other blockchain routes
+// Not Needed since we already got plenty use this as reference always 
 app.get('/api/blockchain/real/status-detailed', async (req, res) => {
   try {
-    console.log('🔍 Detailed real blockchain status requested');
+    console.log('Detailed real blockchain status requested');
     
     const Web3 = await import('web3');
     const web3 = new Web3.default(process.env.BLOCKCHAIN_NETWORK);
@@ -1861,7 +1847,7 @@ app.get('/api/blockchain/real/status-detailed', async (req, res) => {
     res.json(response);
     
   } catch (error) {
-    console.error('❌ Detailed blockchain status error:', error);
+    console.error('X Detailed blockchain status error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get detailed blockchain status',
@@ -1871,11 +1857,12 @@ app.get('/api/blockchain/real/status-detailed', async (req, res) => {
   }
 });
 
-// Add this near the end of server.js, before app.listen()
+// deploy this, before app.listen()
+// to prevent errors on startup
 app.get('/api/debug-routes', (req, res) => {
   const routes = [];
   
-  // Helper to extract routes
+  // Helper function to extract routes
   function extractRoutes(layer, path = '') {
     if (layer.route) {
       // Regular route
@@ -1902,12 +1889,12 @@ app.get('/api/debug-routes', (req, res) => {
     }
   }
   
-  // Extract all routes
+  // Extracts all routes
   app._router.stack.forEach(layer => {
     extractRoutes(layer);
   });
   
-  // Filter and format
+  // Filters and format
   const apiRoutes = routes
     .filter(r => r.type === 'route')
     .map(r => ({
@@ -1928,7 +1915,7 @@ app.get('/api/debug-routes', (req, res) => {
 });
 
 
-// ✅ 404 handler
+// 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ 
     success: false,
@@ -1941,24 +1928,24 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await connectDB();
-    console.log('✅ MongoDB connected successfully');
+    console.log('++ MongoDB connected successfully');
 
-    // Initialize demo data...
+    // Initializes demo data... | Not utilized since none exists or formatted
     
     // Start background sync worker
     SyncWorker.start();
-    console.log('✅ Background sync worker started');
+    console.log('+++ Background sync worker started');
 
 
 	  app.listen(PORT, '0.0.0.0', () => {
-      console.log(`✅ Server running on port ${PORT}`);
+      console.log(`++ Server running on port ${PORT}`);
     });
    // app.listen(PORT, () => {
-   //    console.log(`✅ Server running on port ${PORT}`);
+   //    console.log(`++ Server running on port ${PORT}`);
    //  });
 
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('XX Failed to start server:', error);
     process.exit(1);
   }
 };
@@ -1981,7 +1968,7 @@ app.get('/api/blockchain/transaction/:txHash', async (req, res) => {
   }
 });
 
-// Test email endpoint
+// Tests email endpoint
 app.get('/api/test-email', async (req, res) => {
   try {
     const testUser = {
@@ -2015,7 +2002,7 @@ app.get('/api/test-email', async (req, res) => {
 // Route 1: Detailed Health Check
 app.get('/api/system/health/detailed', async (req, res) => {
   try {
-    console.log('🔍 Detailed health check requested');
+    console.log(' Detailed health check requested');
     
     // Import health helper
     const healthHelper = await import('./utils/healthHelper.js');
@@ -2040,10 +2027,10 @@ app.get('/api/system/health/detailed', async (req, res) => {
       error: blockchainStatus.reason?.message || 'Blockchain check failed'
     };
     
-    // Get system info
+    // Gets system info
     const systemInfo = healthHelper.getSystemInfo();
     
-    // Determine overall status
+    // Determines overall status
     let overallStatus = 'critical';
     let statusMessage = 'System is experiencing issues';
     
@@ -2075,7 +2062,7 @@ app.get('/api/system/health/detailed', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Detailed health check failed:', error);
+    console.error('Detailed health check failed:', error);
     res.status(500).json({
       success: false,
       message: 'Detailed health check failed',
@@ -2087,7 +2074,7 @@ app.get('/api/system/health/detailed', async (req, res) => {
 // Route 2: Real Blockchain Status
 app.get('/api/blockchain/real/status', async (req, res) => {
   try {
-    console.log('🔍 Real blockchain status check requested');
+    console.log('Real blockchain status check requested');
     
     let realBlockchainInfo = {
       available: false,
@@ -2101,28 +2088,28 @@ app.get('/api/blockchain/real/status', async (req, res) => {
       const service = realBlockchainModule.default;
       
       if (service) {
-        console.log('✅ Real blockchain service loaded');
+        console.log('Real blockchain service loaded');
         
         // Check if the service has the method
         if (typeof service.getNetworkInfo === 'function') {
-          console.log('🔄 Calling getNetworkInfo()...');
+          console.log('Calling getNetworkInfo()...');
           const networkInfo = await service.getNetworkInfo();
-          console.log('✅ Network info received:', networkInfo);
+          console.log('Network info received:', networkInfo);
           
           realBlockchainInfo.details = networkInfo;
           realBlockchainInfo.available = networkInfo.connected || false;
           realBlockchainInfo.error = networkInfo.error;
         } else {
-          console.log('❌ getNetworkInfo method not found');
+          console.log('getNetworkInfo method not found');
           realBlockchainInfo.error = 'getNetworkInfo method not available';
         }
       } else {
-        console.log('❌ Real blockchain service not available');
+        console.log('Real blockchain service not available');
         realBlockchainInfo.error = 'Real blockchain service not available';
       }
       
     } catch (importError) {
-      console.error('❌ Failed to import real blockchain service:', importError);
+      console.error('Failed to import real blockchain service:', importError);
       realBlockchainInfo.error = `Service import failed: ${importError.message}`;
     }
     
@@ -2137,7 +2124,7 @@ app.get('/api/blockchain/real/status', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Real blockchain status check failed:', error);
+    console.error('Real blockchain status check failed:', error);
     res.status(500).json({
       success: false,
       message: 'Real blockchain status check failed',

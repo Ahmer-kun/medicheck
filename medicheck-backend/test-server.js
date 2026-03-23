@@ -1,4 +1,3 @@
-// test-server.js
 const http = require('http');
 
 console.log('🔍 Checking if backend server is running...\n');

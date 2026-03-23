@@ -13,7 +13,7 @@ const manufacturerCompanySchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
-  // 🔥 MetaMask Connection Fields
+  // MetaMask Connection Fields
   metamaskConnected: {
     type: Boolean,
     default: false

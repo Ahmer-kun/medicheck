@@ -7,14 +7,14 @@ export const useCompanyMetaMask = () => {
   const [connectedCompany, setConnectedCompany] = useState(null);
 
   /**
-   * Link MetaMask to company
+   * Links MetaMask to company
    */
   const linkMetaMaskToCompany = async (companyId, companyType, metamaskAccount) => {
     try {
       setLoading(true);
       setError(null);
 
-      // 1. Get sign message from backend
+      // 1. Gets sign message from backend
       const messageResponse = await api.get(
         `/metamask/sign-message/${companyType}/${companyId}`
       );

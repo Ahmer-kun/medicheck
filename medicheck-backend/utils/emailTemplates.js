@@ -2,12 +2,11 @@ export const emailTemplates = {
   
   /**
    * User Registration Email Template
-   * Works in ALL email clients (Gmail, Outlook, Yahoo, etc.)
    */
   userRegistration: (user, temporaryPassword = null) => {
     const hasTemporaryPassword = temporaryPassword !== null;
     
-    // Create mailto link with proper encoding
+    // Created mailto link for support contact
     const subject = encodeURIComponent(`Medicheck Support - User: ${user.username}`);
     const body = encodeURIComponent(`Hello Admin,\n\nI need assistance with:\n\nUsername: ${user.username}\nRole: ${user.role}\n\nIssue Description:\n[Please describe your issue here]\n\nThank you,\n${user.name}`);
     const mailtoLink = `mailto:contact.medicheck@gmail.com?subject=${subject}&body=${body}`;

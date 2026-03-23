@@ -1,4 +1,3 @@
-// test-simple.js - No external dependencies
 const http = require('http');
 
 console.log('🧪 SIMPLE ATOMIC REGISTRATION TEST\n');

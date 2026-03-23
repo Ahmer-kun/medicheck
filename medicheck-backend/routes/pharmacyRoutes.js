@@ -3,12 +3,12 @@ import { auth, authorize } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// 🔒 All routes require pharmacy or admin role
+// All routes require pharmacy or admin role
 router.use(auth);
 router.use(authorize('pharmacy', 'admin'));
 
 /* --------------------------------------------
-   🏪 PHARMACY DASHBOARD ROUTES
+   PHARMACY DASHBOARD ROUTES
 -------------------------------------------- */
 
 // GET /api/pharmacy/dashboard - Pharmacy dashboard stats

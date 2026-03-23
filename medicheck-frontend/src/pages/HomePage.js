@@ -1,16 +1,23 @@
-// LandingPage.js - Updated with dark gradient background
 import React, { useState, useEffect } from "react";
 import BackgroundFix from "../components/BackgroundFix";
 import { THEMES } from "../data/themes";
 import { useNavigate } from "react-router-dom";
 
-function LandingPage() {
+function HomePage() {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   
-  // Import your logo
   const logoImage = require("../pictures/MSG2.jpeg");
+  
+  // Testimonial images
+  const testimonialImages = {
+    0: "https://randomuser.me/api/portraits/women/65.jpg",
+    1: "https://randomuser.me/api/portraits/men/32.jpg",
+    2: "https://randomuser.me/api/portraits/men/55.jpg"
+  };
   
   const features = [
     {
@@ -58,9 +65,34 @@ function LandingPage() {
     { value: "236", label: "Expiring Soon Monitored", icon: "⚠️" }
   ];
 
+  const testimonials = [
+    {
+      name: "Dr. Sarah Johnson",
+      role: "Quality Control Director",
+      company: "MediLife Pharmaceuticals",
+      quote: "Medicheck has revolutionized our supply chain transparency. The blockchain tracking gives us unprecedented visibility.",
+      avatar: "👩‍⚕️"
+    },
+    {
+      name: "Michael Chen",
+      role: "Pharmacist & Owner",
+      company: "City Health Pharmacy",
+      quote: "Our customers trust our medicines more knowing they can verify authenticity instantly. It's a game-changer.",
+      avatar: "💊"
+    },
+    {
+      name: "Robert Williams",
+      role: "Supply Chain Manager",
+      company: "National Medical Distributors",
+      quote: "The real-time tracking and expiration monitoring have reduced our waste by 40%. Incredible platform.",
+      avatar: "👨‍💼"
+    }
+  ];
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
+      setShowBackToTop(window.scrollY > 300);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -78,15 +110,49 @@ function LandingPage() {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+    setShowMobileMenu(false);
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
 
   const handleGetStarted = () => {
     navigate("/role-selection");
   };
 
+  const toggleMobileMenu = () => {
+    setShowMobileMenu(!showMobileMenu);
+  };
+
+  const handleNavClick = (page) => {
+    if (page === 'home') {
+      navigate('/');
+    } else {
+      navigate(`/${page}`);
+    }
+    setShowMobileMenu(false);
+  };
+
   return (
     <BackgroundFix theme={THEMES.blue}>
       <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-gray-900 via-black to-blue-950 text-white">
+        {/* Back to Top Button */}
+        {showBackToTop && (
+          <button
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-3 rounded-full shadow-lg hover:from-blue-600 hover:to-cyan-600 transition-all transform hover:scale-110 animate-bounce"
+            aria-label="Back to top"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            </svg>
+          </button>
+        )}
+
         {/* Navigation */}
         <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled ? 'bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
@@ -115,29 +181,88 @@ function LandingPage() {
                 </div>
               </div>
               
+              {/* Desktop Navigation */}
               <div className="hidden md:flex items-center gap-6">
-                <button onClick={() => scrollToSection('features')} className="text-gray-300 hover:text-blue-400 font-medium transition-colors">
-                  Features
+                <button
+                  onClick={() => navigate('/')}
+                  className="text-blue-400 font-medium transition-colors"
+                >
+                  Home
                 </button>
-                <button onClick={() => scrollToSection('how-it-works')} className="text-gray-300 hover:text-blue-400 font-medium transition-colors">
+                <button
+                  onClick={() => navigate('/how-it-works')}
+                  className="text-gray-300 hover:text-blue-400 font-medium transition-colors"
+                >
                   How It Works
                 </button>
-                <button onClick={() => scrollToSection('stats')} className="text-gray-300 hover:text-blue-400 font-medium transition-colors">
-                  Statistics
+                <button
+                  onClick={() => navigate('/industries')}
+                  className="text-gray-300 hover:text-blue-400 font-medium transition-colors"
+                >
+                  Industries
                 </button>
-                <button onClick={() => scrollToSection('testimonials')} className="text-gray-300 hover:text-blue-400 font-medium transition-colors">
-                  Testimonials
+                <button
+                  onClick={() => navigate('/contact')}
+                  className="text-gray-300 hover:text-blue-400 font-medium transition-colors"
+                >
+                  Contact
                 </button>
               </div>
               
-              <button
-                onClick={handleGetStarted}
-                className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-6 py-2.5 rounded-lg font-semibold hover:from-blue-600 hover:to-cyan-600 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
-              >
-                Get Started
-              </button>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleGetStarted}
+                  className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-6 py-2.5 rounded-lg font-semibold hover:from-blue-600 hover:to-cyan-600 transition-all transform hover:scale-105 shadow-lg text-sm md:text-base"
+                >
+                  Get Started
+                </button>
+                
+                {/* Mobile Menu Button */}
+                <button
+                  onClick={toggleMobileMenu}
+                  className="md:hidden text-gray-300 hover:text-white p-2"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
+          
+          {/* Mobile Navigation Menu */}
+          {showMobileMenu && (
+            <div className="md:hidden bg-gray-900/95 backdrop-blur-md border-t border-gray-800">
+              <div className="container mx-auto px-4 py-4">
+                <div className="flex flex-col gap-4">
+                  <button
+                    onClick={() => handleNavClick('home')}
+                    className="text-blue-400 font-medium text-left py-2"
+                  >
+                    Home
+                  </button>
+                  <button
+                    onClick={() => handleNavClick('how-it-works')}
+                    className="text-gray-300 hover:text-blue-400 font-medium text-left py-2"
+                  >
+                    How It Works
+                  </button>
+                  <button
+                    onClick={() => handleNavClick('industries')}
+                    className="text-gray-300 hover:text-blue-400 font-medium text-left py-2"
+                  >
+                    Industries
+                  </button>
+                  <button
+                    onClick={() => handleNavClick('contact')}
+                    className="text-gray-300 hover:text-blue-400 font-medium text-left py-2"
+                  >
+                    Contact
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </nav>
 
         {/* Hero Section */}
@@ -307,97 +432,34 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* How It Works Section */}
-        <section id="how-it-works" className="py-16 sm:py-20 px-4 bg-gray-900/50 w-full">
+        {/* Testimonials Section */}
+        <section id="testimonials" className="py-16 sm:py-20 px-4 bg-gray-900/50 w-full">
           <div className="container mx-auto max-w-7xl">
             <div className="text-center mb-12 sm:mb-16">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
-                How Medicheck Works
+                Trusted by Industry Leaders
               </h2>
               <p className="text-base sm:text-lg text-gray-300 max-w-3xl mx-auto">
-                A seamless process from manufacturing to pharmacy delivery
+                See what industry professionals say about Medicheck
               </p>
             </div>
             
-            <div className="relative">
-              {/* Timeline */}
-              <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-blue-500 to-cyan-500"></div>
-              
-              <div className="space-y-8 sm:space-y-12">
-                {[
-                  {
-                    step: "01",
-                    title: "Manufacturer Registration",
-                    description: "Pharmaceutical manufacturers register medicine batches on the blockchain",
-                    icon: "🏭",
-                    color: "blue"
-                  },
-                  {
-                    step: "02",
-                    title: "Blockchain Verification",
-                    description: "Each batch gets a unique blockchain ID for tamper-proof tracking",
-                    icon: "🔗",
-                    color: "cyan"
-                  },
-                  {
-                    step: "03",
-                    title: "Supply Chain Tracking",
-                    description: "Real-time tracking through distributors, warehouses, and logistics",
-                    icon: "🚚",
-                    color: "green"
-                  },
-                  {
-                    step: "04",
-                    title: "Pharmacy Acceptance",
-                    description: "Pharmacies verify and accept batches using blockchain verification",
-                    icon: "🏪",
-                    color: "purple"
-                  },
-                  {
-                    step: "05",
-                    title: "Customer Verification",
-                    description: "End consumers can verify medicine authenticity via QR code scanning",
-                    icon: "👥",
-                    color: "pink"
-                  },
-                  {
-                    step: "06",
-                    title: "Analytics & Compliance",
-                    description: "Comprehensive analytics for all stakeholders and regulatory compliance",
-                    icon: "📊",
-                    color: "indigo"
-                  }
-                ].map((item, index) => (
-                  <div key={index} className={`relative flex flex-col md:flex-row items-center ${
-                    index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
-                  }`}>
-                    <div className="md:w-1/2"></div>
-                    <div className="absolute left-1/2 transform -translate-x-1/2 md:relative md:left-0 md:transform-none">
-                      <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br ${
-                        item.color === 'blue' ? 'from-blue-500 to-blue-600' :
-                        item.color === 'cyan' ? 'from-cyan-500 to-blue-500' :
-                        item.color === 'green' ? 'from-green-500 to-emerald-500' :
-                        item.color === 'purple' ? 'from-purple-500 to-violet-500' :
-                        item.color === 'pink' ? 'from-rose-500 to-pink-500' :
-                        'from-indigo-500 to-blue-500'
-                      } flex items-center justify-center text-white text-lg sm:text-2xl font-bold shadow-lg`}>
-                        {item.step}
-                      </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+              {testimonials.map((testimonial, index) => (
+                <div key={index} className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-6 sm:p-8 border border-gray-700 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                      {testimonial.avatar}
                     </div>
-                    <div className={`md:w-1/2 mt-4 md:mt-0 ${
-                      index % 2 === 0 ? 'md:pl-8 lg:pl-12' : 'md:pr-8 lg:pr-12'
-                    }`}>
-                      <div className="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-700">
-                        <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                          <span className="text-xl sm:text-2xl">{item.icon}</span>
-                          <h3 className="text-base sm:text-xl font-bold text-white">{item.title}</h3>
-                        </div>
-                        <p className="text-sm sm:text-base text-gray-300">{item.description}</p>
-                      </div>
+                    <div>
+                      <div className="font-bold text-white text-lg">{testimonial.name}</div>
+                      <div className="text-gray-400 text-sm">{testimonial.role}</div>
+                      <div className="text-blue-400 text-sm">{testimonial.company}</div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <p className="text-gray-300 text-sm sm:text-base italic">"{testimonial.quote}"</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -461,61 +523,6 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* Testimonials Section */}
-        <section id="testimonials" className="py-16 sm:py-20 px-4 bg-gray-900/50 w-full">
-          <div className="container mx-auto max-w-7xl">
-            <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
-                Trusted by Pharmaceutical Industry Leaders
-              </h2>
-              <p className="text-base sm:text-lg text-gray-300 max-w-3xl mx-auto">
-                See what industry professionals say about Medicheck
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-              {[
-                {
-                  name: "Dr. Sarah Johnson",
-                  role: "Quality Control Director",
-                  company: "MediLife Pharmaceuticals",
-                  quote: "Medicheck has revolutionized our supply chain transparency. The blockchain tracking gives us unprecedented visibility.",
-                  avatar: "👩‍⚕️"
-                },
-                {
-                  name: "Michael Chen",
-                  role: "Pharmacist & Owner",
-                  company: "City Health Pharmacy",
-                  quote: "Our customers trust our medicines more knowing they can verify authenticity instantly. It's a game-changer.",
-                  avatar: "💊"
-                },
-                {
-                  name: "Robert Williams",
-                  role: "Supply Chain Manager",
-                  company: "National Medical Distributors",
-                  quote: "The real-time tracking and expiration monitoring have reduced our waste by 40%. Incredible platform.",
-                  avatar: "👨‍💼"
-                }
-              ].map((testimonial, index) => (
-                <div key={index} className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-6 sm:p-8 border border-gray-700 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="text-3xl sm:text-4xl mb-4">{testimonial.avatar}</div>
-                  <p className="text-sm sm:text-base text-gray-300 italic mb-4 sm:mb-6">"{testimonial.quote}"</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
-                      {testimonial.name.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="font-bold text-white text-sm sm:text-base">{testimonial.name}</div>
-                      <div className="text-gray-400 text-xs sm:text-sm">{testimonial.role}</div>
-                      <div className="text-xs text-gray-500">{testimonial.company}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* CTA Section */}
         <section className="py-16 sm:py-20 px-4 bg-gradient-to-br from-blue-900 to-cyan-900 w-full">
           <div className="container mx-auto max-w-7xl text-center">
@@ -535,7 +542,7 @@ function LandingPage() {
                 Start Free Trial
               </button>
               <button
-                onClick={() => scrollToSection('features')}
+                onClick={() => navigate('/how-it-works')}
                 className="bg-transparent border-2 border-white text-white px-6 sm:px-10 py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg hover:bg-white/10 transition-all"
               >
                 Schedule Demo
@@ -577,12 +584,12 @@ function LandingPage() {
               </div>
               
               <div>
-                <h4 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 text-gray-200">Features</h4>
+                <h4 className="text-base sm:text-lg font-bold mb-3 sm:mb-4 text-gray-200">Pages</h4>
                 <ul className="space-y-1 sm:space-y-2 text-gray-400 text-sm sm:text-base">
-                  <li>Batch Tracking</li>
-                  <li>Counterfeit Detection</li>
-                  <li>Expiration Monitoring</li>
-                  <li>Regulatory Compliance</li>
+                  <li><button onClick={() => navigate('/')} className="hover:text-blue-400 transition-colors text-left">Home</button></li>
+                  <li><button onClick={() => navigate('/how-it-works')} className="hover:text-blue-400 transition-colors text-left">How It Works</button></li>
+                  <li><button onClick={() => navigate('/industries')} className="hover:text-blue-400 transition-colors text-left">Industries</button></li>
+                  <li><button onClick={() => navigate('/contact')} className="hover:text-blue-400 transition-colors text-left">Contact</button></li>
                 </ul>
               </div>
               
@@ -618,4 +625,4 @@ function LandingPage() {
   );
 }
 
-export default LandingPage;
+export default HomePage;

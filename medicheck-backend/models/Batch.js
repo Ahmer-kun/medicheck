@@ -28,7 +28,6 @@ const batchSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
-    // REMOVE or simplify enum here too
   },
   manufacturer: { 
     type: String,
@@ -65,7 +64,7 @@ const batchSchema = new mongoose.Schema({
   },
   blockchainTransactionHash: String,
   blockchainBlockNumber: Number,
-  // ✅ Add dual storage tracking
+  // Our dual storage tracking
   dualStorageStatus: {
     type: String,
     enum: ['pending', 'completed', 'failed', 'rolled_back'],

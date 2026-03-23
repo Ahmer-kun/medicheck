@@ -1,28 +1,27 @@
-// utils/dualStorage.js
 import Batch from '../models/Batch.js';
 import PharmacyMedicine from '../models/PharmacyMedicine.js';
 
 /**
- * Execute strict dual storage operation
+ * Executes strict dual storage operations
  * Rolls back MongoDB if blockchain fails
  * @param {Object} options
  * @returns {Promise<Object>} Result object
  */
 export const executeDualStorage = async (options) => {
   const {
-    mongoModel, // 'Batch' or 'PharmacyMedicine'
+    mongoModel, // Batch / PharmacyMedicine
     mongoData,  // Data for MongoDB
     blockchainData, // Data for blockchain
-    operation = 'create' // 'create' or 'update'
+    operation = 'create' // create or update
   } = options;
 
   let mongoResult = null;
   
   try {
-    console.log('🔄 Executing strict dual storage...');
+    console.log('Executing strict dual storage...');
     
     // Step 1: Save to MongoDB
-    console.log('📝 Step 1: Storing in MongoDB...');
+    console.log('Step 1: Storing in MongoDB...');
     
     if (mongoModel === 'Batch') {
       const newBatch = new Batch({
@@ -42,13 +41,13 @@ export const executeDualStorage = async (options) => {
       throw new Error(`Invalid mongoModel: ${mongoModel}`);
     }
     
-    console.log('✅ MongoDB storage successful');
+    console.log('MongoDB storage successful');
     
     // Step 2: Save to Blockchain
-    console.log('🔗 Step 2: Storing on Blockchain...');
+    console.log('Step 2: Storing on Blockchain...');
     const BlockchainService = (await import('../services/blockchainService.js')).default;
     const blockchainResult = await BlockchainService.registerCompleteMedicine(blockchainData);
-    console.log('✅ Blockchain storage successful');
+    console.log('Blockchain storage successful');
     
     // Step 3: Update MongoDB with blockchain verification
     mongoResult.blockchainVerified = true;
@@ -57,7 +56,7 @@ export const executeDualStorage = async (options) => {
     mongoResult.dualStorageStatus = 'completed';
     await mongoResult.save();
     
-    console.log(`🎉 DUAL STORAGE SUCCESSFUL for ${mongoData.batchNo}`);
+    console.log(`DUAL STORAGE SUCCESSFUL for ${mongoData.batchNo}`);
     
     return {
       success: true,
@@ -67,20 +66,20 @@ export const executeDualStorage = async (options) => {
     };
     
   } catch (error) {
-    console.error('❌ Dual storage failed:', error.message);
+    console.error('Dual storage failed:', error.message);
     
-    // If MongoDB succeeded but blockchain failed, ROLLBACK
+    // If MongoDB succeeded but blockchain failed, it will ROLLBACK
     if (mongoResult && mongoResult._id) {
-      console.log('🔄 Rolling back MongoDB entry due to blockchain failure...');
+      console.log('Rolling back MongoDB entry due to blockchain failure...');
       try {
         if (mongoModel === 'Batch') {
           await Batch.findByIdAndDelete(mongoResult._id);
         } else if (mongoModel === 'PharmacyMedicine') {
           await PharmacyMedicine.findByIdAndDelete(mongoResult._id);
         }
-        console.log('✅ MongoDB entry rolled back successfully');
+        console.log('MongoDB entry rolled back successfully');
       } catch (rollbackError) {
-        console.error('❌ Failed to rollback MongoDB entry:', rollbackError.message);
+        console.error('Failed to rollback MongoDB entry:', rollbackError.message);
       }
     }
     
@@ -95,15 +94,15 @@ export const executeDualStorage = async (options) => {
  */
 export const verifyDualStorage = async (batchNo) => {
   try {
-    console.log(`🔍 Verifying dual storage for ${batchNo}...`);
+    console.log(`Verifying dual storage for ${batchNo}...`);
     
     const BlockchainService = (await import('../services/blockchainService.js')).default;
     
-    // Check MongoDB
+    // Checks MongoDB
     const mongoBatch = await Batch.findOne({ batchNo });
     const mongoPharmacy = await PharmacyMedicine.findOne({ batchNo });
     
-    // Check blockchain
+    // Checks blockchain
     const blockchainExists = await BlockchainService.verifyMedicineExistence(batchNo);
     
     const result = {
@@ -129,7 +128,7 @@ export const verifyDualStorage = async (batchNo) => {
     return result;
     
   } catch (error) {
-    console.error('❌ Dual storage verification failed:', error);
+    console.error('Dual storage verification failed:', error);
     throw error;
   }
 };

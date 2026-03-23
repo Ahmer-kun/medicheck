@@ -1,4 +1,4 @@
-// test-manufacturer-atomic.js
+// Failed attempt to refactor the dualstorage with a seperate concept i.e atomic storage
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { createRequire } from 'module';

@@ -1,4 +1,3 @@
-// test-login.js
 import fetch from 'node-fetch';
 
 async function getToken() {

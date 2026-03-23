@@ -29,21 +29,6 @@ export const navigationItems = [
 // ];
 
 
-// export const navigationItems = [
-//   { to: "/", label: "Dashboard", icon: "📊", roles: ["admin", "manufacturer", "pharmacy", "analytics", "viewer"] },
-//   { to: "/manufacturer-dashboard", label: "Manufacturer Companies", icon: "🏭", roles: ["admin", "manufacturer"] },
-//   { to: "/manufacturer", label: "Batch Registration", icon: "📦", roles: ["admin", "manufacturer"] },
-//   { to: "/pharmacy-dashboard", label: "Pharmacy Companies", icon: "🏪", roles: ["admin", "pharmacy"] },
-//   { to: "/pharmacy", label: "Medicine Management", icon: "💊", roles: ["admin", "pharmacy"] },
-//   { to: "/verify", label: "Customer Verify", icon: "🔍", roles: ["admin", "manufacturer", "pharmacy", "analytics", "viewer", "public"] },
-//   { to: "/analytics", label: "Analytics", icon: "📈", roles: ["admin", "analytics"] },
-//   { to: "/admin", label: "Admin", icon: "⚙️", roles: ["admin"] },
-// ];
-
-
-
-
-
 // Users Data
 export const USERS = {
   admin: { username: "admin", password: "admin123", role: "admin", name: "System Administrator", theme: "blue" },
@@ -78,7 +63,8 @@ export const BLOCKCHAIN_NODES = [
   { id: 5, name: "Customer Node", type: "customer", x: 300, y: 300, connected: true },
 ];
 
-// Pharmacy Companies Data (already exists)
+// Pharmacy Companies Data (INITIAL DATA) | FOR DEMO PURPOSES
+//  No Usage in current codebase | Dated : Feb-05-2026
 export const PHARMACY_COMPANIES = [
   {
     id: 1,

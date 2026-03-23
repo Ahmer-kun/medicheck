@@ -15,7 +15,7 @@ class TransactionMonitor {
     if (this.isMonitoring) return;
     
     this.isMonitoring = true;
-    console.log('🔍 Starting blockchain transaction monitor...');
+    console.log('Starting blockchain transaction monitor...');
     
     // Check every 15 seconds
     setInterval(async () => {
@@ -25,7 +25,7 @@ class TransactionMonitor {
   
   async addPendingTransaction(txHash, batchNo, batchId) {
     this.pendingTransactions.set(txHash, { batchNo, batchId, addedAt: new Date() });
-    console.log(`📝 Tracking transaction ${txHash} for batch ${batchNo}`);
+    console.log(`Tracking transaction ${txHash} for batch ${batchNo}`);
     
     // Start monitoring if not already
     await this.startMonitoring();
@@ -34,7 +34,7 @@ class TransactionMonitor {
   async checkPendingTransactions() {
     if (this.pendingTransactions.size === 0) return;
     
-    console.log(`🔍 Checking ${this.pendingTransactions.size} pending transactions...`);
+    console.log(`Checking ${this.pendingTransactions.size} pending transactions...`);
     
     for (const [txHash, data] of this.pendingTransactions.entries()) {
       try {
@@ -44,7 +44,7 @@ class TransactionMonitor {
           const isConfirmed = receipt.confirmations >= 1;
           
           if (isConfirmed) {
-            console.log(`✅ Transaction ${txHash} confirmed for batch ${data.batchNo}`);
+            console.log(`Transaction ${txHash} confirmed for batch ${data.batchNo}`);
             
             // Update database
             await this.updateDatabase(data.batchId, {
@@ -59,13 +59,13 @@ class TransactionMonitor {
             // Remove from tracking
             this.pendingTransactions.delete(txHash);
           } else {
-            console.log(`⏳ Transaction ${txHash} pending (${receipt.confirmations} confirmations)`);
+            console.log(`Transaction ${txHash} pending (${receipt.confirmations} confirmations)`);
           }
         } else {
-          console.log(`⏳ Transaction ${txHash} still in mempool`);
+          console.log(`Transaction ${txHash} still in mempool`);
         }
       } catch (error) {
-        console.error(`❌ Error checking transaction ${txHash}:`, error.message);
+        console.error(`Error checking transaction ${txHash}:`, error.message);
       }
     }
   }
@@ -74,9 +74,9 @@ class TransactionMonitor {
     try {
       const Batch = (await import('../models/Batch.js')).default;
       await Batch.findByIdAndUpdate(batchId, updateData);
-      console.log(`✅ Updated batch ${batchId} with blockchain verification`);
+      console.log(`Updated batch ${batchId} with blockchain verification`);
     } catch (error) {
-      console.error('❌ Error updating database:', error);
+      console.error('Error updating database:', error);
     }
   }
 }

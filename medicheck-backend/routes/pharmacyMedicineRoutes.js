@@ -14,11 +14,12 @@ import { auth, authorize } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// 🌐 PUBLIC ROUTES (no authentication needed)
+// PUBLIC ROUTES (no authentication needed)
+
 // Verify pharmacy medicine - Public access
 router.get("/verify/:batchNo", verifyPharmacyMedicine);
 
-// 🔒 PROTECTED ROUTES (require authentication)
+// PROTECTED ROUTES (require authentication)
 router.use(auth);
 
 // Get all medicines (all pharmacies) - Pharmacy & Admin only
@@ -36,10 +37,10 @@ router.put("/medicines/:id", authorize('pharmacy', 'admin'), updatePharmacyMedic
 // DELETE pharmacy medicine
 router.delete("/medicines/:id", authorize('pharmacy', 'admin'), deletePharmacyMedicine);
 
-// ✅ UPDATED ROUTE: Accept manufacturer batch into pharmacy WITH VERIFICATION
+// UPDATED ROUTE: Accept manufacturer batch into pharmacy WITH VERIFICATION
 router.post("/accept-batch", authorize('pharmacy', 'admin'), acceptManufacturerBatchWithVerification);
 
-// ✅ NEW ROUTE: Manual verification for any batch
+// Manual verification for any batch | Not recommended except for special cases
 router.get("/verify-manually/:batchNo", authorize('pharmacy', 'admin'), verifyBatchManually);
 
 // Get pharmacy stock
@@ -110,7 +111,7 @@ router.put("/medicines/update-quantity", authorize('pharmacy', 'admin'), async (
   }
 });
 
-// ✅ NEW ROUTE: Register existing pharmacy medicine on blockchain
+// Register existing pharmacy medicine on blockchain
 router.post("/medicines/:medicineId/register-blockchain", authorize('pharmacy', 'admin'), async (req, res) => {
   try {
     const { medicineId } = req.params;
@@ -155,11 +156,11 @@ router.post("/medicines/:medicineId/register-blockchain", authorize('pharmacy', 
       medicine.blockchainTransactionHash = blockchainResult.transactionHash;
       medicine.registeredOnBlockchain = true;
       
-      console.log(`✅ Medicine ${medicine.batchNo} registered on blockchain`);
+      console.log(`Medicine ${medicine.batchNo} registered on blockchain`);
       
     } catch (error) {
       blockchainError = error.message;
-      console.error("❌ Blockchain registration failed:", error);
+      console.error("Blockchain registration failed:", error);
       medicine.blockchainError = blockchainError;
     }
 
@@ -181,7 +182,7 @@ router.post("/medicines/:medicineId/register-blockchain", authorize('pharmacy', 
     });
 
   } catch (error) {
-    console.error("❌ Blockchain registration error:", error);
+    console.error("Blockchain registration error:", error);
     res.status(500).json({
       success: false,
       message: "Error registering on blockchain",
@@ -190,7 +191,7 @@ router.post("/medicines/:medicineId/register-blockchain", authorize('pharmacy', 
   }
 });
 
-// ✅ NEW ROUTE: Verify pharmacy batch on blockchain
+// Verify pharmacy batch on blockchain
 router.get("/verify-blockchain/:batchNo", authorize('pharmacy', 'admin', 'viewer'), async (req, res) => {
   try {
     const { batchNo } = req.params;
@@ -199,7 +200,7 @@ router.get("/verify-blockchain/:batchNo", authorize('pharmacy', 'admin', 'viewer
     const Batch = (await import("../models/Batch.js")).default;
     const BlockchainService = (await import("../services/blockchainService.js")).default;
     
-    console.log(`🔍 Verifying pharmacy batch on blockchain: ${batchNo}`);
+    console.log(`Verifying pharmacy batch on blockchain: ${batchNo}`);
 
     // 1. Check in blockchain
     const blockchainResult = await BlockchainService.getCompleteMedicineFromBlockchain(batchNo);
@@ -250,7 +251,6 @@ router.get("/verify-blockchain/:batchNo", authorize('pharmacy', 'admin', 'viewer
       recommendations: []
     };
 
-    // Generate recommendations
     if (!blockchainResult.exists) {
       verificationResult.recommendations.push("Register this batch on blockchain");
     }
@@ -269,7 +269,7 @@ router.get("/verify-blockchain/:batchNo", authorize('pharmacy', 'admin', 'viewer
     });
 
   } catch (error) {
-    console.error("❌ Verification error:", error);
+    console.error("Verification error:", error);
     res.status(500).json({
       success: false,
       message: "Verification failed",
@@ -278,7 +278,7 @@ router.get("/verify-blockchain/:batchNo", authorize('pharmacy', 'admin', 'viewer
   }
 });
 
-// ✅ NEW ROUTE: Get all blockchain-verified pharmacy medicines
+// Get all blockchain-verified pharmacy medicines
 router.get("/blockchain-verified", authorize('pharmacy', 'admin'), async (req, res) => {
   try {
     const PharmacyMedicine = (await import("../models/PharmacyMedicine.js")).default;

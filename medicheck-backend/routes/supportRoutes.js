@@ -17,8 +17,8 @@ router.use(auth);
 
 // User routes (accessible to all authenticated users)
 router.post("/tickets", createSupportTicket);
-router.get("/tickets", getUserTickets); // Now returns all tickets for admin
-router.get("/tickets/:id", getTicket); // Now accessible for admin to any ticket
+router.get("/tickets", getUserTickets); // returns all tickets for admin
+router.get("/tickets/:id", getTicket); // accessible for admin to any ticket
 router.post("/tickets/:id/response", addTicketResponse); // Admin can respond to any ticket
 
 // Admin-only routes

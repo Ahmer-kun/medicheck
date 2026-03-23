@@ -2,7 +2,6 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// controllers/authController.js
 export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -77,12 +76,13 @@ export const login = async (req, res) => {
   }
 };
 
+// Function to initialize default users
 
 export const initializeUsers = async () => {
   try {
     const existing = await User.countDocuments();
     if (existing > 0) {
-      console.log("ℹ️ Users already exist — skipping initialization");
+      console.log("Users already exist — skipping initialization");
       return;
     }
 
@@ -95,9 +95,9 @@ export const initializeUsers = async () => {
     ];
 
     await User.insertMany(defaultUsers);
-    console.log("✅ Default users initialized successfully");
+    console.log("Default users initialized successfully");
   } catch (error) {
-    console.error("❌ Error initializing default users:", error.message);
+    console.error("Error initializing default users:", error.message);
   }
 };
 
@@ -157,8 +157,7 @@ export const refreshToken = async (req, res) => {
   }
 };
 
-
-// In authController.js - add this new function
+// Register a new viewer (public registration)
 export const registerViewer = async (req, res) => {
   try {
     const { 
@@ -171,7 +170,7 @@ export const registerViewer = async (req, res) => {
       address 
     } = req.body;
 
-    console.log("👤 Creating new viewer account:", { username, name, phone, cnic });
+    console.log("Creating new viewer account:", { username, name, phone, cnic });
 
     // Validate required fields
     if (!username || !password || !name || !email || !cnic) {
@@ -230,16 +229,16 @@ export const registerViewer = async (req, res) => {
       createdAt: newUser.createdAt
     };
 
-    console.log("✅ Viewer account created successfully:", username);
+    console.log("Viewer account created successfully:", username);
 
-    // Send welcome email (async - don't wait for response)
+    // Send welcome email (async - doesn't wait for response)
     try {
       const EmailService = (await import("../services/emailService.js")).default;
       await EmailService.sendUserRegistrationEmail(userResponse, password);
-      console.log("✅ Welcome email sent to:", userResponse.email);
+      console.log("Welcome email sent to:", userResponse.email);
     } catch (emailError) {
-      console.error("❌ Failed to send welcome email:", emailError);
-      // Don't fail the request if email fails
+      console.error("Failed to send welcome email:", emailError);
+      
     }
 
     res.status(201).json({
@@ -250,7 +249,7 @@ export const registerViewer = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error creating viewer account:", error);
+    console.error("Error creating viewer account:", error);
     
     // Handle duplicate key errors
     if (error.code === 11000) {

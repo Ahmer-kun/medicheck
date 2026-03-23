@@ -1,4 +1,3 @@
-// middleware/validation.js
 import Joi from "joi";
 
 // Existing validations
@@ -21,7 +20,7 @@ export const authValidation = {
   }),
 };
 
-// NEW: Viewer registration validation
+// Viewer registration validation
 export const viewerRegistrationValidation = Joi.object({
   username: Joi.string()
     .required()

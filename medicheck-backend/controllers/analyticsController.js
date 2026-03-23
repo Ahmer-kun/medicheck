@@ -53,7 +53,7 @@ export const getDashboardStats = async (req, res) => {
       results.map(item => ({ name: item._id, batches: item.batches }))
     );
 
-    // Monthly trend (last 6 months)
+    // Monthly trend 
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
@@ -91,7 +91,7 @@ export const getDashboardStats = async (req, res) => {
           expiredMedicines,
           nearExpiry,
           totalBatches,
-          verifiedBatches: totalBatches // Assuming all batches are verified for now
+          verifiedBatches: totalBatches 
         },
         statusDistribution,
         monthlyTrend,
@@ -148,75 +148,3 @@ export const getBatchAnalytics = async (req, res) => {
   }
 };
 
-
-// // controllers/analyticsController.js
-// import Batch from '../models/Batch.js';
-// import User from '../models/User.js';
-// import Pharmacy from '../models/Pharmacy.js';
-
-// export const getDashboardStats = async (req, res) => {
-//   try {
-//     const totalBatches = await Batch.countDocuments();
-//     const activeBatches = await Batch.countDocuments({
-//       expiryDate: { $gte: new Date() },
-//       status: 'active'
-//     });
-//     const expiredBatches = await Batch.countDocuments({
-//       $or: [
-//         { expiryDate: { $lt: new Date() } },
-//         { status: 'expired' }
-//       ]
-//     });
-//     const totalUsers = await User.countDocuments({ isActive: true });
-//     const totalPharmacies = await Pharmacy.countDocuments({ isActive: true });
-//     const recentBatches = await Batch.find()
-//       .sort({ createdAt: -1 })
-//       .limit(5)
-//       .populate('manufacturerId', 'name')
-//       .populate('pharmacyId', 'name');
-
-//     res.json({
-//       success: true,
-//       stats: { totalBatches, activeBatches, expiredBatches, totalUsers, totalPharmacies },
-//       recentBatches
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error fetching analytics', error: error.message });
-//   }
-// };
-
-// export const getBatchAnalytics = async (req, res) => {
-//   try {
-//     const batchStats = await Batch.aggregate([
-//       {
-//         $group: {
-//           _id: '$status',
-//           count: { $sum: 1 },
-//           totalQuantity: { $sum: '$quantity' }
-//         }
-//       }
-//     ]);
-
-//     const monthlyRegistrations = await Batch.aggregate([
-//       {
-//         $group: {
-//           _id: {
-//             year: { $year: '$createdAt' },
-//             month: { $month: '$createdAt' }
-//           },
-//           count: { $sum: 1 }
-//         }
-//       },
-//       { $sort: { '_id.year': 1, '_id.month': 1 } },
-//       { $limit: 12 }
-//     ]);
-
-//     res.json({
-//       success: true,
-//       batchStats,
-//       monthlyRegistrations
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error fetching batch analytics', error: error.message });
-//   }
-// };

@@ -12,7 +12,7 @@ class EmailService {
     // Use user's email or fallback to username-based email
     const toEmail = user.email || `${user.username}@medicheck.com`;
     
-    console.log(`📧 Preparing registration email for: ${toEmail}`);
+    console.log(`Preparing registration email for: ${toEmail}`);
     
     const result = await this.sendEmail(
       toEmail,
@@ -22,11 +22,11 @@ class EmailService {
     );
 
     if (result.simulated) {
-      console.log('📧 Email sent in simulation mode');
+      console.log('Email sent in simulation mode');
     } else if (result.success) {
-      console.log(`✅ Welcome email sent to: ${toEmail}`);
+      console.log(`Welcome email sent to: ${toEmail}`);
     } else {
-      console.error(`❌ Failed to send email to: ${toEmail}`, result.error);
+      console.error(`Failed to send email to: ${toEmail}`, result.error);
     }
 
     return result;
@@ -36,7 +36,7 @@ class EmailService {
     const template = emailTemplates.passwordReset(user, newPassword);
     const toEmail = user.email || `${user.username}@medicheck.com`;
     
-    console.log(`📧 Preparing password reset email for: ${toEmail}`);
+    console.log(`Preparing password reset email for: ${toEmail}`);
     
     const result = await this.sendEmail(
       toEmail,
@@ -45,7 +45,7 @@ class EmailService {
     );
 
     if (result.simulated) {
-      console.log('📧 Password reset email sent in simulation mode');
+      console.log('Password reset email sent in simulation mode');
     }
 
     return result;
@@ -54,4 +54,3 @@ class EmailService {
 
 export default new EmailService();
 
-// second log use if fail

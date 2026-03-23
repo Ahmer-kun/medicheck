@@ -1,5 +1,4 @@
-// In utils/validation.js - Update validateBatch function
-// utils/validation.js - Update validateBatch function
+// validation functions for batch creation, login, and batch search
 export const validateBatch = (batch) => {
   const errors = {};
 

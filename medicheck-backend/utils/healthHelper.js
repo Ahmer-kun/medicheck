@@ -1,4 +1,3 @@
-// utils/healthHelper.js
 import mongoose from 'mongoose';
 
 // Helper functions for health checks
@@ -6,7 +5,7 @@ export async function safeModelCount(modelName, filter = {}) {
   try {
     let Model;
     
-    // Dynamically import the model
+    // Dynamically imports the model
     switch (modelName) {
       case 'BlockchainSyncQueue':
         try {
@@ -64,7 +63,7 @@ export async function checkMongoDBHealth() {
     
     const stateName = stateNames[readyState] || 'unknown';
     
-    // Get model names from mongoose
+    // Gets model names from mongoose
     let modelNames = [];
     try {
       modelNames = Object.keys(mongoose.connection.models || {});
@@ -96,13 +95,13 @@ export async function checkMongoDBHealth() {
 
 export async function checkBlockchainHealth() {
   try {
-    // Import Web3 dynamically
+    // Imports Web3 dynamically
     const { default: Web3 } = await import('web3');
     
     const rpcUrl = process.env.BLOCKCHAIN_NETWORK || 'http://localhost:8545';
     const web3 = new Web3(rpcUrl);
     
-    // Test connection with timeout
+    // Tests connection with timeout
     const blockchainCheck = web3.eth.getBlockNumber();
     const timeout = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Blockchain connection timeout after 5 seconds')), 5000)
@@ -119,7 +118,7 @@ export async function checkBlockchainHealth() {
       }
     };
     
-    // Check contract if address is configured
+    // Checks contract if address is configured
     if (process.env.CONTRACT_ADDRESS && 
         process.env.CONTRACT_ADDRESS !== '0xYourDeployedContractAddressHere') {
       try {

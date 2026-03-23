@@ -1,4 +1,3 @@
-// src/hooks/useApi.js
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { api } from '../utils/api';
 

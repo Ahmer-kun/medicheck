@@ -227,123 +227,23 @@ function ExcelImportModal({
   return errors;
 };
 
-
-
-  // const validateData = (data) => {
-  //   const errors = [];
-    
-  //   // First filter out completely empty rows
-  //   const validData = data.filter(row => !isRowEmpty(row));
-    
-  //   console.log('Valid data for validation:', validData.length, 'rows');
-    
-  //   validData.forEach((row, index) => {
-  //     const rowNumber = row._rowNumber;
-      
-  //     // Check required fields
-  //     requiredFields.forEach(field => {
-  //       const mappedHeader = Object.keys(mapping).find(key => mapping[key] === field);
-  //       if (!mappedHeader || !row[mappedHeader]) {
-  //         errors.push({
-  //           row: rowNumber,
-  //           field: field,
-  //           message: `${field} is required (column: ${mappedHeader || 'Not mapped'})`
-  //         });
-  //       }
-  //     });
-
-  //     // Validate batch number format
-  //     const batchNoHeader = Object.keys(mapping).find(key => mapping[key] === 'batchNo');
-  //     if (batchNoHeader && row[batchNoHeader]) {
-  //       const batchNo = String(row[batchNoHeader]).trim();
-  //       if (batchNo.length < 3) {
-  //         errors.push({
-  //           row: rowNumber,
-  //           field: 'batchNo',
-  //           message: 'Batch number must be at least 3 characters'
-  //         });
-  //       }
-  //     }
-
-  //     // Validate quantity
-  //     const quantityHeader = Object.keys(mapping).find(key => mapping[key] === 'quantity');
-  //     if (quantityHeader && row[quantityHeader]) {
-  //       const quantity = parseInt(row[quantityHeader]);
-  //       if (isNaN(quantity) || quantity <= 0) {
-  //         errors.push({
-  //           row: rowNumber,
-  //           field: 'quantity',
-  //           message: 'Quantity must be a positive number'
-  //         });
-  //       }
-  //     }
-
-  //     // Validate dates
-  //     const mfgDateHeader = Object.keys(mapping).find(key => mapping[key] === 'manufactureDate');
-  //     const expiryDateHeader = Object.keys(mapping).find(key => mapping[key] === 'expiryDate');
-      
-  //     if (mfgDateHeader && row[mfgDateHeader]) {
-  //       const mfgDate = parseExcelDate(row[mfgDateHeader]);
-  //       if (!mfgDate || isNaN(mfgDate.getTime())) {
-  //         errors.push({
-  //           row: rowNumber,
-  //           field: 'manufactureDate',
-  //           message: 'Invalid manufacture date format'
-  //         });
-  //       }
-  //     }
-      
-  //     if (expiryDateHeader && row[expiryDateHeader]) {
-  //       const expiryDate = parseExcelDate(row[expiryDateHeader]);
-  //       if (!expiryDate || isNaN(expiryDate.getTime())) {
-  //         errors.push({
-  //           row: rowNumber,
-  //           field: 'expiryDate',
-  //           message: 'Invalid expiry date format'
-  //         });
-  //       }
-  //     }
-      
-  //     // Check date order if both dates exist
-  //     if (mfgDateHeader && expiryDateHeader && row[mfgDateHeader] && row[expiryDateHeader]) {
-  //       const mfgDate = parseExcelDate(row[mfgDateHeader]);
-  //       const expiryDate = parseExcelDate(row[expiryDateHeader]);
-        
-  //       if (mfgDate && expiryDate && !isNaN(mfgDate.getTime()) && !isNaN(expiryDate.getTime())) {
-  //         if (expiryDate <= mfgDate) {
-  //           errors.push({
-  //             row: rowNumber,
-  //             field: 'expiryDate',
-  //             message: 'Expiry date must be after manufacture date'
-  //           });
-  //         }
-  //       }
-  //     }
-  //   });
-
-  //   console.log('Validation errors:', errors.length);
-  //   return errors;
-  // };
-
-
-
   const checkExistingBatches = async (batchNumbers) => {
   try {
     console.log(`🔍 Checking ${batchNumbers.length} batch numbers for duplicates...`);
     
     const existingBatches = [];
     
-    // Check each batch number
+    // Checks each batch number
     for (const batchNo of batchNumbers) {
       try {
         const response = await api.get(`/batches/${batchNo}`);
         
-        // If response exists and is not null/404
+        // If a response exists and is not null/404
         if (response !== null && response.success !== false) {
           existingBatches.push(batchNo);
         }
       } catch (error) {
-        // 404 errors are expected (batch doesn't exist)
+        // 404 error (batch doesn't exist)
         if (!error.message.includes('not found') && !error.message.includes('404')) {
           console.warn(`Error checking batch ${batchNo}:`, error.message);
         }
@@ -379,21 +279,21 @@ function ExcelImportModal({
       companyId: companyId
     };
 
-    // Map data according to mapping
+    // Maps data according to mapping
     Object.keys(mapping).forEach(header => {
       const fieldName = mapping[header];
       let value = row[header];
       
       if (value === undefined || value === null || value === '') return;
       
-      // Store batch numbers for duplicate check
+      // Stores batch numbers for duplicate check
       if (fieldName === 'batchNo') {
         const batchNo = String(value).trim();
         formattedRow[fieldName] = batchNo;
         batchNumbers.push(batchNo);
       }
       
-      // Special handling for dates
+      // A Special handling for dates
       if (fieldName === 'manufactureDate' || fieldName === 'expiryDate') {
         const parsedDate = parseExcelDate(value);
         if (parsedDate && !isNaN(parsedDate.getTime())) {
@@ -404,13 +304,13 @@ function ExcelImportModal({
         }
       }
       
-      // Convert quantity to number
+      // Converts quantity to number
       if (fieldName === 'quantity') {
         const numValue = Number(value);
         value = isNaN(numValue) ? 0 : Math.max(0, numValue);
       }
       
-      // Trim strings
+      // Trims strings
       if (typeof value === 'string') {
         value = value.trim();
       }
@@ -423,7 +323,7 @@ function ExcelImportModal({
     return formattedRow;
   }).filter(row => row.batchNo && row.medicineName);
 
-  // ✅ NEW: Check for existing batches BEFORE importing
+  // Checks for existing batches BEFORE importing
   const existingBatches = await checkExistingBatches(batchNumbers);
   
   if (existingBatches.length > 0) {
@@ -433,11 +333,11 @@ function ExcelImportModal({
       `\n\nPlease remove or change these batch numbers before importing.`;
     
     alert(duplicateMessage);
-    setStep(2); // Go back to preview
+    setStep(2); // Goes back to preview
     return;
   }
 
-  // Then proceed with validation
+  // Then proceeds with validation
   const errors = validateData(validData);
   setValidationErrors(errors);
   
@@ -456,7 +356,7 @@ function ExcelImportModal({
       sampleData: formattedData.slice(0, 2)
     });
 
-    // Send to backend
+    // Sends to backend
     const response = await api.post('/batches/import-excel', {
       batches: formattedData,
       manufacturerCompanyId: companyId
@@ -464,7 +364,6 @@ function ExcelImportModal({
 
     console.log('Import response:', response);
 
-    // ✅ UPDATED: Check for DUAL STORAGE FAILURE
     if (response.success) {
       // Check if it's a DUAL STORAGE failure
       if (response.storage && response.storage.status === "rolled_back") {
@@ -522,106 +421,11 @@ function ExcelImportModal({
     }
     
     alert(userMessage);
-    setStep(2); // Go back to preview step
+    setStep(2); // Goes back to preview step
   } finally {
     setLoading(false);
   }
 };
-
-  // const handleImport = async () => {
-  //   // Filter out empty rows first
-  //   const validData = previewData.filter(row => !isRowEmpty(row));
-    
-  //   if (validData.length === 0) {
-  //     alert('No valid data to import. All rows appear to be empty.');
-  //     return;
-  //   }
-    
-  //   console.log('Importing valid data:', validData.length, 'rows');
-    
-  //   const errors = validateData(validData);
-  //   setValidationErrors(errors);
-    
-  //   if (errors.length > 0) {
-  //     alert(`Found ${errors.length} validation error(s). Please fix them before importing.`);
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   setStep(3);
-
-  //   try {
-  //     const formattedData = validData.map(row => {
-  //       const formattedRow = {
-  //         manufacturer: manufacturerName,
-  //         companyId: companyId
-  //       };
-
-  //       // Map data according to mapping
-  //       Object.keys(mapping).forEach(header => {
-  //         const fieldName = mapping[header];
-  //         let value = row[header];
-          
-  //         if (value === undefined || value === null || value === '') return;
-          
-  //         // Special handling for dates
-  //         if (fieldName === 'manufactureDate' || fieldName === 'expiryDate') {
-  //           const parsedDate = parseExcelDate(value);
-  //           if (parsedDate && !isNaN(parsedDate.getTime())) {
-  //             value = parsedDate.toISOString().split('T')[0];
-  //           } else {
-  //             // If parsing fails, keep original but log warning
-  //             console.warn(`Could not parse date: ${value}`);
-  //             value = String(value).trim();
-  //           }
-  //         }
-          
-  //         // Convert quantity to number
-  //         if (fieldName === 'quantity') {
-  //           const numValue = Number(value);
-  //           value = isNaN(numValue) ? 0 : Math.max(0, numValue);
-  //         }
-          
-  //         // Trim strings
-  //         if (typeof value === 'string') {
-  //           value = value.trim();
-  //         }
-          
-  //         formattedRow[fieldName] = value;
-  //       });
-
-  //       return formattedRow;
-  //     }).filter(row => row.batchNo && row.medicineName); // Filter out rows without essential data
-
-  //     console.log('Sending import data:', {
-  //       count: formattedData.length,
-  //       manufacturerCompanyId: companyId,
-  //       sampleData: formattedData.slice(0, 2)
-  //     });
-
-  //     // Send to backend
-  //     const response = await api.post('/batches/import-excel', {
-  //       batches: formattedData,
-  //       manufacturerCompanyId: companyId
-  //     });
-
-  //     console.log('Import response:', response);
-
-  //     if (response.success) {
-  //       onImportSuccess(response);
-  //       onClose();
-  //       alert(`✅ Successfully imported ${response.importedCount || formattedData.length} batch(es)!`);
-  //     } else {
-  //       throw new Error(response.message || 'Import failed');
-  //     }
-  //   } catch (error) {
-  //     console.error('Import error:', error);
-  //     alert(`❌ Import failed: ${error.message || 'Unknown error'}`);
-  //     setStep(2);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const parseExcelDate = (dateValue) => {
     if (!dateValue) return null;

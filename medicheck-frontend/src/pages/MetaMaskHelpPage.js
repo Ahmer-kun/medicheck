@@ -1,3 +1,5 @@
+//  Not used yet, but will be linked from error states in ManufacturerPage and AdminLoginPage for MetaMask connection issues. Provides a step-by-step troubleshooting guide and quick actions to resolve common problems.
+// in future 
 import React from 'react';
 import { Link } from 'react-router-dom';
 
