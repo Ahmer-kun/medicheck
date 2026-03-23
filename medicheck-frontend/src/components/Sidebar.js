@@ -54,7 +54,7 @@ function Sidebar({ collapsed, user, onLogout, theme }) {
           </nav>
         </div>
 
-        {/* User Info and Logout - Fixed at bottom */}
+        {/* User Info and Logout */}
         {!collapsed && user && (
           <div className="flex-shrink-0 border-t border-gray-200 pt-3 md:pt-4 mt-3">
             <div className="text-gray-600 text-xs md:text-sm mb-1">Logged in as:</div>
