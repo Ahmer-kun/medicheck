@@ -129,7 +129,7 @@ function Topbar({ onToggle, metamask, user, theme }) {
     };
   }, [checkInterval]);
 
-  // Render blockchain status indicator - FIXED VERSION
+  // Render blockchain status indicator
   const renderBlockchainStatus = () => {
     // If MetaMask is connected, prioritize MetaMask status over backend status
     if (metamask.isConnected && metamask.account) {
@@ -201,7 +201,7 @@ function Topbar({ onToggle, metamask, user, theme }) {
     );
   };
 
-  // Render MetaMask status component - FIXED VERSION
+  // Render MetaMask status component 
   const renderMetaMaskStatus = () => {
     // If MetaMask is not installed
     if (!metamask.isMetaMaskInstalled) {

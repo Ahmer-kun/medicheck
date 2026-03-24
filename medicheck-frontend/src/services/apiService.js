@@ -1,4 +1,3 @@
-// src/services/apiService.js
 import { api, createApiResponse, createApiError } from '../utils/api';
 
 // Base service class
