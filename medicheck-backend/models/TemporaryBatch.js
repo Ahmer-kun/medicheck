@@ -1,4 +1,3 @@
-// Create new file: models/TemporaryBatch.js
 import mongoose from "mongoose";
 
 const temporaryBatchSchema = new mongoose.Schema({
