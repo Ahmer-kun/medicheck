@@ -15,7 +15,7 @@ async function getToken() {
   const result = await loginResponse.json();
   console.log('Login Result:', {
     success: result.success,
-    token: result.token ? '✅ Received' : '❌ None',
+    token: result.token ? ' Received' : '❌ None',
     user: result.user
   });
 
