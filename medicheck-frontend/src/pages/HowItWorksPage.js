@@ -29,7 +29,6 @@ function HowItWorksPage() {
     { title: "Anti-Counterfeiting", description: "Blockchain verification eliminates fake medicines", icon: "🔒" }
   ];
 
-  // Expanded FAQ list
   const faqItems = [
     { question: "How secure is the blockchain technology?", answer: "Medicheck uses enterprise-grade blockchain with military-grade encryption. Each transaction is immutable and cryptographically secured, making it virtually impossible to tamper with medicine records." },
     { question: "Can I integrate Medicheck with existing systems?", answer: "Yes, Medicheck offers API integration with major ERP, inventory, and pharmacy management systems. Our team provides seamless integration support." },
@@ -142,7 +141,7 @@ function HowItWorksPage() {
           )}
         </nav>
 
-        {/* Hero Section – no badge */}
+        {/* Hero Section */}
         <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 px-4 w-full">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900/15 via-transparent to-cyan-900/15 opacity-40 pointer-events-none" />
           <div className="container mx-auto relative z-10 max-w-4xl text-center">
@@ -292,7 +291,7 @@ function HowItWorksPage() {
           </div>
         </section>
 
-        {/* Footer – cleaned, no tagline */}
+        {/* Footer – no tagline, no Blockchain Secured badge */}
         <footer className="bg-gray-950 text-white py-12 px-4 w-full border-t border-white/5">
           <div className="container mx-auto max-w-7xl">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -309,9 +308,6 @@ function HowItWorksPage() {
                 <p className="text-slate-300 text-sm leading-relaxed">
                   Secure, transparent, and compliant medicine tracking powered by blockchain technology.
                 </p>
-                <div className="mt-4 inline-flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full text-xs text-slate-300">
-                  <span className="w-3 h-3 bg-emerald-400 rounded-full" /> Blockchain Secured
-                </div>
               </div>
               <div>
                 <h4 className="text-lg font-bold mb-4 text-slate-200">Pages</h4>
