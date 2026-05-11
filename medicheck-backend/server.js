@@ -9,7 +9,7 @@ import { checkMongoDBHealth, checkBlockchainHealth, safeModelCount, getSystemInf
 import transactionMonitor from './services/transactionMonitor.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-
+import { auth, authorize } from './middleware/auth.js';
 
 // Security middleware
 import helmet from 'helmet';
@@ -2134,28 +2134,37 @@ app.get('/api/blockchain/real/status', async (req, res) => {
   }
 });
 
-app.post('/api/blockchain/real/register', async (req, res) => {
-  try {
-    const batchData = req.body;
-    const RealBlockchainService = (await import('../services/realBlockchainService.js')).default;
-    
-    const result = await RealBlockchainService.registerMedicine(batchData);
-    
-    res.json({
-      success: true,
-      message: 'Medicine registered on real blockchain',
-      data: result
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Real blockchain registration failed',
-      error: error.message
-    });
+app.post(
+  '/api/blockchain/real/register', auth, authorize('manufacturer', 'admin'), async (req, res) => {
+    try {
+      const batchData = req.body;
+ 
+      if (!batchData || !batchData.batchNo) {
+        return res.status(400).json({
+          success: false,
+          message: 'batchData with batchNo is required'
+        });
+      }
+ 
+      const RealBlockchainService = (await import('../services/realBlockchainService.js')).default;
+      const result = await RealBlockchainService.registerMedicine(batchData);
+ 
+      res.json({
+        success: true,
+        message: 'Medicine registered on real blockchain',
+        data: result
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Real blockchain registration failed',
+        error: error.message
+      });
+    }
   }
-});
+);
 
-app.get('/api/blockchain/real/faucet/:address', async (req, res) => {
+app.get('/api/blockchain/real/faucet/:address', auth, async (req, res) => {
   try {
     const { address } = req.params;
     const RealBlockchainService = (await import('../services/realBlockchainService.js')).default;

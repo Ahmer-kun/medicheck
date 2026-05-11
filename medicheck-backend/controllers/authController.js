@@ -101,43 +101,64 @@ export const initializeUsers = async () => {
   }
 };
 
-
+// fix the infinite-loop bug in token refresh by verifying signature before checking expiry
 export const refreshToken = async (req, res) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+ 
     if (!token) {
       return res.status(401).json({
         success: false,
         message: "No token provided"
       });
     }
-
-    // Verify the old token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Find the user
+ 
+    // Decode the token even if it is expired.
+    // jwt.verify with ignoreExpiration: true still validates the
+    // signature — it only skips the expiry check.
+    // A token with a tampered signature will still throw here.
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET, {
+        ignoreExpiration: true
+      });
+    } catch (verifyError) {
+      // Signature is invalid — definitely reject
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token — please log in again"
+      });
+    }
+ 
+    // Look up the live user record (catches deleted / deactivated accounts)
     const user = await User.findById(decoded.id).select('-password');
-    
+ 
     if (!user) {
       return res.status(401).json({
         success: false,
         message: "User not found"
       });
     }
-
-    // Generate new token
+ 
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: "Account is deactivated. Please contact administrator."
+      });
+    }
+ 
+    // Issue a brand-new access token
     const newToken = jwt.sign(
-      { 
-        id: user._id, 
-        username: user.username, 
-        role: user.role 
+      {
+        id: user._id,
+        username: user.username,
+        role: user.role
       },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
     );
-
-    res.json({
+ 
+    return res.json({
       success: true,
       token: newToken,
       user: {
@@ -148,11 +169,12 @@ export const refreshToken = async (req, res) => {
         isActive: user.isActive
       }
     });
+ 
   } catch (error) {
     console.error("Token refresh error:", error);
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
-      message: "Invalid or expired token"
+      message: "Token refresh failed — please log in again"
     });
   }
 };
@@ -234,11 +256,12 @@ export const registerViewer = async (req, res) => {
     // Send welcome email (async - doesn't wait for response)
     try {
       const EmailService = (await import("../services/emailService.js")).default;
-      await EmailService.sendUserRegistrationEmail(userResponse, password);
+      // Pass ONLY the user object — never the plaintext password
+      await EmailService.sendUserRegistrationEmail(userResponse);
       console.log("Welcome email sent to:", userResponse.email);
     } catch (emailError) {
       console.error("Failed to send welcome email:", emailError);
-      
+      // Non-fatal: user is already created, email failure doesn't block response
     }
 
     res.status(201).json({

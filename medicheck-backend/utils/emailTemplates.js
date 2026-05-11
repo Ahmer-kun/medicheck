@@ -3,7 +3,7 @@ export const emailTemplates = {
   /**
    * User Registration Email Template
    */
-  userRegistration: (user, temporaryPassword = null) => {
+  userRegistration: (user) => {
     const hasTemporaryPassword = temporaryPassword !== null;
     
     // Created mailto link for support contact
@@ -68,18 +68,22 @@ export const emailTemplates = {
                     </div>
 
                     <!-- Password Section -->
-                    ${hasTemporaryPassword ? `
-                    <div class="password-alert">
-                        <h3>🔐 Your Password</h3>
-                        <p><strong>Your password:</strong> <code style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; font-size: 16px; border: 1px solid #ddd;">${temporaryPassword}</code></p>
-                        <p><strong style="color: #dc3545;">Important:</strong> This is your permanent password. If you forget it, you must contact the administrator.</p>
-                    </div>
-                    ` : `
+                    // ${hasTemporaryPassword ? `
+                    // <div class="password-alert">
+                    //     <h3>🔐 Your Password</h3>
+                    //     <p><strong>Your password:</strong> <code style="background: #f8f9fa; padding: 8px 12px; border-radius: 4px; font-size: 16px; border: 1px solid #ddd;">${temporaryPassword}</code></p>
+                    //     <p><strong style="color: #dc3545;">Important:</strong> This is your permanent password. If you forget it, you must contact the administrator.</p>
+                    // </div>
+                    // ` : `
+                    // <div class="info-box">
+                    //     <h3>🔐 Password Information</h3>
+                    //     <p>The password was set during account creation. If you need to reset it, contact the administrator.</p>
+                    // </div>
+                    // `}
                     <div class="info-box">
-                        <h3>🔐 Password Information</h3>
-                        <p>The password was set during account creation. If you need to reset it, contact the administrator.</p>
+                      <h3>🔐 Password Information</h3>
+                      <p>Use the password you chose during registration to log in. If you forget it, contact the administrator.</p>
                     </div>
-                    `}
 
                     <!-- SUPPORT SECTION - WORKING CLICKABLE LINK -->
                     <div class="support-section">
@@ -153,12 +157,14 @@ Role: ${user.role}
 Name: ${user.name}
 ${user.email ? `Email: ${user.email}` : ''}
 
-${hasTemporaryPassword ? `
-YOUR PASSWORD: ${temporaryPassword}
-IMPORTANT: This is your permanent password. If you forget it, contact the administrator.
-` : `
-Password was set during account creation.
-`}
+Use the password you chose during registration to log in.
+If you forget it, contact the administrator.
+// ${hasTemporaryPassword ? `
+// YOUR PASSWORD: ${temporaryPassword}
+// IMPORTANT: This is your permanent password. If you forget it, contact the administrator.
+// ` : `
+// Password was set during account creation.
+// `}
 
 Login URL: ${process.env.APP_URL || 'http://localhost:3000'}
 

@@ -15,7 +15,10 @@ const router = express.Router();
 
 // Public routes
 router.post("/login", validate(authValidation.login), login);
-// router.post("/refresh-token", validate(authValidation.refreshToken), refreshToken);
+
+// Token refresh route
+router.post("/refresh-token", refreshToken);
+
 router.post("/register-viewer", validate(viewerRegistrationValidation), registerViewer);
 
 // Development route to initialize users

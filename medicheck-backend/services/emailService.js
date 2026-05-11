@@ -6,8 +6,8 @@ class EmailService {
     return await sendEmail(to, subject, html, text);
   }
 
-  async sendUserRegistrationEmail(user, temporaryPassword = null) {
-    const template = emailTemplates.userRegistration(user, temporaryPassword);
+  async sendUserRegistrationEmail(user) {
+    const template = emailTemplates.userRegistration(user);
     
     // Use user's email or fallback to username-based email
     const toEmail = user.email || `${user.username}@medicheck.com`;

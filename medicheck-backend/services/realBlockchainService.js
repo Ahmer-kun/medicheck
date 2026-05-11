@@ -221,47 +221,73 @@ class RealBlockchainService {
   async deployContract() {
     try {
       if (!this.signer) {
-        throw new Error('Deployer private key not configured');
+        throw new Error('Deployer private key not configured. Set DEPLOYER_PRIVATE_KEY in .env');
       }
-
-      console.log('Deploying contract to real blockchain...');
-      
+ 
+      console.log('Deploying MedicineTracker contract to real blockchain...');
+ 
+      // Load the full Hardhat artifact (contains ABI + bytecode)
+      const { readFile } = await import('fs/promises');
+      const { join, dirname } = await import('path');
+      const { fileURLToPath } = await import('url');
+ 
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = dirname(__filename);
+ 
+      // Hardhat artifact path — adjust if your project layout differs
+      const artifactPath = join(
+        __dirname,
+        '../artifacts/contracts/MedicineTracker.sol/MedicineTracker.json'
+      );
+ 
+      let artifact;
+      try {
+        const data = await readFile(artifactPath, 'utf8');
+        artifact = JSON.parse(data);
+      } catch (readError) {
+        throw new Error(
+          `Could not load contract artifact at ${artifactPath}. ` +
+          `Run "npx hardhat compile" first. Original error: ${readError.message}`
+        );
+      }
+ 
+      const contractABI = artifact.abi;
+      const contractBytecode = artifact.bytecode; // ← now correctly loaded
+ 
+      if (!contractBytecode || contractBytecode === '0x') {
+        throw new Error('Bytecode is empty. Make sure the contract compiled successfully.');
+      }
+ 
       // Gets deployer address and balance
       const address = await this.signer.getAddress();
       const balance = await this.provider.getBalance(address);
-      
+ 
       console.log(`Deployer: ${address}`);
       console.log(`Balance: ${ethers.formatEther(balance)} ETH`);
-
-      // Checks if we have enough gas
+ 
       if (balance < ethers.parseEther('0.01')) {
-        throw new Error('Insufficient balance for deployment. Get test ETH from faucet.');
+        throw new Error('Insufficient balance for deployment. Get test ETH from a faucet.');
       }
-
-      // Loads contract ABI and bytecode
-      const contractABI = await this.loadContractABI();
-      
-      // NOTE: For deployment, we need the full contract including bytecode
-      // Compile the contract separately and provide the bytecode 
+ 
       const contractFactory = new ethers.ContractFactory(
         contractABI,
-        contractBytecode, // This Loads bytecode from compilation
+        contractBytecode,
         this.signer
       );
-
+ 
       console.log('Deploying contract...');
       const contract = await contractFactory.deploy();
       await contract.waitForDeployment();
-
+ 
       const contractAddress = await contract.getAddress();
-      
+ 
       console.log('Contract deployed successfully!');
       console.log(`Contract Address: ${contractAddress}`);
-      console.log(`Explorer URL: ${this.getExplorerUrl(contractAddress)}`);
-
-      // Saves contract address to .env
+      console.log(`Explorer: ${await this.getExplorerUrl(contractAddress)}`);
+ 
+      // Save contract address to .env
       await this.updateEnvFile(contractAddress);
-
+ 
       return {
         success: true,
         contractAddress,
@@ -269,12 +295,69 @@ class RealBlockchainService {
         deployer: address,
         network: this.network
       };
-
+ 
     } catch (error) {
-      console.error('Deployment failed:', error);
+      console.error('Deployment failed:', error.message);
       throw error;
     }
   }
+  // async deployContract() {
+  //   try {
+  //     if (!this.signer) {
+  //       throw new Error('Deployer private key not configured');
+  //     }
+
+  //     console.log('Deploying contract to real blockchain...');
+      
+  //     // Gets deployer address and balance
+  //     const address = await this.signer.getAddress();
+  //     const balance = await this.provider.getBalance(address);
+      
+  //     console.log(`Deployer: ${address}`);
+  //     console.log(`Balance: ${ethers.formatEther(balance)} ETH`);
+
+  //     // Checks if we have enough gas
+  //     if (balance < ethers.parseEther('0.01')) {
+  //       throw new Error('Insufficient balance for deployment. Get test ETH from faucet.');
+  //     }
+
+  //     // Loads contract ABI and bytecode
+  //     const contractABI = await this.loadContractABI();
+      
+  //     // NOTE: For deployment, we need the full contract including bytecode
+  //     // Compile the contract separately and provide the bytecode 
+  //     const contractFactory = new ethers.ContractFactory(
+  //       contractABI,
+  //       contractBytecode, // This Loads bytecode from compilation
+  //       this.signer
+  //     );
+
+  //     console.log('Deploying contract...');
+  //     const contract = await contractFactory.deploy();
+  //     await contract.waitForDeployment();
+
+  //     const contractAddress = await contract.getAddress();
+      
+  //     console.log('Contract deployed successfully!');
+  //     console.log(`Contract Address: ${contractAddress}`);
+  //     console.log(`Explorer URL: ${this.getExplorerUrl(contractAddress)}`);
+
+  //     // Saves contract address to .env
+  //     await this.updateEnvFile(contractAddress);
+
+  //     return {
+  //       success: true,
+  //       contractAddress,
+  //       transactionHash: contract.deploymentTransaction().hash,
+  //       deployer: address,
+  //       network: this.network
+  //     };
+
+  //   } catch (error) {
+  //     console.error('Deployment failed:', error);
+  //     throw error;
+  //   }
+  // }
 
   async getExplorerUrl(address) {
     const explorers = {
