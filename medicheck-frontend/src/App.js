@@ -81,7 +81,7 @@ function MedicheckDashboard() {
       name: String(newBatch.name),
       medicineName: String(newBatch.medicineName || newBatch.name),
       manufactureDate: String(newBatch.manufactureDate),
-      expiry: String(newBatch.expiry),
+      expiryDate: String(newBatch.expiryDate || newBatch.expiry),
       formulation: String(newBatch.formulation),
       manufacturer: newBatch.manufacturer || "Unknown Manufacturer",
       pharmacy: newBatch.pharmacy || "To be assigned",
@@ -91,8 +91,12 @@ function MedicheckDashboard() {
     };
 
     try {
-      const savedBatch = await api.post("/batches", formattedBatch);
+      const response = await api.post("/batches", formattedBatch);
+      // Backend returns { success: true, data: batchObject }
+      const savedBatch = response?.data || response;
       setBatches(prev => [savedBatch, ...prev]);
+      // Re-fetch to ensure the full batch list is in sync with server
+      fetchBatches();
       return true;
     } catch (error) {
       console.error("❌ Failed to save batch:", error);
@@ -103,7 +107,9 @@ function MedicheckDashboard() {
 
   async function handleAccept(batchNo) {
     try {
-      const updatedBatch = await api.put(`/batches/accept/${batchNo}`);
+      const response = await api.put(`/batches/accept/${batchNo}`);
+      // Backend returns { success: true, data: batchObject }
+      const updatedBatch = response?.data || response;
       setBatches(prev =>
         prev.map(b => (b.batchNo === batchNo ? updatedBatch : b))
       );

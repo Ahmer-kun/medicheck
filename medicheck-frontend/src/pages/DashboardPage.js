@@ -38,7 +38,7 @@ function DashboardPage({ batches, metamask, user, theme }) {
   // Memoized calculations for batch statistics
   const batchStats = useMemo(() => {
     const expiredCount = uniqueBatches.filter(batch => {
-      const expiryDate = new Date(batch.expiry || batch.expiryDate);
+      const expiryDate = new Date(batch.expiryDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       expiryDate.setHours(0, 0, 0, 0);
@@ -46,7 +46,7 @@ function DashboardPage({ batches, metamask, user, theme }) {
     }).length;
 
     const activeCount = uniqueBatches.filter(batch => {
-      const expiryDate = new Date(batch.expiry || batch.expiryDate);
+      const expiryDate = new Date(batch.expiryDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       expiryDate.setHours(0, 0, 0, 0);
@@ -252,7 +252,7 @@ function DashboardPage({ batches, metamask, user, theme }) {
   }, []);
 
   const isBatchExpired = useMemo(() => (batch) => {
-    const expiryDate = new Date(batch.expiry || batch.expiryDate);
+    const expiryDate = new Date(batch.expiryDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     expiryDate.setHours(0, 0, 0, 0);
@@ -606,4 +606,3 @@ function DashboardPage({ batches, metamask, user, theme }) {
 }
 
 export default DashboardPage;
-

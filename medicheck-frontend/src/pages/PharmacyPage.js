@@ -263,7 +263,7 @@ const PharmacyPage = ({ batches, onAccept, metamask, user, theme, onRefresh }) =
       total: displayedMedicines.length,
       active: displayedMedicines.filter(m => m.status === 'Active').length,
       expired: displayedMedicines.filter(m => {
-        const expiryDate = new Date(m.expiryDate || m.expiry);
+        const expiryDate = new Date(m.expiryDate);
         return expiryDate < new Date();
       }).length,
       verified: displayedMedicines.filter(m => m.blockchainVerified).length
@@ -618,7 +618,7 @@ const PharmacyPage = ({ batches, onAccept, metamask, user, theme, onRefresh }) =
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
                             {manufacturerBatches.map((batch) => {
-                              const isExpired = new Date(batch.expiry) < new Date();
+                              const isExpired = new Date(batch.expiryDate) < new Date();
                               return (
                                 <tr key={batch._id} className="hover:bg-gray-50">
                                   <td className="py-2 md:py-3 px-2 md:px-4">
@@ -643,7 +643,7 @@ const PharmacyPage = ({ batches, onAccept, metamask, user, theme, onRefresh }) =
                                   </td>
                                   <td className="py-2 md:py-3 px-2 md:px-4">
                                     <div className={`font-semibold text-xs ${isExpired ? 'text-red-600' : 'text-gray-900'}`}>
-                                      {new Date(batch.expiry).toLocaleDateString()}
+                                      {new Date(batch.expiryDate).toLocaleDateString()}
                                       {isExpired && <div className="text-red-500 text-xs">Expired</div>}
                                     </div>
                                   </td>
@@ -770,7 +770,7 @@ const PharmacyPage = ({ batches, onAccept, metamask, user, theme, onRefresh }) =
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {displayedMedicines.map((medicine) => {
-                          const isExpired = new Date(medicine.expiryDate || medicine.expiry) < new Date();
+                          const isExpired = new Date(medicine.expiryDate) < new Date();
                           const statusColor = isExpired ? 'bg-red-100 text-red-800 border-red-200' :
                             medicine.status === 'Active' ? 'bg-green-100 text-green-800 border-green-200' :
                             medicine.status === 'In Transit' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
@@ -812,7 +812,7 @@ const PharmacyPage = ({ batches, onAccept, metamask, user, theme, onRefresh }) =
                               
                               <td className="py-2 md:py-3 px-2 md:px-3">
                                 <div className={`font-semibold text-xs ${isExpired ? 'text-red-600' : 'text-gray-900'}`}>
-                                  {new Date(medicine.expiryDate || medicine.expiry).toLocaleDateString()}
+                                  {new Date(medicine.expiryDate).toLocaleDateString()}
                                   {isExpired && (
                                     <div className="text-red-500 text-xs font-semibold mt-1 bg-red-50 px-1.5 py-0.5 rounded border border-red-200">
                                       EXPIRED

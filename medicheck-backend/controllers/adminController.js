@@ -29,7 +29,7 @@ export const getAdminStats = async (req, res) => {
       PharmacyCompany.countDocuments({ isActive: true }),
       Batch.countDocuments({ status: 'active' }),
       Batch.countDocuments({ 
-        expiry: { $lt: new Date() } 
+        expiryDate: { $lt: new Date() } 
       }),
       Batch.countDocuments({ blockchainVerified: true }),
       User.countDocuments({ isActive: true }),
@@ -482,7 +482,7 @@ export const getAllBatches = async (req, res) => {
 
     const batches = await Batch.find()
       .sort({ createdAt: -1 })
-      .select('batchNo name medicineName manufactureDate expiry formulation manufacturer pharmacy quantity status blockchainVerified createdAt')
+      .select('batchNo name medicineName manufactureDate expiryDate formulation manufacturer pharmacy quantity status blockchainVerified createdAt')
       .lean();
 
     // Also gets pharmacy medicines
@@ -498,14 +498,14 @@ export const getAllBatches = async (req, res) => {
         ...batch,
         type: 'manufacturer_batch',
         id: batch._id,
-        expiry: batch.expiry,
+        expiryDate: batch.expiryDate,
         source: 'manufacturer'
       })),
       ...pharmacyMedicines.map(medicine => ({
         ...medicine,
         type: 'pharmacy_medicine',
         id: medicine._id,
-        expiry: medicine.expiryDate,
+        expiryDate: medicine.expiryDate,
         pharmacy: medicine.pharmacyCompany?.name || 'Unknown Pharmacy',
         source: 'pharmacy'
       }))
@@ -540,7 +540,7 @@ export const getPendingBatches = async (req, res) => {
       ]
     })
     .sort({ createdAt: -1 })
-    .select('batchNo name manufacturer manufactureDate expiry formulation quantity status blockchainVerified createdAt')
+    .select('batchNo name manufacturer manufactureDate expiryDate formulation quantity status blockchainVerified createdAt')
     .lean();
 
     // Also check pharmacy medicines that need approval
@@ -557,13 +557,13 @@ export const getPendingBatches = async (req, res) => {
         ...batch,
         type: 'batch',
         id: batch._id,
-        expiry: batch.expiry
+        expiryDate: batch.expiryDate
       })),
       ...pendingMedicines.map(medicine => ({
         ...medicine,
         type: 'pharmacy_medicine',
         id: medicine._id,
-        expiry: medicine.expiryDate,
+        expiryDate: medicine.expiryDate,
         pharmacy: medicine.pharmacyCompany?.name || 'Unknown Pharmacy'
       }))
     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -682,9 +682,9 @@ export const getRecallList = async (req, res) => {
 
     // Find expired batches and medicines
     const expiredBatches = await Batch.find({
-      expiry: { $lt: new Date() }
+      expiryDate: { $lt: new Date() }
     })
-    .select('batchNo name manufactureDate expiry formulation manufacturer')
+    .select('batchNo name manufactureDate expiryDate formulation manufacturer')
     .lean();
 
     const expiredMedicines = await PharmacyMedicine.find({
@@ -700,7 +700,7 @@ export const getRecallList = async (req, res) => {
         batchNo: batch.batchNo,
         name: batch.name,
         reason: 'Medicine expired',
-        date: new Date(batch.expiry).toLocaleDateString(),
+        date: new Date(batch.expiryDate).toLocaleDateString(),
         severity: 'High',
         type: 'batch',
         manufacturer: batch.manufacturer
@@ -832,7 +832,7 @@ export const createUser = async (req, res) => {
 
     // Send welcome email (async - don't wait for response)
     try {
-      await EmailService.sendUserRegistrationEmail(userResponse, password);
+      await EmailService.sendUserRegistrationEmail(userResponse);
       console.log("Welcome email sent to:", userResponse.email);
     } catch (emailError) {
       console.error("Failed to send welcome email:", emailError);

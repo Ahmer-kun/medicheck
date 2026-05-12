@@ -50,54 +50,22 @@ function VerifyPage({ batches, metamask, user, theme }) {
   }, [metamask.isConnected]);
 
   // Fetch pharmacy medicines
+  // FIX: Was using hardcoded Railway URL with raw fetch() causing CORS errors.
+  // Now uses the api client which reads REACT_APP_API_URL and attaches the token.
   const fetchPharmacyMedicines = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      
-      const headers = {
-        "Content-Type": "application/json",
-      };
-      
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-      
-      const response = await fetch("https://medicheck-production.up.railway.app/api/pharmacy/medicines", {
-        method: "GET",
-        headers: headers
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setPharmacyMedicines(data.data);
-          console.log("✅ Loaded pharmacy medicines for verification:", data.data.length);
-        }
-      } else if (response.status === 401) {
-        console.warn("⚠️ Not authenticated - showing medicines anyway");
-        const publicResponse = await fetch("https://medicheck-production.up.railway.app/api/pharmacy/medicines");
-        if (publicResponse.ok) {
-          const publicData = await publicResponse.json();
-          if (publicData.success) {
-            setPharmacyMedicines(publicData.data);
-          }
-        }
+      const response = await api.get("/pharmacy/medicines");
+      if (response.success) {
+        setPharmacyMedicines(response.data || []);
+        console.log("Loaded pharmacy medicines for verification:", (response.data || []).length);
+      } else {
+        console.warn("Could not load pharmacy medicines:", response.message);
+        setPharmacyMedicines([]);
       }
     } catch (error) {
       console.error("Error fetching pharmacy medicines:", error);
-      try {
-        const fallbackResponse = await fetch("https://medicheck-production.up.railway.app/api/pharmacy/medicines");
-        if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json();
-          if (fallbackData.success) {
-            setPharmacyMedicines(fallbackData.data);
-          }
-        }
-      } catch (fallbackError) {
-        console.error("Fallback also failed:", fallbackError);
-        setPharmacyMedicines([]);
-      }
+      setPharmacyMedicines([]);
     } finally {
       setLoading(false);
     }
@@ -153,7 +121,7 @@ function VerifyPage({ batches, metamask, user, theme }) {
       const medicine = medicineFromPharmacy || medicineFromManufacturer;
       
       // Get expiry date - handle different field names
-      const expiryDateString = medicine.expiryDate || medicine.expiry;
+      const expiryDateString = medicine.expiryDate;
       const expiryDate = new Date(expiryDateString);
       const today = new Date();
       
@@ -201,7 +169,7 @@ function VerifyPage({ batches, metamask, user, theme }) {
         batchNo: medicine.batchNo,
         name: medicine.name,
         formulation: medicine.formulation,
-        expiry: expiryDateString,
+        expiryDate: expiryDateString,
         expiryDate: expiryDateString,
         manufacturer: medicine.manufacturer,
         pharmacy: medicine.pharmacyName || medicine.pharmacy || 'Unknown',
@@ -612,9 +580,9 @@ function VerifyPage({ batches, metamask, user, theme }) {
                           <div className="col-span-2">
                             <span className="text-gray-500">Expiry:</span>
                             <div className="font-medium text-xs">
-                              {new Date(medicine.expiryDate || medicine.expiry).toLocaleDateString()}
+                              {new Date(medicine.expiryDate).toLocaleDateString()}
                               {(() => {
-                                const expiryDate = new Date(medicine.expiryDate || medicine.expiry);
+                                const expiryDate = new Date(medicine.expiryDate);
                                 const today = new Date();
                                 const daysRemaining = Math.floor((expiryDate - today) / (1000 * 60 * 60 * 24));
                                 
@@ -714,7 +682,7 @@ function VerifyPage({ batches, metamask, user, theme }) {
                         <div>
                           <div className="font-bold text-red-700 text-base md:text-lg">{result.message}</div>
                           <div className="text-xs md:text-sm text-red-600 flex items-center gap-1 mt-1">
-                            <span>⚠️</span> Expired on {new Date(result.expiry).toLocaleDateString()}
+                            <span>⚠️</span> Expired on {new Date(result.expiryDate).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
@@ -726,7 +694,7 @@ function VerifyPage({ batches, metamask, user, theme }) {
                         <div><strong className="text-gray-800 text-sm md:text-base">Pharmacy:</strong> <span className="truncate block">{result.pharmacy || 'Not yet accepted'}</span></div>
                         <div><strong className="text-gray-800 text-sm md:text-base">Formulation:</strong> <span className="truncate block">{result.formulation}</span></div>
                         <div><strong className="text-gray-800 text-sm md:text-base">Quantity:</strong> <span className="text-sm md:text-base">{result.quantity} units</span></div>
-                        <div><strong className="text-gray-800 text-sm md:text-base">Expiry Date:</strong> <span className="text-red-600 font-semibold text-sm md:text-base">{new Date(result.expiry).toLocaleDateString()}</span></div>
+                        <div><strong className="text-gray-800 text-sm md:text-base">Expiry Date:</strong> <span className="text-red-600 font-semibold text-sm md:text-base">{new Date(result.expiryDate).toLocaleDateString()}</span></div>
                         <div><strong className="text-gray-800 text-sm md:text-base">Status:</strong> <span className="text-red-600 font-semibold text-sm md:text-base">EXPIRED</span></div>
                         {result.expiryCheck && (
                           <div className="md:col-span-2 bg-red-50 p-2 md:p-3 rounded border border-red-200">
@@ -747,7 +715,7 @@ function VerifyPage({ batches, metamask, user, theme }) {
                         <div>
                           <div className="font-bold text-orange-700 text-base md:text-lg">{result.message}</div>
                           <div className="text-xs md:text-sm text-orange-600 flex items-center gap-1 mt-1">
-                            <span>⏰</span> Expires today ({new Date(result.expiry).toLocaleDateString()})
+                            <span>⏰</span> Expires today ({new Date(result.expiryDate).toLocaleDateString()})
                           </div>
                         </div>
                       </div>
@@ -759,7 +727,7 @@ function VerifyPage({ batches, metamask, user, theme }) {
                         <div><strong className="text-gray-800 text-sm md:text-base">Pharmacy:</strong> <span className="truncate block">{result.pharmacy || 'Not yet accepted'}</span></div>
                         <div><strong className="text-gray-800 text-sm md:text-base">Formulation:</strong> <span className="truncate block">{result.formulation}</span></div>
                         <div><strong className="text-gray-800 text-sm md:text-base">Quantity:</strong> <span className="text-sm md:text-base">{result.quantity} units</span></div>
-                        <div><strong className="text-gray-800 text-sm md:text-base">Expiry Date:</strong> <span className="text-orange-600 font-semibold text-sm md:text-base">{new Date(result.expiry).toLocaleDateString()}</span></div>
+                        <div><strong className="text-gray-800 text-sm md:text-base">Expiry Date:</strong> <span className="text-orange-600 font-semibold text-sm md:text-base">{new Date(result.expiryDate).toLocaleDateString()}</span></div>
                         <div><strong className="text-gray-800 text-sm md:text-base">Status:</strong> <span className="text-orange-600 font-semibold text-sm md:text-base">EXPIRES TODAY</span></div>
                         {result.blockchainVerified && (
                           <div className="text-xs md:text-sm text-green-600 flex items-center gap-1">
@@ -799,7 +767,7 @@ function VerifyPage({ batches, metamask, user, theme }) {
                         <div><strong className="text-gray-800 text-sm md:text-base">Pharmacy:</strong> <span className="truncate block">{result.pharmacy || 'Not yet accepted'}</span></div>
                         <div><strong className="text-gray-800 text-sm md:text-base">Formulation:</strong> <span className="truncate block">{result.formulation}</span></div>
                         <div><strong className="text-gray-800 text-sm md:text-base">Quantity:</strong> <span className="text-sm md:text-base">{result.quantity} units</span></div>
-                        <div><strong className="text-gray-800 text-sm md:text-base">Expiry Date:</strong> <span className="text-green-600 font-semibold text-sm md:text-base">{new Date(result.expiry).toLocaleDateString()}</span></div>
+                        <div><strong className="text-gray-800 text-sm md:text-base">Expiry Date:</strong> <span className="text-green-600 font-semibold text-sm md:text-base">{new Date(result.expiryDate).toLocaleDateString()}</span></div>
                         <div><strong className="text-gray-800 text-sm md:text-base">Status:</strong> <span className="text-green-600 font-semibold text-sm md:text-base">
                           {result.daysRemaining < 30 ? `${result.daysRemaining} DAYS REMAINING` : 'ACTIVE'}
                         </span></div>
@@ -842,7 +810,7 @@ function VerifyPage({ batches, metamask, user, theme }) {
                         <div><strong className="text-gray-800 text-sm md:text-base">Manufacturer:</strong> <span className="truncate block">{result.manufacturer}</span></div>
                         <div><strong className="text-gray-800 text-sm md:text-base">Pharmacy:</strong> <span className="truncate block">{result.pharmacy || 'Not yet accepted'}</span></div>
                         <div><strong className="text-gray-800 text-sm md:text-base">Formulation:</strong> <span className="truncate block">{result.formulation}</span></div>
-                        <div><strong className="text-gray-800 text-sm md:text-base">Expiry Date:</strong> <span className="text-sm md:text-base">{new Date(result.expiry).toLocaleDateString()}</span></div>
+                        <div><strong className="text-gray-800 text-sm md:text-base">Expiry Date:</strong> <span className="text-sm md:text-base">{new Date(result.expiryDate).toLocaleDateString()}</span></div>
                         <div><strong className="text-gray-800 text-sm md:text-base">Status:</strong> <span className="text-yellow-600 font-semibold text-sm md:text-base">{result.status}</span></div>
                       </div>
                     </div>

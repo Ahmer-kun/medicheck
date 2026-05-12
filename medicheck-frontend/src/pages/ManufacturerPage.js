@@ -160,7 +160,7 @@ const fetchManufacturerCompanies = async () => {
         const totalBatches = manufacturerBatches.length;
         const verifiedBatches = manufacturerBatches.filter(b => b.blockchainVerified).length;
         const expiredBatches = manufacturerBatches.filter(b => {
-          const expiryDate = new Date(b.expiry || b.expiryDate);
+          const expiryDate = new Date(b.expiryDate);
           return expiryDate < new Date();
         }).length;
         const activeBatches = totalBatches - expiredBatches;
@@ -288,7 +288,7 @@ const fetchManufacturerBatches = async () => {
     name: form.medicineName,
     medicineName: form.medicineName,
     manufactureDate: form.manufactureDate,
-    expiry: form.expiryDate,
+    expiryDate: form.expiryDate,
     formulation: form.formulation,
     manufacturer: form.manufacturer,
     quantity: form.quantity,
@@ -798,7 +798,7 @@ const registerBatch = async (batchData) => {
                   return !status.includes('pharmacy') && status !== 'accepted';
                 })
                 .map((batch) => {
-                  const isExpired = new Date(batch.expiry) < new Date();
+                  const isExpired = new Date(batch.expiryDate) < new Date();
                   const statusColor = isExpired ? 'bg-red-100 text-red-800 border-red-200' :
                     batch.status === 'active' ? 'bg-green-100 text-green-800 border-green-200' :
                     'bg-blue-100 text-blue-800 border-blue-200';
@@ -834,7 +834,7 @@ const registerBatch = async (batchData) => {
                       
                       <td className="py-3 md:py-4 px-3 md:px-6">
                         <div className={`font-semibold ${isExpired ? 'text-red-600' : 'text-gray-900'}`}>
-                          {new Date(batch.expiry).toLocaleDateString()}
+                          {new Date(batch.expiryDate).toLocaleDateString()}
                           {isExpired && (
                             <div className="text-red-500 text-xs font-semibold mt-0.5 bg-red-50 px-2 py-0.5 rounded border border-red-200">
                               EXPIRED

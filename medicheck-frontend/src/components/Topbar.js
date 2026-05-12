@@ -31,25 +31,24 @@ function Topbar({ onToggle, metamask, user, theme }) {
     return user?.role ? user.role.toLowerCase() : 'user';
   };
 
-  // Check blockchain status - SIMPLIFIED VERSION
+  // using a more robust approach to check blockchain status with multiple endpoints and better error handling
   const checkBlockchainStatus = async () => {
     try {
-      // Don't set loading to true immediately to prevent flicker
-      // Only shows loading state if it's the first check or after a long time
-      
       let response;
-      
+ 
+      // Primary: /blockchain/real/status
+      // Response shape: { success, realBlockchain: { available, details: { connected, network, ... } } }
       try {
-        response = await api.get('/blockchain/status');
+        response = await api.get('/blockchain/real/status');
       } catch (endpoint1Error) {
-        console.log('Blockchain status endpoint failed:', endpoint1Error.message);
-        
-        // Try alternative endpoint
+        console.log('Primary blockchain status endpoint failed:', endpoint1Error.message);
+ 
+        // Fallback: /blockchain/real/health
+        // Response shape: { success, realBlockchain: { connected, networkName, latestBlock, gasPrice, contract } }
         try {
-          response = await api.get('/blockchain/health');
+          response = await api.get('/blockchain/real/health');
         } catch (endpoint2Error) {
-          console.log('Alternative endpoint also failed:', endpoint2Error.message);
-          
+          console.log('Fallback blockchain endpoint also failed:', endpoint2Error.message);
           setBlockchainStatus(prev => ({
             ...prev,
             loading: false,
@@ -62,22 +61,59 @@ function Topbar({ onToggle, metamask, user, theme }) {
           return;
         }
       }
-      
-      if (response.data && response.data.success) {
-        const blockchain = response.data.blockchain || response.data;
-        setBlockchainStatus({
+ 
+      // The ApiClient returns the parsed JSON body directly (no .data wrapper)
+      if (response && response.success) {
+ 
+        // Handle /blockchain/real/status response shape
+        if (response.realBlockchain) {
+          const rb = response.realBlockchain;
+ 
+          // Primary endpoint nests info under .details
+          if (rb.details && Object.keys(rb.details).length > 0) {
+            const details = rb.details;
+            setBlockchainStatus({
+              loading: false,
+              isRealBlockchain: details.isRealBlockchain || false,
+              connected: rb.available || details.connected || false,
+              network: details.network?.name || (details.isRealBlockchain ? 'Real Network' : 'Local Network'),
+              contract: details.contract?.exists ? 'Deployed' : 'Not Found',
+              blockNumber: details.network?.blockNumber || null,
+              gasPrice: details.gas?.gasPrice || null,
+              hasBalance: details.wallet?.hasEnough || false,
+              balance: details.wallet?.balance || null,
+              timestamp: details.timestamp || response.timestamp,
+              error: false
+            });
+            return;
+          }
+ 
+          // Fallback endpoint shape: realBlockchain fields are flat
+          setBlockchainStatus({
+            loading: false,
+            isRealBlockchain: true,                          // /real/health only runs when blockchain is live
+            connected: rb.connected || false,
+            network: rb.networkName || 'Real Network',
+            contract: rb.contract?.hasCode ? 'Deployed' : 'Not Found',
+            blockNumber: rb.latestBlock || null,
+            gasPrice: rb.gasPrice || null,
+            hasBalance: true,
+            balance: null,
+            timestamp: response.timestamp,
+            error: false
+          });
+          return;
+        }
+ 
+        // Unexpected shape — treat as disconnected
+        setBlockchainStatus(prev => ({
+          ...prev,
           loading: false,
-          isRealBlockchain: blockchain.isRealBlockchain || false,
-          connected: blockchain.connected || false,
-          network: blockchain.networkName || (blockchain.isRealBlockchain ? 'Real' : 'Local'),
-          contract: blockchain.contract?.exists ? 'Deployed' : 'Not Found',
-          blockNumber: blockchain.latestBlock || blockchain.blockNumber,
-          gasPrice: blockchain.gasPrice,
-          hasBalance: blockchain.hasBalance || blockchain.hasEnough || true,
-          balance: blockchain.balance,
-          timestamp: blockchain.timestamp,
-          error: false
-        });
+          connected: false,
+          network: 'Unknown',
+          error: true
+        }));
+ 
       } else {
         setBlockchainStatus(prev => ({
           ...prev,
@@ -89,6 +125,7 @@ function Topbar({ onToggle, metamask, user, theme }) {
           error: true
         }));
       }
+ 
     } catch (error) {
       console.log('Blockchain status check failed:', error.message);
       setBlockchainStatus(prev => ({

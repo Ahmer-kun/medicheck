@@ -20,7 +20,7 @@ const batchSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
-  expiry: { 
+  expiryDate: { 
     type: Date,
     required: true
   },
@@ -77,7 +77,7 @@ const batchSchema = new mongoose.Schema({
 
 // Index for better query performance
 batchSchema.index({ batchNo: 1 });
-batchSchema.index({ status: 1, expiry: 1 });
+batchSchema.index({ status: 1, expiryDate: 1 });
 batchSchema.index({ manufacturer: 1 });
 batchSchema.index({ createdAt: -1 });
 
