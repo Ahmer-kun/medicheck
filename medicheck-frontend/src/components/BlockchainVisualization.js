@@ -5,92 +5,72 @@ function BlockchainVisualization() {
   const [isAnimating, setIsAnimating] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Checks if mobile on mount and resize
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Node positions
   const blockchainNodes = isMobile ? [
     { id: 1, name: "Manufacturer", type: "manufacturer", x: 20, y: 20, connected: true },
-    { id: 2, name: "Pharmacy", type: "pharmacy", x: 70, y: 20, connected: true },
-    { id: 3, name: "Regulator", type: "regulator", x: 20, y: 60, connected: true },
-    { id: 4, name: "Customer", type: "customer", x: 70, y: 60, connected: true },
-    { id: 5, name: "Auditor", type: "auditor", x: 45, y: 85, connected: true }
+    { id: 2, name: "Pharmacy",     type: "pharmacy",     x: 70, y: 20, connected: true },
+    { id: 3, name: "Regulator",    type: "regulator",    x: 20, y: 60, connected: true },
+    { id: 4, name: "Customer",     type: "customer",     x: 70, y: 60, connected: true },
+    { id: 5, name: "Auditor",      type: "auditor",      x: 45, y: 85, connected: true }
   ] : [
     { id: 1, name: "Manufacturer", type: "manufacturer", x: 20, y: 40, connected: true },
-    { id: 2, name: "Pharmacy", type: "pharmacy", x: 80, y: 40, connected: true },
-    { id: 3, name: "Regulator", type: "regulator", x: 50, y: 15, connected: true },
-    { id: 4, name: "Customer", type: "customer", x: 20, y: 70, connected: true },
-    { id: 5, name: "Auditor", type: "auditor", x: 80, y: 70, connected: true }
+    { id: 2, name: "Pharmacy",     type: "pharmacy",     x: 80, y: 40, connected: true },
+    { id: 3, name: "Regulator",    type: "regulator",    x: 50, y: 15, connected: true },
+    { id: 4, name: "Customer",     type: "customer",     x: 20, y: 70, connected: true },
+    { id: 5, name: "Auditor",      type: "auditor",      x: 80, y: 70, connected: true }
   ];
 
-  // Relationships with better label positioning
   const relationships = [
-    { from: 1, to: 2, label: "Supply" },
-    { from: 2, to: 4, label: "Dispense" },
+    { from: 1, to: 2, label: "Supply"  },
+    { from: 2, to: 4, label: "Dispense"},
     { from: 3, to: 1, label: "Monitor" },
     { from: 3, to: 2, label: "Inspect" },
-    { from: 5, to: 1, label: "Audit" },
-    { from: 5, to: 2, label: "Review" },
-    { from: 5, to: 4, label: "Verify" }
+    { from: 5, to: 1, label: "Audit"   },
+    { from: 5, to: 2, label: "Review"  },
+    { from: 5, to: 4, label: "Verify"  }
   ];
 
   useEffect(() => {
     if (!isAnimating) return;
-    
     const interval = setInterval(() => {
       setConnections(prev => {
         const randomRel = relationships[Math.floor(Math.random() * relationships.length)];
         return [
           ...prev.slice(-3),
-          {
-            id: Date.now(),
-            from: randomRel.from,
-            to: randomRel.to,
-            label: randomRel.label,
-            duration: Math.random() * 1000 + 500
-          }
+          { id: Date.now(), from: randomRel.from, to: randomRel.to, label: randomRel.label, duration: Math.random() * 1000 + 500 }
         ];
       });
     }, 1500);
-
     return () => clearInterval(interval);
   }, [isAnimating]);
 
-  const getNodeColor = (type) => {
-    const colors = {
-      manufacturer: "bg-blue-500 border-blue-600",
-      pharmacy: "bg-purple-500 border-purple-600",
-      regulator: "bg-red-500 border-red-600",
-      customer: "bg-orange-500 border-orange-600",
-      auditor: "bg-teal-500 border-teal-600"
-    };
-    return colors[type];
-  };
+  const getNodeColor = (type) => ({
+    manufacturer: "bg-blue-500 border-blue-600",
+    pharmacy:     "bg-purple-500 border-purple-600",
+    regulator:    "bg-red-500 border-red-600",
+    customer:     "bg-orange-500 border-orange-600",
+    auditor:      "bg-teal-500 border-teal-600"
+  }[type]);
 
-  const getNodeIcon = (type) => {
-    const icons = {
-      manufacturer: "🏭",
-      pharmacy: "💊",
-      regulator: "🏛️",
-      customer: "👤",
-      auditor: "🔍"
-    };
-    return icons[type] || "⚫";
-  };
+  const getNodeIcon = (type) => ({
+    manufacturer: "🏭",
+    pharmacy:     "💊",
+    regulator:    "🏛️",
+    customer:     "👤",
+    auditor:      "🔍"
+  }[type] || "⚫");
 
   return (
     <div className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-gray-200 shadow-sm mb-4 md:mb-6">
       <div className="flex justify-between items-center mb-3 md:mb-4">
         <h3 className="text-base md:text-xl font-bold text-gray-800">Live Blockchain Network</h3>
-        <button 
+        <button
           onClick={() => setIsAnimating(!isAnimating)}
           className={`px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm font-semibold transition-all ${
             isAnimating ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
@@ -99,120 +79,62 @@ function BlockchainVisualization() {
           {isAnimating ? '🟢 Live' : '⏸️ Paused'}
         </button>
       </div>
-      
+
       <div className={`relative ${isMobile ? 'h-64' : 'h-80 md:h-96'} bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg md:rounded-xl border border-gray-200 p-2 md:p-4 overflow-hidden`}>
         {/* PERMANENT CONNECTION LINES */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
           <defs>
-            <marker id="arrow" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
-              <polygon points="0 0, 8 2.5, 0 5" className="fill-gray-400" />
-            </marker>
-            <marker id="arrow-blue" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
-              <polygon points="0 0, 8 2.5, 0 5" className="fill-blue-500" />
-            </marker>
-            <marker id="arrow-red" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
-              <polygon points="0 0, 8 2.5, 0 5" className="fill-red-500" />
-            </marker>
-            <marker id="arrow-green" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
-              <polygon points="0 0, 8 2.5, 0 5" className="fill-green-500" />
-            </marker>
-            <marker id="arrow-orange" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
-              <polygon points="0 0, 8 2.5, 0 5" className="fill-orange-500" />
-            </marker>
-            <marker id="arrow-purple" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
-              <polygon points="0 0, 8 2.5, 0 5" className="fill-purple-500" />
-            </marker>
+            <marker id="arrow"        markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 8 2.5, 0 5" className="fill-gray-400"   /></marker>
+            <marker id="arrow-blue"   markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 8 2.5, 0 5" className="fill-blue-500"   /></marker>
+            <marker id="arrow-red"    markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 8 2.5, 0 5" className="fill-red-500"    /></marker>
+            <marker id="arrow-green"  markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 8 2.5, 0 5" className="fill-green-500"  /></marker>
+            <marker id="arrow-orange" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 8 2.5, 0 5" className="fill-orange-500" /></marker>
+            <marker id="arrow-purple" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto"><polygon points="0 0, 8 2.5, 0 5" className="fill-purple-500" /></marker>
           </defs>
-          
-          {/* Draw ALL relationship lines */}
+
           {relationships.map((rel, idx) => {
             const fromNode = blockchainNodes.find(n => n.id === rel.from);
-            const toNode = blockchainNodes.find(n => n.id === rel.to);
-            
+            const toNode   = blockchainNodes.find(n => n.id === rel.to);
             if (!fromNode || !toNode) return null;
-            
+
             const dx = toNode.x - fromNode.x;
             const dy = toNode.y - fromNode.y;
             const length = Math.sqrt(dx * dx + dy * dy);
-            
-            // Adjust start/end points
             const startX = fromNode.x + (dx / length) * 4;
             const startY = fromNode.y + (dy / length) * 4;
-            const endX = toNode.x - (dx / length) * 4;
-            const endY = toNode.y - (dy / length) * 4;
-            
-            // Calculate label position with better spacing
+            const endX   = toNode.x   - (dx / length) * 4;
+            const endY   = toNode.y   - (dy / length) * 4;
             const labelX = (startX + endX) / 2;
             const labelY = (startY + endY) / 2;
-            
-            // Custom label positioning to prevent overlap
+
             let labelOffsetX = 0;
             let labelOffsetY = 0;
-            
-            // Special positioning for specific relationships to prevent overlap
-            if (rel.from === 2 && rel.to === 4) { // Pharmacy -> Customer (Dispense)
-              labelOffsetY = -12; // Move "Dispense" up
-              labelOffsetX = 8;  // Move slightly to the right
-            } else if (rel.from === 5 && rel.to === 4) { // Auditor -> Customer (Verify)
-              labelOffsetY = 12; // Move "Verify" down
-              labelOffsetX = -8; // Move slightly to the left
-            } else if (Math.abs(dx) > Math.abs(dy)) {
-              // More horizontal line
-              labelOffsetY = -8;
-            } else {
-              // More vertical line
-              labelOffsetX = 8;
-            }
-            
-            // Determine line color
-            let lineColor = "#94A3B8";
-            let markerId = "arrow";
-            
-            if (rel.from === 3) { // Regulator
-              lineColor = "#EF4444";
-              markerId = "arrow-red";
-            } else if (rel.from === 5) { // Auditor
-              lineColor = "#0D9488";
-              markerId = "arrow-green";
-            } else if (rel.label === "Supply") {
-              lineColor = "#3B82F6";
-              markerId = "arrow-blue";
-            } else if (rel.label === "Dispense") {
-              lineColor = "#8B5CF6";
-              markerId = "arrow-purple";
-            } else if (rel.label === "Verify") {
-              lineColor = "#F59E0B";
-              markerId = "arrow-orange";
-            }
-            
+            if (rel.from === 2 && rel.to === 4) { labelOffsetY = -12; labelOffsetX =  8; }
+            else if (rel.from === 5 && rel.to === 4) { labelOffsetY =  12; labelOffsetX = -8; }
+            else if (Math.abs(dx) > Math.abs(dy)) { labelOffsetY = -8; }
+            else { labelOffsetX = 8; }
+
+            let lineColor = "#94A3B8"; let markerId = "arrow";
+            if (rel.from === 3)           { lineColor = "#EF4444"; markerId = "arrow-red";    }
+            else if (rel.from === 5)      { lineColor = "#0D9488"; markerId = "arrow-green";  }
+            else if (rel.label === "Supply")  { lineColor = "#3B82F6"; markerId = "arrow-blue";  }
+            else if (rel.label === "Dispense"){ lineColor = "#8B5CF6"; markerId = "arrow-purple";}
+            else if (rel.label === "Verify")  { lineColor = "#F59E0B"; markerId = "arrow-orange";}
+
             return (
               <g key={idx}>
-                {/* Main connection line */}
                 <line
-                  x1={`${startX}%`}
-                  y1={`${startY}%`}
-                  x2={`${endX}%`}
-                  y2={`${endY}%`}
-                  stroke={lineColor}
-                  strokeWidth={isMobile ? "1.5" : "2"}
-                  strokeDasharray="5,3"
-                  markerEnd={`url(#${markerId})`}
-                  opacity="0.7"
+                  x1={`${startX}%`} y1={`${startY}%`}
+                  x2={`${endX}%`}   y2={`${endY}%`}
+                  stroke={lineColor} strokeWidth={isMobile ? "1.5" : "2"}
+                  strokeDasharray="5,3" markerEnd={`url(#${markerId})`} opacity="0.7"
                 />
-                
-                {/* Relationship label - Only show on desktop WITHOUT white background */}
                 {!isMobile && (
                   <text
-                    x={`${labelX + labelOffsetX}%`}
-                    y={`${labelY + labelOffsetY}%`}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fontSize="9"
-                    fontWeight="700"
-                    fill={lineColor}
-                    style={{
-                      textShadow: '0px 0px 3px rgba(255,255,255,0.8), 0px 0px 3px rgba(255,255,255,0.8)'
-                    }}
+                    x={`${labelX + labelOffsetX}%`} y={`${labelY + labelOffsetY}%`}
+                    textAnchor="middle" dominantBaseline="middle"
+                    fontSize="9" fontWeight="700" fill={lineColor}
+                    style={{ textShadow: '0px 0px 3px rgba(255,255,255,0.8)' }}
                   >
                     {rel.label}
                   </text>
@@ -221,71 +143,54 @@ function BlockchainVisualization() {
             );
           })}
         </svg>
-        
-        {/* ANIMATED DATA FLOW */}
+
+        {/* ANIMATED DATA FLOW — keyframes defined in index.css */}
         {isAnimating && connections.map((conn) => {
           const fromNode = blockchainNodes.find(n => n.id === conn.from);
-          const toNode = blockchainNodes.find(n => n.id === conn.to);
-          
+          const toNode   = blockchainNodes.find(n => n.id === conn.to);
           if (!fromNode || !toNode) return null;
-          
-          const dx = toNode.x - fromNode.x;
-          const dy = toNode.y - fromNode.y;
+
+          const dx     = toNode.x - fromNode.x;
+          const dy     = toNode.y - fromNode.y;
           const length = Math.sqrt(dx * dx + dy * dy);
-          const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-          
+          const angle  = Math.atan2(dy, dx) * 180 / Math.PI;
+
           return (
             <div
               key={conn.id}
               className="absolute pointer-events-none"
               style={{
-                left: `${fromNode.x}%`,
-                top: `${fromNode.y}%`,
-                width: `${length}%`,
-                height: '2px',
-                transform: `rotate(${angle}deg)`,
-                transformOrigin: '0 0',
+                left: `${fromNode.x}%`, top: `${fromNode.y}%`,
+                width: `${length}%`, height: '2px',
+                transform: `rotate(${angle}deg)`, transformOrigin: '0 0',
                 zIndex: 2,
                 animation: `flowAlongLine ${conn.duration}ms linear forwards`
               }}
             >
-              <div
-                className="absolute w-2 h-2 md:w-3 md:h-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 shadow"
-              >
+              <div className="absolute w-2 h-2 md:w-3 md:h-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 shadow">
                 <div className="absolute inset-0.5 bg-white rounded-full"></div>
               </div>
             </div>
           );
         })}
 
-        {/* NODES - Names BELOW icons (not next to them) */}
+        {/* NODES */}
         {blockchainNodes.map((node) => (
           <div
             key={node.id}
-            className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
-              node.connected ? 'opacity-100' : 'opacity-50'
-            }`}
-            style={{ 
-              left: `${node.x}%`, 
-              top: `${node.y}%`,
-              zIndex: 20 
-            }}
+            className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${node.connected ? 'opacity-100' : 'opacity-50'}`}
+            style={{ left: `${node.x}%`, top: `${node.y}%`, zIndex: 20 }}
           >
             <div className={`${isMobile ? 'w-16 h-16' : 'w-20 md:w-24 h-20 md:h-24'} flex flex-col items-center justify-center group cursor-pointer`}>
-              {/* Icon circle */}
               <div className={`${isMobile ? 'w-12 h-12' : 'w-16 md:w-20 h-16 md:h-20'} rounded-full ${getNodeColor(node.type)} border-3 md:border-4 flex items-center justify-center text-white shadow-lg md:shadow-xl transition-all duration-300 hover:scale-110 hover:shadow-xl mb-1`}>
                 <div className={`${isMobile ? 'text-xl' : 'text-2xl md:text-3xl'} transition-transform`}>
                   {getNodeIcon(node.type)}
                 </div>
               </div>
-              
-              {/* Node name BELOW icon */}
               <div className={`${isMobile ? 'text-[10px]' : 'text-xs md:text-sm'} font-bold text-center text-gray-800 mt-1 max-w-[80px] md:max-w-[100px] px-1`}>
                 {node.name}
               </div>
             </div>
-            
-            {/* Connection indicator */}
             <div className="absolute -top-1 -right-1 w-2 h-2 md:w-3 md:h-3 rounded-full border border-white bg-green-400 animate-pulse shadow"></div>
           </div>
         ))}
@@ -307,30 +212,13 @@ function BlockchainVisualization() {
           <span className="text-green-600 font-semibold">High</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-1.5 md:h-2 mt-1 md:mt-2">
-          <div 
+          <div
             className="bg-gradient-to-r from-green-400 to-blue-500 h-1.5 md:h-2 rounded-full transition-all duration-1000"
             style={{ width: isAnimating ? '85%' : '0%' }}
           ></div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes flowAlongLine {
-          0% {
-            opacity: 0;
-          }
-          10% {
-            opacity: 1;
-          }
-          90% {
-            opacity: 1;
-          }
-          100% {
-            transform: translate(100%, 0) rotate(var(--angle));
-            opacity: 0;
-          }
-        }
-      `}</style>
+      {/* NOTE: @keyframes flowAlongLine is defined in src/index.css */}
     </div>
   );
 }
