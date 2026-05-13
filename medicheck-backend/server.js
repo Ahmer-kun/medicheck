@@ -2068,65 +2068,28 @@ app.get('/api/system/health/detailed', async (req, res) => {
   }
 });
 
-// Route 2: Real Blockchain Status
+// Route 2: Blockchain Status — uses blockchainService (single source of truth)
 app.get('/api/blockchain/real/status', async (req, res) => {
   try {
-    console.log('Real blockchain status check requested');
-    
-    let realBlockchainInfo = {
-      available: false,
-      error: null,
-      details: {}
-    };
-    
-    try {
-      // Try to import the real blockchain service
-      const realBlockchainModule = await import('../services/realBlockchainService.js');
-      const service = realBlockchainModule.default;
-      
-      if (service) {
-        console.log('Real blockchain service loaded');
-        
-        // Check if the service has the method
-        if (typeof service.getNetworkInfo === 'function') {
-          console.log('Calling getNetworkInfo()...');
-          const networkInfo = await service.getNetworkInfo();
-          console.log('Network info received:', networkInfo);
-          
-          realBlockchainInfo.details = networkInfo;
-          realBlockchainInfo.available = networkInfo.connected || false;
-          realBlockchainInfo.error = networkInfo.error;
-        } else {
-          console.log('getNetworkInfo method not found');
-          realBlockchainInfo.error = 'getNetworkInfo method not available';
-        }
-      } else {
-        console.log('Real blockchain service not available');
-        realBlockchainInfo.error = 'Real blockchain service not available';
-      }
-      
-    } catch (importError) {
-      console.error('Failed to import real blockchain service:', importError);
-      realBlockchainInfo.error = `Service import failed: ${importError.message}`;
-    }
-    
-    // Always respond with something
+    const BlockchainService = (await import('../services/blockchainService.js')).default;
+    const networkInfo = await BlockchainService.getNetworkInfo();
+
     res.json({
       success: true,
       timestamp: new Date().toISOString(),
-      message: 'Real blockchain status check completed',
-      realBlockchain: realBlockchainInfo,
-      serviceAvailable: realBlockchainInfo.available,
-      error: realBlockchainInfo.error
+      message: 'Blockchain status check completed',
+      realBlockchain: {
+        available: networkInfo.connected || false,
+        error: networkInfo.error || null,
+        details: networkInfo
+      },
+      serviceAvailable: networkInfo.connected || false
     });
-    
   } catch (error) {
-    console.error('Real blockchain status check failed:', error);
     res.status(500).json({
       success: false,
-      message: 'Real blockchain status check failed',
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: 'Blockchain status check failed',
+      error: error.message
     });
   }
 });
@@ -2143,8 +2106,9 @@ app.post(
         });
       }
  
-      const RealBlockchainService = (await import('../services/realBlockchainService.js')).default;
-      const result = await RealBlockchainService.registerMedicine(batchData);
+      // Uses blockchainService — same service used by batchController
+      const BlockchainService = (await import('../services/blockchainService.js')).default;
+      const result = await BlockchainService.registerCompleteMedicine(batchData);
  
       res.json({
         success: true,
@@ -2164,15 +2128,16 @@ app.post(
 app.get('/api/blockchain/real/faucet/:address', auth, async (req, res) => {
   try {
     const { address } = req.params;
-    const RealBlockchainService = (await import('../services/realBlockchainService.js')).default;
-    
-    await RealBlockchainService.getTestETHFromFaucet(address);
-    
+    // Uses blockchainService.getFaucetLinks() — no longer needs realBlockchainService
+    const BlockchainService = (await import('../services/blockchainService.js')).default;
+    const faucets = BlockchainService.getFaucetLinks(address);
+
     res.json({
       success: true,
-      message: 'Faucet information generated',
+      message: 'Faucet links generated',
       address: address,
-      instructions: 'Check server logs for faucet URLs'
+      faucets: faucets,
+      instructions: 'Use any of the faucet links to get Sepolia test ETH'
     });
   } catch (error) {
     res.status(500).json({

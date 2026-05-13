@@ -1,7 +1,6 @@
 import Batch from '../models/Batch.js';
 import PharmacyMedicine from '../models/PharmacyMedicine.js';
 import User from '../models/User.js';
-import Pharmacy from '../models/Pharmacy.js';
 
 export const getDashboardStats = async (req, res) => {
   try {
