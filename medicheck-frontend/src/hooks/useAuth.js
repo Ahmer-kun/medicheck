@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
-import { USERS } from "../data/constants";
 
 function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
-  const [backendAvailable, setBackendAvailable] = useState(false);
+  const [backendAvailable, setBackendAvailable] = useState(null); // null = checking, true/false = result
 
-  // Checks if backend is available on mount
+  // Check if backend is available on mount
   useEffect(() => {
     checkBackend();
   }, []);
@@ -16,98 +15,61 @@ function useAuth() {
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/health`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
-      
-      if (response.ok) {
-        setBackendAvailable(true);
-        console.log("✅ Backend is available");
-      } else {
-        setBackendAvailable(false);
-        console.log("⚠️ Backend not available, using fallback");
-      }
+      setBackendAvailable(response.ok);
     } catch (error) {
       setBackendAvailable(false);
-      console.log("⚠️ Backend not available, using fallback");
     }
   };
 
   const login = async (username, password, role) => {
     setLoading(true);
-    
+
     try {
-      // First try to use backend if available
-      if (backendAvailable) {
-        console.log("Trying backend login...");
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/login`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ username, password }),
-        });
-
-        // Check if response is HTML (error page)
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("text/html")) {
-          throw new Error("Backend returned HTML instead of JSON");
-        }
-
-        // Try to parse as JSON
-        const text = await response.text();
-        let data;
-        
-        try {
-          data = JSON.parse(text);
-        } catch (parseError) {
-          console.error("Failed to parse JSON:", text.substring(0, 100));
-          throw new Error("Invalid response from server");
-        }
-
-        if (!response.ok || !data.success) {
-          throw new Error(data.message || "Login failed");
-        }
-
-        // Store token and user data
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        setUser(data.user);
-
-        return data.user;
+      // If backend check is still running, wait briefly then recheck
+      if (backendAvailable === null) {
+        await checkBackend();
       }
-      
-      // Fallback: Use hardcoded users
-      throw new Error("Backend not available, using fallback");
-      
-    } catch (error) {
-      console.log("Backend login failed, using fallback:", error.message);
-      
-      // FALLBACK: Use hardcoded users
-      const user = Object.values(USERS).find(
-        u => u.username === username && u.password === password && u.role === role
-      );
-      
-      if (user) {
-        // Create mock token and user data
-        const mockToken = `mock-token-${Date.now()}`;
-        const userData = { 
-          ...user, 
-          token: mockToken,
-          id: `user-${Date.now()}`,
-          email: `${username}@example.com`
-        };
-        
-        localStorage.setItem("token", mockToken);
-        localStorage.setItem("user", JSON.stringify(userData));
-        setUser(userData);
-        
-        console.log("✅ Fallback login successful for:", user.username);
-        return userData;
-      } else {
-        throw new Error("Invalid credentials. Please check username/password.");
+
+      // Backend is down — tell user clearly, no fallback
+      if (!backendAvailable) {
+        throw new Error(
+          "Service temporarily unavailable. The backend is not reachable. Please try again later."
+        );
       }
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      // Guard against HTML error pages
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("text/html")) {
+        throw new Error("Unexpected response from server. Please try again.");
+      }
+
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Invalid response from server. Please try again.");
+      }
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Invalid credentials. Please check your username and password.");
+      }
+
+      // Store token and user data
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      setUser(data.user);
+
+      return data.user;
+
     } finally {
       setLoading(false);
     }
@@ -124,16 +86,24 @@ function useAuth() {
     setSelectedRole(role);
   };
 
-  // Check for existing session on app load
+  // Restore session on app load
+  // Rejects mock tokens left over from old fallback system
   useEffect(() => {
     const token = localStorage.getItem("token");
     const savedUser = localStorage.getItem("user");
-    
+
     if (token && savedUser) {
+      // Clear any mock tokens from the old fallback system
+      if (token.startsWith("mock-token-")) {
+        console.warn("Clearing old mock token — real login required.");
+        logout();
+        return;
+      }
+
       try {
         setUser(JSON.parse(savedUser));
       } catch (error) {
-        console.error("Error parsing saved user:", error);
+        console.error("Error restoring session:", error);
         logout();
       }
     }
@@ -152,4 +122,3 @@ function useAuth() {
 }
 
 export default useAuth;
-
